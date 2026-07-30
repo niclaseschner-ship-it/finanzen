@@ -1,0 +1,98 @@
+<!doctype html><html lang=de><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><title>Finanzen · Reisen</title>
+<style>
+ body{font-family:system-ui,Arial,sans-serif;margin:0;background:#0f1117;color:#e6e6e6;font-size:14px}
+ .bar{position:sticky;top:0;background:#11141c;padding:10px;border-bottom:1px solid #262b36;display:flex;gap:10px;align-items:center;z-index:5}
+ a{color:#9aa4b2;text-decoration:none;font-weight:600}
+ .wrap{padding:16px 28px;max-width:1500px;margin:0 auto}
+ .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:8px 0 18px}
+ .kpi{background:#171a23;border:1px solid #262b36;border-radius:12px;padding:14px}
+ .kpi .v{font-size:22px;font-weight:700}.kpi .l{color:#9aa4b2;font-size:12px;margin-top:3px}
+ table{width:100%;border-collapse:collapse}td,th{padding:7px 8px;border-bottom:1px solid #1e232e;vertical-align:top}
+ th{position:sticky;top:48px;background:#11141c;color:#9aa4b2;text-align:left}
+ .r{text-align:right;white-space:nowrap}
+ input{background:#1b1f2a;color:#e6e6e6;border:1px solid #2c323f;border-radius:7px;padding:5px 7px;font-size:13px}
+ .nm{width:230px} .b{background:#222a38;border:1px solid #2c323f;color:#cbd5e1;border-radius:6px;padding:4px 9px;cursor:pointer;font-weight:600}
+ .b.ok{background:#16301d;border-color:#2c6b3f;color:#7ee0a0} .b.no{background:#301717;border-color:#6b2c2c;color:#ff8a8a}
+ .pill{font-size:11px;border-radius:6px;padding:1px 7px}
+ .s-confirmed{background:#16301d;color:#7ee0a0}.s-candidate{background:#2a2f3a;color:#cbd5e1}.s-rejected{background:#301717;color:#ff8a8a}
+ tr.rej{opacity:.45} .hint{color:#6b7280;font-size:12px} #msg{margin-left:auto;color:#9aa4b2}
+ .cnt{background:#222a38;border:1px solid #2c323f;color:#cbd5e1;border-radius:6px;padding:2px 8px;cursor:pointer;font-size:13px}
+ .orte{color:#9ec1ff} #ov{position:fixed;inset:0;background:#000a;display:none;z-index:60;align-items:center;justify-content:center}
+ #mod{background:#11141c;border:1px solid #3a4252;border-radius:12px;max-width:780px;width:92%;max-height:82vh;overflow:auto;padding:16px}
+ .prodc{color:#7ee0a0}
+ #detail{margin-top:8px}
+</style></head><body>
+<script src="/shared.js"></script>
+<div class=bar>
+ <a href="/">✏️ Editor</a><a href="/statistik.html">📊 Statistik</a><a href="/vertraege">📑 Verträge</a>
+ <b style="color:#4f8cff">🏖️ Reisen</b> <a href="/import">📥 Import</a> <a href="/vermoegen">💰 Vermögen</a> <a href="/vorsorge">🎯 Vorsorge</a>
+ <span>Jahr: <select id=yr onchange=draw()></select></span>
+ <label class=hint><input type=checkbox id=hiderej onchange=draw()> abgelehnte ausblenden</label>
+ <span id=msg></span>
+</div>
+<div class=wrap>
+<div class=kpis id=kpis></div>
+<p class=hint>Reise = zusammenhängend >2 Tage außerhalb der Heimatregion (mehrere Orte = EINE Reise).
+Bestätige echte Reisen (✓) oder lehne Transit/Tagesausflüge ab (✗). Klick auf „Buchungen" zeigt, was dazugehört.</p>
+<table><thead><tr><th>Status</th><th>Name</th><th>Zeitraum</th><th>Orte</th>
+<th class=r>Buchungen</th><th class=r>Kosten</th></tr></thead><tbody id=tb></tbody></table>
+<h3 id=dh style="margin-top:22px"></h3><div id=detail></div>
+</div>
+<script>
+let T=[], FS;
+const fmt=x=>Math.round(x).toLocaleString('de-DE');
+const esc=s=>{const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML;};
+async function load(){ await BK.init(); T=await (await fetch('/api/trips')).json();
+ const ys=[...new Set(T.flatMap(t=>[t.start.slice(0,4),t.ende.slice(0,4)]))].sort();
+ yr.innerHTML=['Alle',...ys].map(y=>`<option>${y}</option>`).join(''); yr.value=ys[ys.length-1]||'Alle';
+ FS=BK.filterState('reisen'); const s=FS.load();   // Filter über Seitenwechsel merken
+ if(s){ if(s.yr!=null&&[...yr.options].some(o=>o.value===s.yr))yr.value=s.yr;
+   if(s.hiderej!=null)document.getElementById('hiderej').checked=s.hiderej; }
+ draw(); }
+function kpis(){
+ const y=document.getElementById('yr').value, inY=t=>y==='Alle'||(t.start.slice(0,4)<=y&&t.ende.slice(0,4)>=y);
+ const ok=T.filter(t=>t.status==='confirmed'&&inY(t)), cand=T.filter(t=>t.status==='candidate'&&inY(t));
+ const sum=ok.reduce((s,t)=>s+t.kosten,0);
+ document.getElementById('kpis').innerHTML=[
+  ['Bestätigte Reisen',ok.length],['Summe (bestätigt)',fmt(sum)+' €'],
+  ['Ø pro Reise',ok.length?fmt(sum/ok.length)+' €':'–'],['offen (zu prüfen)',cand.length]
+ ].map(([l,v])=>`<div class=kpi><div class=v>${v}</div><div class=l>${esc(l)}</div></div>`).join('');
+}
+function draw(){
+ kpis(); const hide=document.getElementById('hiderej').checked, y=document.getElementById('yr').value;
+ if(FS)FS.save({yr:y,hiderej:hide});
+ const tb=document.getElementById('tb'); tb.innerHTML='';
+ for(const t of T){
+  if(hide&&t.status==='rejected')continue;
+  if(y!=='Alle' && !(t.start.slice(0,4)<=y && t.ende.slice(0,4)>=y))continue;
+  const tr=document.createElement('tr'); if(t.status==='rejected')tr.className='rej';
+  tr.innerHTML=`<td><button class="b ok" data-a=confirmed title="echte Reise">✓</button>
+     <button class="b no" data-a=rejected title="kein Urlaub">✗</button>
+     <div class="pill s-${t.status}">${t.status}</div></td>
+   <td><input class=nm value="${esc(t.name)}" placeholder="${esc(t.orte.split(',')[0]||t.start)}"></td>
+   <td>${t.start} … ${t.ende}<div class=hint>${t.tage} Tage</div></td>
+   <td class=orte>${esc(t.orte)}</td>
+   <td class=r><button class=cnt>${t.n} ▸</button></td>
+   <td class=r>${fmt(t.kosten)} €</td>`;
+  tr.querySelector('.nm').onchange=e=>save(t,{name:e.target.value});
+  tr.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>save(t,{status:b.dataset.a}));
+  tr.querySelector('.cnt').onclick=()=>showTx(t);
+  tb.appendChild(tr);
+ }
+}
+function showTx(t){    // Buchungen INLINE darunter (gleiche Detailtabelle wie überall)
+ document.getElementById('dh').textContent='🏖️ '+(t.name||t.orte)+'  ('+t.start+' … '+t.ende+')';
+ BK.loadInto('detail','/api/rows?trip='+encodeURIComponent(t.id));
+ document.getElementById('dh').scrollIntoView({behavior:'smooth',block:'start'});
+}
+async function save(t,patch){
+ document.getElementById('msg').textContent='speichere…';
+ const res=await (await fetch('/api/trip_edit',{method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({id:t.id,...patch})})).json();
+ if(res.trips)T=res.trips;
+ document.getElementById('msg').textContent='gespeichert ✓';
+ draw();
+}
+load();
+</script></body></html>

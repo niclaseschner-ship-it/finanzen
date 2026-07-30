@@ -1,0 +1,148 @@
+<!doctype html><html lang=de><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><title>Finanzen · Import</title>
+<style>
+ body{font-family:system-ui,Arial,sans-serif;margin:0;background:#0f1117;color:#e6e6e6;font-size:14px}
+ .bar{position:sticky;top:0;background:#11141c;padding:10px;border-bottom:1px solid #262b36;display:flex;gap:10px;align-items:center;z-index:5}
+ a{color:#9aa4b2;text-decoration:none;font-weight:600} a:hover{color:#cbd5e1}
+ .wrap{padding:16px 28px;max-width:1500px;margin:0 auto}
+ h2{font-size:16px;margin:26px 0 10px;border-bottom:1px solid #262b36;padding-bottom:6px}
+ table{width:100%;border-collapse:collapse}td,th{padding:7px 9px;border-bottom:1px solid #1e232e;text-align:left}
+ th{color:#9aa4b2;font-weight:600} .r{text-align:right;white-space:nowrap}
+ .pill{font-size:11px;border-radius:6px;padding:1px 7px}
+ .t-Bank{background:#1c2740;color:#9ec1ff}.t-Mail{background:#2a2333;color:#d9b3ff}
+ .b{background:#222a38;border:1px solid #2c323f;color:#cbd5e1;border-radius:7px;padding:6px 12px;cursor:pointer;font-weight:600}
+ .b:hover{border-color:#4f8cff} .b.go{background:#16301d;border-color:#2c6b3f;color:#7ee0a0}
+ input[type=month],input[type=file]{background:#1b1f2a;color:#e6e6e6;border:1px solid #2c323f;border-radius:7px;padding:6px 8px;font-size:13px}
+ .hint{color:#6b7280;font-size:12px} .card{background:#171a23;border:1px solid #262b36;border-radius:12px;padding:16px;margin-top:10px}
+ /* Zeitachse */
+ #chart{position:relative;margin:6px 0 4px}
+ .trow{display:flex;align-items:center;gap:10px;height:30px;padding-right:10px}
+ .tlabel{width:160px;flex:none;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .track{position:relative;flex:1;height:16px;background:#10131a;border-radius:5px}
+ .barseg{position:absolute;top:0;bottom:0;border-radius:5px}
+ .seg-Bank{background:linear-gradient(90deg,#2b5cc4,#4f8cff)}.seg-Mail{background:linear-gradient(90deg,#7b4fc4,#b98cff)}
+ #ovl{position:absolute;left:170px;right:10px;top:0;pointer-events:none}
+ .yline{position:absolute;top:0;bottom:0;border-left:1px dashed #2c323f}
+ .ylab{position:absolute;top:-2px;font-size:10px;color:#6b7280;transform:translateX(3px)}
+ #band{position:absolute;top:0;bottom:22px;background:rgba(79,140,255,.12);border-left:2px solid #4f8cff;border-right:2px solid #4f8cff}
+ .axis{position:relative;height:20px;margin-left:170px;margin-right:10px}
+ code{background:#1b1f2a;padding:2px 6px;border-radius:5px;color:#9ec1ff}
+</style></head><body>
+<div class=bar>
+ <a href="/">✏️ Editor</a><a href="/statistik.html">📊 Statistik</a><a href="/vertraege">📑 Verträge</a><a href="/reisen">🏖️ Reisen</a>
+ <b style="color:#4f8cff">📥 Import</b> <a href="/vermoegen">💰 Vermögen</a> <a href="/vorsorge">🎯 Vorsorge</a>
+ <span id=msg style="margin-left:auto;color:#9aa4b2"></span>
+</div>
+<div class=wrap>
+
+<h2>Datenquellen</h2>
+<table><thead><tr><th>Quelle</th><th>Typ</th><th>Vorhandener Zeitraum</th>
+ <th class=r>Buchungen/Mails</th><th>Letztes Update</th><th>Pflege</th></tr></thead>
+ <tbody id=stab></tbody></table>
+
+<h2>Berücksichtigter Zeitraum</h2>
+<p class=hint>Alle Auswertungen (Statistik, Verträge, Reisen) nutzen nur diesen Zeitraum.
+ Vorschlag = nur <b>vollständige Monate, in denen ALLE Quellen Daten haben</b> (laufender Monat bleibt immer draußen).</p>
+<div class=card>
+ <div id=chart></div>
+ <div class=axis id=axis></div>
+ <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:14px">
+  <label>von <input type=month id=vonI onchange=drawBand()></label>
+  <label>bis <input type=month id=bisI onchange=drawBand()></label>
+  <button class=b id=sugBtn>Vorschlag übernehmen (<span id=sugTxt>–</span>)</button>
+  <button class="b go" id=saveBtn>Zeitraum speichern</button>
+  <span class=hint id=pmsg></span>
+ </div>
+</div>
+
+<h2>Kontodaten einspielen</h2>
+<div class=card>
+ <p class=hint>Neue Kontoexporte hier hochladen oder direkt in den Eingangsordner legen, dann
+  &bdquo;Daten verarbeiten&ldquo;. <b>Vorher auf Lücken prüfen:</b> fehlende Wochen fallen später
+  kaum auf und verfälschen jede Monatsauswertung — ein Upload ohne diese Prüfung hat hier schon
+  einmal vier Wochen verschluckt. Die Zeitachse unten zeigt, welcher Zeitraum abgedeckt ist.</p>
+ <p class=hint>Zielordner der Bank-CSV, falls du selbst nachsehen willst:<br><code>__KONTEN__</code></p>
+</div>
+
+</div>
+<script>
+let D=null;
+const esc=s=>{const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML;};
+const day=s=>Date.parse(s);
+const monStart=ym=>ym?ym+'-01':'';
+const monEnd=ym=>{if(!ym)return'';const y=+ym.slice(0,4),m=+ym.slice(5,7);const d=new Date(y,m,0);
+  return ym+'-'+String(d.getDate()).padStart(2,'0');};
+
+async function load(){
+ D=await (await fetch('/api/sources')).json();
+ const tb=document.getElementById('stab'); tb.innerHTML='';
+ for(const s of D.sources){
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td><b>${esc(s.name)}</b></td>
+   <td><span class="pill t-${s.typ}">${s.typ}</span></td>
+   <td>${esc(s.von||'?')} … ${esc(s.bis||'?')}</td>
+   <td class=r>${(s.n||0).toLocaleString('de-DE')}</td>
+   <td>${esc(s.update||'–')}</td>
+   <td class=hint>${s.sync==='Upload'?'CSV-Upload':'Live-Sync (Mail)'}</td>`;
+  tb.appendChild(tr);
+ }
+ document.getElementById('vonI').value=D.current.von||D.suggest.von||'';
+ document.getElementById('bisI').value=D.current.bis||D.suggest.bis||'';
+ document.getElementById('sugTxt').textContent=D.suggest.von?`${D.suggest.von} … ${D.suggest.bis}`:'–';
+ renderChart();
+}
+
+function renderChart(){
+ const S=D.sources.filter(s=>s.von&&s.bis);
+ const chart=document.getElementById('chart'), axis=document.getElementById('axis');
+ chart.innerHTML=''; axis.innerHTML='';
+ if(!S.length){chart.textContent='keine Quellen';return;}
+ let gmin=Math.min(...S.map(s=>day(s.von))), gmax=Math.max(...S.map(s=>day(s.bis)));
+ const span=gmax-gmin||1; window._g={gmin,gmax,span};
+ const pos=t=>(day(t)-gmin)/span*100;
+ // Quellen-Balken
+ for(const s of S){
+  const row=document.createElement('div'); row.className='trow';
+  row.innerHTML=`<div class=tlabel>${esc(s.name)}</div>
+   <div class=track><div class="barseg seg-${s.typ}" style="left:${pos(s.von).toFixed(2)}%;width:${Math.max(0.6,pos(s.bis)-pos(s.von)).toFixed(2)}%"></div></div>`;
+  chart.appendChild(row);
+ }
+ // Overlay (Jahreslinien + Band) über die Track-Spalte
+ const ovl=document.createElement('div'); ovl.id='ovl'; ovl.style.height=(S.length*30)+'px';
+ const y0=new Date(gmin).getFullYear(), y1=new Date(gmax).getFullYear();
+ for(let y=y0; y<=y1+1; y++){
+  const x=(Date.parse(y+'-01-01')-gmin)/span*100; if(x<0||x>100)continue;
+  const ln=document.createElement('div'); ln.className='yline'; ln.style.left=x+'%';
+  const lb=document.createElement('div'); lb.className='ylab'; lb.style.left=x+'%'; lb.textContent=y;
+  ovl.appendChild(ln); axis.appendChild(lb);
+ }
+ const band=document.createElement('div'); band.id='band'; ovl.appendChild(band);
+ chart.appendChild(ovl);
+ drawBand();
+}
+
+function drawBand(){
+ const band=document.getElementById('band'); if(!band||!window._g)return;
+ const {gmin,span}=window._g;
+ const v=monStart(document.getElementById('vonI').value), b=monEnd(document.getElementById('bisI').value);
+ if(!v||!b){band.style.display='none';return;}
+ band.style.display='block';
+ let l=(day(v)-gmin)/span*100, r=(day(b)-gmin)/span*100;
+ l=Math.max(0,Math.min(100,l)); r=Math.max(0,Math.min(100,r));
+ band.style.left=l+'%'; band.style.width=Math.max(0,r-l)+'%';
+}
+
+document.getElementById('sugBtn').onclick=()=>{
+ document.getElementById('vonI').value=D.suggest.von||'';
+ document.getElementById('bisI').value=D.suggest.bis||''; drawBand();
+};
+document.getElementById('saveBtn').onclick=async()=>{
+ const von=document.getElementById('vonI').value, bis=document.getElementById('bisI').value;
+ document.getElementById('pmsg').textContent='speichere…';
+ const r=await (await fetch('/api/period',{method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({von,bis})})).json();
+ document.getElementById('pmsg').textContent=`gespeichert ✓  aktiv: ${r.von||'Anfang'} … ${r.bis}`;
+};
+
+load();
+</script></body></html>

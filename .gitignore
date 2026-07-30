@@ -1,0 +1,73 @@
+# ============================================================================
+# Finanzen — .gitignore
+#
+# Grundregel: NUR Code und Doku sind versioniert. Alles, was echte Finanz- oder
+# Personendaten enthält, bleibt draußen — damit dieses Repo weitergegeben werden
+# kann, ohne Bankdaten mitzuliefern.
+# Bei Zweifel: NICHT tracken. Ein vergessenes Ignore steht sonst dauerhaft in der
+# Git-History, auch wenn die Datei später gelöscht wird.
+# ============================================================================
+
+# --- Die Datenbank (= alle Buchungen, ~190 MB) ------------------------------
+finanzen.db
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+
+# --- Rohdaten-Eingang: Kontoexporte, Depot-Exporte -------------------------
+konten/*
+!konten/.gitkeep
+vermoegen/eingang/
+vermoegen/depot/
+vermoegen/immobilien/
+*.csv
+
+# --- Mailanhänge (~2,2 GB Belege) ------------------------------------------
+attachments/
+
+# --- Generierte Ausgaben (jederzeit aus der DB neu rechenbar) --------------
+output/*
+!output/.gitkeep
+vermoegen/vermoegen.html
+
+# --- Persönliche Konfiguration ---------------------------------------------
+# Gepflegte Fakten: Kaufpreise, Anteile, Kreditkonditionen, IBANs.
+# Versioniert wird nur die Beispieldatei (positionen.beispiel.json).
+# Mit Sternchen, damit auch Sicherungen draußen bleiben: einrichten.py legt beim
+# Überschreiben eine konfig.json.bak an — die enthält dieselben echten Kontodaten.
+konfig.json*
+vermoegen/positionen.json*
+
+# Sicherungen und Konfliktreste von Editoren und Werkzeugen. Sie stehen neben der
+# Originaldatei und tragen denselben Inhalt — bei Konfigurationsdateien also echte IBANs.
+*.bak
+*.orig
+*.rej
+*~
+
+# --- Arbeitsstände der KI-Kategorisierung ----------------------------------
+# Enthalten echte Händlernamen + Beträge. Der wiederverwendbare Teil ist
+# scripts/ki_prompt.md (versioniert) — die JSONs sind Durchläufe, keine Quelle.
+scripts/ki_*.json
+scripts/offen.json
+
+# --- Python / venv ---------------------------------------------------------
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# --- Editor / OS -----------------------------------------------------------
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+
+# --- Generierte Demo (beispieldaten/erzeugen.py legt sie jederzeit neu an) ---
+beispieldaten/demo/
+
+# Einmaliger KI-Seed-Batch mit ~65 ECHTEN Haendlernamen aus den eigenen Buchungen
+# (inkl. Namen Dritter). Bleibt lokal nutzbar, wird aber nicht ausgeliefert.
+scripts/extra/ki_seed.py

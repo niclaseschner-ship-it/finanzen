@@ -1,0 +1,172 @@
+<!doctype html><html lang=de><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><title>Finanzen · Editor</title>
+<style>
+ body{font-family:system-ui,Arial,sans-serif;margin:0;background:#0f1117;color:#e6e6e6;font-size:14px}
+ .bar{position:sticky;top:0;background:#11141c;padding:10px;border-bottom:1px solid #262b36;display:flex;gap:9px;flex-wrap:wrap;align-items:center;z-index:5}
+ a{color:#9aa4b2;text-decoration:none;font-weight:600}
+ select,input{background:#1b1f2a;color:#e6e6e6;border:1px solid #2c323f;border-radius:7px;padding:6px 8px;font-size:13px}
+ table{width:100%;border-collapse:collapse} td,th{padding:6px 8px;border-bottom:1px solid #1e232e;vertical-align:top}
+ th{position:sticky;top:50px;background:#11141c;color:#9aa4b2;text-align:left}
+ .r{text-align:right;white-space:nowrap}.neg{color:#ff8a8a}.pos{color:#7ee0a0}
+ .ctx{color:#c2c9d6;font-size:12px;max-width:340px}.why{color:#6b7280;font-size:11px}
+ .mail{color:#7f9cc7;font-size:11px;margin-top:2px}
+ .vtg{background:#3a2f4d;color:#c9b6ec;border-radius:5px;padding:0 5px;font-size:10px;vertical-align:middle}
+ tr.ign{opacity:.45} tr.saved>td{background:#16301d}
+ tr.unsaved>td{background:#3a1620;outline:1px solid #ff8a8a}
+ .lbl{width:140px} .stat{margin-left:auto;color:#9aa4b2}
+ .lc{cursor:pointer;min-width:130px} .chip{background:#26324a;border-radius:6px;padding:1px 6px;margin:1px;display:inline-block;font-size:12px}
+ .lbe{background:#2a3343;border:0;color:#9aa4b2;border-radius:6px;cursor:pointer;padding:1px 7px}
+ #lp{position:fixed;z-index:50;background:#11141c;border:1px solid #3a4252;border-radius:10px;width:270px;box-shadow:0 8px 30px #000a;display:none}
+ #lp .lphd{padding:10px 12px 6px}
+ #lp .lq{width:100%;box-sizing:border-box;background:#1b1f2a;color:#e6e6e6;border:1px solid #2c323f;border-radius:7px;padding:7px 9px;font-size:13px}
+ #lp .lplist{max-height:42vh;overflow:auto;padding:4px 12px 6px}
+ #lp .lo{display:block;padding:3px 0;font-size:13px;cursor:pointer}
+ #lp .lo.on{color:#7ee0a0;font-weight:600}
+ #lp .lnew{padding:6px 9px;margin:2px 0 6px;background:#16301d;color:#7ee0a0;border:1px solid #2c6b3f;border-radius:7px;cursor:pointer;font-size:13px}
+ #lp .lpfoot{padding:8px 12px;border-top:1px solid #2c323f;background:#11141c;border-radius:0 0 10px 10px}
+ #lp button{background:#4f8cff;border:0;color:#fff;border-radius:7px;padding:6px 10px;cursor:pointer}
+ #lp .sec{background:#2a3343;color:#cbd5e1}
+</style></head><body>
+<div id=lp></div>
+<div class=bar>
+ <b style="color:#4f8cff">✏️ Editor</b> <a href="/statistik.html">📊 Statistik</a> <a href="/vertraege">📑 Verträge</a> <a href="/reisen">🏖️ Reisen</a> <a href="/import">📥 Import</a> <a href="/vermoegen">💰 Vermögen</a> <a href="/vorsorge">🎯 Vorsorge</a>
+ <select id=fcat onchange=draw()><option value="">— Kategorie —</option></select>
+ <input id=flabel placeholder="Label…" oninput=draw() class=lbl>
+ <input id=fsearch placeholder="Suche Händler/Kontext…" oninput=draw() style="width:220px">
+ <label><input type=checkbox id=fonly onchange=draw()> nur „Sonstiges"</label>
+ <button onclick=rebuild()>📊 Statistik neu</button>
+ <span class=stat id=stat></span>
+</div>
+<table><thead><tr><th>Datum</th><th class=r>Betrag</th><th>Händler</th><th>Kategorie</th>
+<th>Labels</th><th>Ign.</th><th>Monat→</th><th>Geltung</th><th>Kontext</th></tr></thead>
+<tbody id=tb></tbody></table>
+<datalist id=labelcat></datalist>
+<script>
+let ROWS=[], META={cats:[],labels:[]}, OPTS='';
+const LIMIT=150;
+const fmt=x=>x.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
+const esc=s=>{const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML;};
+async function load(){
+ META=await (await fetch('/api/meta')).json();
+ fcat.innerHTML='<option value="">— Kategorie —</option>'+META.cats.map(c=>`<option>${esc(c)}</option>`).join('');
+ document.getElementById('labelcat').innerHTML=META.labels.map(l=>`<option value="${esc(l)}">`).join('');
+ ROWS=await (await fetch('/api/rows')).json(); draw();
+}
+const catOptions=c=>META.cats.map(x=>`<option${x===c?' selected':''}>${esc(x)}</option>`).join('')
+  +`<option value="__new__">➕ neue Kategorie…</option>`;
+function rowHTML(r){
+ const opts=catOptions(r.cat);
+ const ctx=(r.vz||'').replace(/\s·\s*$/,'');
+ return `<td>${r.d}${r.effm&&r.effm!==r.d.slice(0,7)?'<div class=why>→'+r.effm+'</div>':''}</td>
+   <td class="r ${r.b<0?'neg':'pos'}">${fmt(r.b)}</td>
+   <td>${esc(r.h).slice(0,34)}${r.vtg?' <span class=vtg>Vertrag</span>':''}</td>
+   <td><select data-f=cat>${opts}</select></td>
+   <td class=lc>${chips(r.labels)}<button type=button class=lbe>＋ Label</button></td>
+   <td style="text-align:center"><input type=checkbox data-f=ignore ${r.ignore?'checked':''}></td>
+   <td><input type=month data-f=dov value="${r.dov?r.dov.slice(0,7):''}" style="width:118px"></td>
+   <td><select data-f=scope><option value=tx>nur diese</option><option value=merchant>ganzer Vertrag</option></select></td>
+   <td class=ctx>${esc(ctx).slice(0,170)}${r.ctx?'<div class=mail>✉ '+esc(r.ctx).slice(0,130)+'</div>':''}<div class=why>${esc(r.src||'')} · ${esc(r.status)}</div></td>`;
+}
+const chips=s=>(s||'').split(',').map(x=>x.trim()).filter(Boolean).map(l=>`<span class=chip>${esc(l)}</span>`).join('');
+function bind(tr,r){
+ tr.querySelectorAll('[data-f]').forEach(el=>el.addEventListener('change',()=>save(r,tr)));
+ tr.querySelector('.lc').addEventListener('click',e=>openLabels(r,tr,e));
+}
+function _lev(a,b){const m=a.length,n=b.length;if(!m)return n;if(!n)return m;let p=[];for(let j=0;j<=n;j++)p[j]=j;
+ for(let i=1;i<=m;i++){let c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c;}return p[n];}
+function _lscore(L,Q){ // höher = besser; >=300 = starker Treffer (für Enter)
+ if(L===Q)return 1000; if(L.startsWith(Q))return 600-L.length; const i=L.indexOf(Q); if(i>=0)return 400-i;
+ const d=_lev(L,Q),md=Math.max(1,Math.floor(Q.length/3)); if(d<=md)return 350-d*30;   // Tippfehler-nah
+ let p=0;while(p<L.length&&p<Q.length&&L[p]===Q[p])p++; if(p>=3)return 150+p;          // ähnlicher Wortanfang
+ return -1;}
+function _rank(Q,sel){const ql=Q.toLowerCase(),pool=[...new Set([...(META.labels||[]),...sel])];
+ let it=pool.map(l=>({l,on:sel.has(l),s:ql?_lscore(l.toLowerCase(),ql):0}));
+ if(ql)it=it.filter(x=>x.on||x.s>=0);
+ it.sort((a,b)=>(b.on-a.on)||(b.s-a.s)||a.l.localeCompare(b.l)); return it;}
+function openLabels(r,tr,e){
+ const lp=document.getElementById('lp');
+ const sel=new Set((r.labels||'').split(',').map(x=>x.trim()).filter(Boolean));
+ lp.innerHTML=`<div class=lphd><input id=lq class=lq placeholder="suchen oder neu… ⏎" autocomplete=off></div>`
+  +`<div class=lplist id=lpl></div>`
+  +`<div class=lpfoot><button id=ls>Übernehmen</button> <button id=lc class=sec>Abbrechen</button></div>`;
+ lp.style.display='block';
+ const q=lp.querySelector('#lq'),list=lp.querySelector('#lpl');
+ const draw=()=>{const Q=q.value.trim(),exact=(META.labels||[]).some(l=>l.toLowerCase()===Q.toLowerCase());
+   let h=(Q&&!exact)?`<div class=lnew id=lnew>➕ „${esc(Q)}" anlegen</div>`:'';
+   const it=_rank(Q,sel);
+   h+=it.map(x=>`<label class="lo${x.on?' on':''}"><input type=checkbox value="${esc(x.l)}" ${x.on?'checked':''}> ${esc(x.l)}</label>`).join('');
+   if(!it.length&&!(Q&&!exact))h+='<div class=why style="padding:4px">nichts gefunden</div>';
+   list.innerHTML=h;
+   const nw=list.querySelector('#lnew');if(nw)nw.onclick=()=>addNew(Q);
+   list.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.onchange=()=>{cb.checked?sel.add(cb.value):sel.delete(cb.value);
+     cb.parentElement.classList.toggle('on',cb.checked);});};
+ const addNew=async v=>{v=(v||'').trim();if(!v)return;
+   try{const res=await (await fetch('/api/addlabel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:v})})).json();META.labels=res.labels||META.labels;}catch(_){}
+   sel.add(v);q.value='';draw();q.focus();};
+ const toggle=l=>{sel.has(l)?sel.delete(l):sel.add(l);q.value='';draw();q.focus();};
+ q.addEventListener('input',draw);
+ q.addEventListener('keydown',ev=>{
+   if(ev.key==='Enter'){ev.preventDefault();const Q=q.value.trim();if(!Q)return apply();
+     const c=_rank(Q,new Set()).filter(x=>x.s>=300);
+     if(c.length)toggle(c[0].l);else addNew(Q);}
+   else if(ev.key==='Escape')lp.style.display='none';});
+ function apply(){r.labels=[...sel].join(',');
+   tr.querySelector('.lc').innerHTML=chips(r.labels)+'<button type=button class=lbe>＋ Label</button>';
+   tr.querySelector('.lc').addEventListener('click',ev=>openLabels(r,tr,ev));
+   lp.style.display='none';save(r,tr);}
+ lp.querySelector('#ls').onclick=apply;
+ lp.querySelector('#lc').onclick=()=>lp.style.display='none';
+ draw();
+ const w=lp.offsetWidth,h=lp.offsetHeight;
+ lp.style.left=Math.max(8,Math.min(e.clientX,innerWidth-w-12))+'px';
+ lp.style.top=Math.max(8,Math.min(e.clientY,innerHeight-h-12))+'px';
+ q.focus();
+}
+function draw(){
+ const fc=fcat.value,fl=flabel.value.toLowerCase(),fs=fsearch.value.toLowerCase(),fo=fonly.checked;
+ const tb=document.getElementById('tb');tb.innerHTML='';let n=0,sum=0,shown=0;
+ const frag=document.createDocumentFragment();
+ for(const r of ROWS){
+  if(fc&&r.cat!==fc)continue;
+  if(fl&&!(r.labels||'').toLowerCase().includes(fl))continue;
+  if(fs&&!((r.h+' '+r.vz+' '+r.ctx).toLowerCase().includes(fs)))continue;
+  if(fo&&r.status!=='unkategorisiert')continue;
+  n++; if(r.status!=='ignoriert')sum+=r.b;
+  if(shown<LIMIT){const tr=document.createElement('tr');if(r.ignore)tr.className='ign';
+    tr.innerHTML=rowHTML(r);bind(tr,r);frag.appendChild(tr);shown++;}
+ }
+ tb.appendChild(frag);
+ stat.textContent=`${n} Treffer · ${fmt(sum)} €`+(n>shown?` · zeige ${shown} (Filter verfeinern)`:'');
+}
+async function save(r,tr){
+ const g=f=>tr.querySelector(`[data-f=${f}]`);
+ if(g('cat').value==='__new__'){                  // neue Kategorie anlegen
+   const name=(prompt('Neue Kategorie:')||'').trim();
+   if(!name){ g('cat').value=r.cat; return; }
+   const res=await (await fetch('/api/addcat',{method:'POST',headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({name})})).json();
+   META.cats=res.cats||META.cats; g('cat').innerHTML=catOptions(name);
+ }
+ const body={tx_id:r.id,cred:r.cred,hkey:r.hkey,scope:g('scope').value,
+   category:g('cat').value,labels:r.labels||'',
+   ignore:g('ignore').checked,datum_override:g('dov').value?g('dov').value+'-01':''};
+ try{
+   const resp=await fetch('/api/edit',{method:'POST',headers:{'Content-Type':'application/json'},
+     body:JSON.stringify(body)});
+   if(!resp.ok) throw new Error('HTTP '+resp.status);
+   const res=await resp.json();
+   if(res.full){ROWS=await (await fetch('/api/rows')).json();draw();return;}
+   if(!res.row) throw new Error('keine Server-Bestätigung');
+   Object.assign(r,res.row);tr.classList.remove('unsaved');tr.classList.add('saved');tr.classList.toggle('ign',!!r.ignore);
+ }catch(e){
+   tr.classList.remove('saved');tr.classList.add('unsaved');
+   alert('⚠ NICHT gespeichert: '+e.message+'\nLäuft der Server (python app.py)? Bitte erneut.');
+ }
+}
+async function rebuild(){stat.textContent='baue Statistik…';await fetch('/api/rebuild',{method:'POST'});stat.textContent='Statistik neu ✓';}
+// Label-Panel schliessen: Klick ausserhalb oder Esc
+document.addEventListener('mousedown',e=>{const lp=document.getElementById('lp');
+ if(lp.style.display==='block'&&!lp.contains(e.target)&&!e.target.closest('.lc'))lp.style.display='none';});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.getElementById('lp').style.display='none';});
+load();
+</script></body></html>

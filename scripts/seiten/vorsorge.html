@@ -1,0 +1,466 @@
+<!doctype html><html lang=de><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><title>Finanzen · Vorsorge</title>
+<style>
+ body{font-family:system-ui,Arial,sans-serif;margin:0;background:#0f1117;color:#e6e6e6;font-size:14px}
+ .bar{position:sticky;top:0;background:#11141c;padding:10px;border-bottom:1px solid #262b36;display:flex;gap:10px;align-items:center;z-index:5;flex-wrap:wrap}
+ a{color:#9aa4b2;text-decoration:none;font-weight:600} a:hover{color:#cbd5e1}
+ .wrap{padding:16px 26px 80px;max-width:1500px;margin:0 auto}
+ h1{font-size:22px;margin:8px 0 2px} h2{font-size:15px;margin:0 0 10px;color:#cbd5e1}
+ .sub{color:#9aa4b2;max-width:900px;line-height:1.55;margin:2px 0 14px}
+ .layout{display:grid;grid-template-columns:minmax(320px,430px) 1fr;gap:22px;align-items:start}
+ @media(max-width:920px){.layout{grid-template-columns:1fr}}
+ .grp{background:#171a23;border:1px solid #262b36;border-radius:12px;padding:14px 16px;margin-bottom:14px}
+ .grp h2{border-bottom:1px solid #262b36;padding-bottom:7px}
+ .field{display:flex;align-items:center;gap:8px;margin:7px 0}
+ .field .fl{flex:1;color:#cbd5e1}
+ .field input{width:130px;background:#1b1f2a;color:#e6e6e6;border:1px solid #2c323f;border-radius:7px;padding:6px 8px;font-size:14px;text-align:right}
+ .field input:focus{outline:none;border-color:#4f8cff}
+ .field .fu{width:64px;color:#6b7280;font-size:12px}
+ .chk{display:flex;align-items:center;gap:8px;color:#cbd5e1;margin:2px 0 8px;cursor:pointer;font-weight:600}
+ .chk input{width:16px;height:16px;accent-color:#4f8cff}
+ .subh{color:#cbd5e1;font-weight:600;font-size:12px;margin:12px 0 6px;border-top:1px solid #262b36;padding-top:10px;line-height:1.4}
+ .hint{color:#6b7280;font-size:12px;line-height:1.5;margin:2px 0 6px}
+ .szen{display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 6px}
+ .szb{background:#222a38;border:1px solid #2c323f;color:#cbd5e1;border-radius:8px;padding:6px 11px;cursor:pointer;font-weight:600;font-size:13px}
+ .szb:hover{border-color:#4f8cff}
+ .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
+ .btn{background:#222a38;border:1px solid #2c323f;color:#cbd5e1;border-radius:8px;padding:8px 13px;cursor:pointer;font-weight:600}
+ .btn.go{background:#16301d;border-color:#2c6b3f;color:#7ee0a0}.btn:hover{border-color:#4f8cff}
+ .verdict{border-radius:12px;padding:14px 16px;margin-bottom:14px;line-height:1.5}
+ .verdict.ok{background:#132a1c;border:1px solid #2c6b3f}
+ .verdict.bad{background:#2a1620;border:1px solid #6b2c3a}
+ .verdict .vh{font-size:17px;font-weight:700;margin-bottom:3px}
+ .verdict.ok .vh{color:#7ee0a0}.verdict.bad .vh{color:#ff8a8a}
+ .verdict .vd{color:#cbd5e1;font-size:13px}
+ .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:14px}
+ .kpi{background:#171a23;border:1px solid #262b36;border-radius:12px;padding:13px 14px}
+ .kpi .v{font-size:22px;font-weight:700}.kpi .l{color:#9aa4b2;font-size:12px;margin-top:3px}
+ .kpi .s{color:#6b7280;font-size:11px;margin-top:2px}
+ .neg{color:#ff8a8a}.pos{color:#7ee0a0}
+ .chartcard{background:#171a23;border:1px solid #262b36;border-radius:12px;padding:14px 16px;margin-bottom:14px}
+ .legend{color:#9aa4b2;font-size:12px;margin-top:6px;display:flex;gap:16px;flex-wrap:wrap}
+ .legend b{color:#4f8cff}.legend i{color:#9aa4b2;font-style:normal}
+ .legend .sw{display:inline-block;width:20px;height:0;vertical-align:middle;margin-right:3px}
+ .legend .swv{display:inline-block;width:0;height:12px;vertical-align:middle;margin-right:5px}
+ .modeToggle{display:inline-flex;background:#171a23;border:1px solid #262b36;border-radius:9px;padding:3px;margin-bottom:12px;gap:2px}
+ .modebtn{background:none;border:0;color:#9aa4b2;font-weight:600;font-size:13px;padding:6px 13px;border-radius:7px;cursor:pointer}
+ .modebtn.on{background:#4f8cff;color:#fff}
+ table.det{width:100%;border-collapse:collapse;font-size:13px}
+ table.det td{padding:5px 8px;border-bottom:1px solid #1e232e}
+ table.det td:last-child{text-align:right;white-space:nowrap;color:#e6e6e6}
+ table.det td:first-child{color:#9aa4b2}
+ .disc{color:#6b7280;font-size:12px;line-height:1.55;margin-top:12px}
+</style></head><body>
+<div class=bar>
+ <a href="/">✏️ Editor</a><a href="/statistik.html">📊 Statistik</a><a href="/vertraege">📑 Verträge</a><a href="/reisen">🏖️ Reisen</a><a href="/import">📥 Import</a><a href="/vermoegen">💰 Vermögen</a>
+ <b style="color:#4f8cff">🎯 Vorsorge</b>
+ <span id=savestat style="margin-left:auto;color:#9aa4b2;font-size:13px">–</span>
+</div>
+<div class=wrap>
+ <h1>🎯 Vorsorge &amp; Ruhestandsplanung</h1>
+ <p class=sub>Eine Jahr-für-Jahr-Simulation: erst <b>ansparen</b> (ETF wächst im Wert, Immobilie schüttet Miete aus), dann in der Rente <b>entnehmen</b> — die
+ Entnahme wächst jedes Jahr mit der Inflation. Alle Werte sind einstellbar; nichts wird nach außen gesendet, dein Plan wird lokal
+ gespeichert. Beträge in <b>Fettdruck</b> sind heutige Kaufkraft, das Chart zeigt zusätzlich die reale (kaufkraftbereinigte) Linie.</p>
+
+ <div class=layout>
+  <!-- ============ EINGABEN ============ -->
+  <div>
+   <div class=grp>
+    <h2>⏱️ Zeit &amp; Person</h2>
+    <div class=field><span class=fl>Aktuelles Alter</span><input type=number id=alter step=1><span class=fu>Jahre</span></div>
+    <div class=field><span class=fl>Renteneintritt mit</span><input type=number id=rentenalter step=1><span class=fu>Jahre</span></div>
+    <div class=field><span class=fl>Planen bis Alter</span><input type=number id=endalter step=1><span class=fu>Jahre</span></div>
+    <p class=hint>Planungshorizont = Lebenserwartung mit Puffer. In DE üblich: gesetzl. Rente mit 67. Konservativ bis ~90 planen.</p>
+   </div>
+
+   <div class=grp>
+    <h2>💸 Bedarf in der Rente</h2>
+    <div class=field><span class=fl>Monatl. Ausgaben (heute)</span><input type=number id=bedarf step=100><span class=fu>€/Mon</span></div>
+    <div class=field><span class=fl>Rente lt. Bescheid</span><input type=number id=rente_gesetzlich step=100><span class=fu>€/Mon</span></div>
+    <div class=field><span class=fl>Rentenanpassung</span><input type=number id=rente_anpassung step=0.1><span class=fu>% p.a.</span></div>
+    <p class=hint>Ausgaben in heutiger Kaufkraft (Faustregel ~70–90 % von heute). <b>Rente lt. Bescheid</b> = die „wenn Sie weiter einzahlen"-Regelaltersrente von der Renteninformation (heutiger Wert, brutto — für netto grob 10–15 % abziehen). <b>Rentenanpassung</b> = die jährliche Rentensteigerung; die Renteninformation rechnet 1 % und 2 % vor — trag dein Szenario ein. Liegt sie unter der Inflation, verliert die Rente real an Wert.</p>
+   </div>
+
+   <div class=grp>
+    <h2>📈 ETF / Depot</h2>
+    <div class=field><span class=fl>Aktueller Depotwert</span><input type=number id=etf_start step=1000><span class=fu>€</span></div>
+    <div class=field><span class=fl>Monatl. Sparrate</span><input type=number id=sparrate step=50><span class=fu>€/Mon</span></div>
+    <div class=field><span class=fl>Wertsteigerung bis Rente</span><input type=number id=etf_rendite step=0.1><span class=fu>% p.a.</span></div>
+    <div class=field><span class=fl>Wertsteigerung in Rente</span><input type=number id=etf_rendite_rente step=0.1><span class=fu>% p.a.</span></div>
+    <div class=field><span class=fl>ETF-Gebühren p.a.</span><input type=number id=etf_fees step=0.01><span class=fu>% p.a.</span></div>
+    <div class=field><span class=fl>Steuern auf Entnahmen (pauschal)</span><input type=number id=abgaben step=1><span class=fu>%</span></div>
+    <div class=szen style="margin-top:4px">
+     <button class=szb data-tax=20 type=button>20 %</button>
+     <button class=szb data-tax=30 type=button>30 %</button>
+    </div>
+    <p class=hint>ETF wächst im <b>Wert</b> (keine laufende Ausschüttung, wird beim Entnehmen verkauft). Breiter Aktien-ETF langfristig ~5–8 % nominal (Default 6,5). In der Rente konservativer wegen Umschichtung: ~3–5 % (Default 4,5). ETF-Gebühren sind realistisch meist ~0,1–0,3 % p.a. und sollten von der Rendite abgezogen werden. Sparrate bleibt nominal konstant. <b>Steuern auf Entnahmen</b> sind eine einfache Pauschalannahme; ich sehe typischerweise 20–30 % p.a. als sinnvolle Bandbreite. Erbschaften/Übertragungen werden hier ausdrücklich ohne Steuern modelliert.</p>
+   </div>
+
+   <div class=grp>
+    <h2>🏠 Immobilie</h2>
+    <div class=field><span class=fl>Wert heute</span><input type=number id=immo_wert step=10000><span class=fu>€</span></div>
+    <div class=field><span class=fl>Restschuld heute</span><input type=number id=immo_schuld step=10000><span class=fu>€</span></div>
+    <div class=field><span class=fl>Tilgung (Rate)</span><input type=number id=immo_tilgung step=50><span class=fu>€/Mon</span></div>
+    <div class=field><span class=fl>Wertsteigerung</span><input type=number id=immo_wachstum step=0.1><span class=fu>% p.a.</span></div>
+    <div class=field><span class=fl>Netto-Mietrendite</span><input type=number id=immo_rendite step=0.1><span class=fu>% p.a.</span></div>
+    <div class=field><span class=fl>Fürs Alter verkaufen</span><input type=number id=immo_anteil step=5><span class=fu>%</span></div>
+    <p class=hint>Die Immobilie <b>schüttet monatlich aus</b> (Netto-Mietrendite × Wert, nach Kosten/Finanzierung): vor der Rente reinvestiert, in der Rente deckt sie laufend Bedarf. Netto-Mietrendite real ~2–4 % (Default 3), Wertsteigerung ~1–3 % (Default 2). <b>Tilgung</b> geht als Abfluss aus dem Depot und senkt die Restschuld Jahr für Jahr, bis sie 0 ist (Zinsen stecken schon in der Netto-Mietrendite — kein Doppelzählen). „Fürs Alter verkaufen" = Anteil des Eigenkapitals, den du bei Renteneintritt liquidierst (0 % = behalten, wirft weiter Miete ab). Einkommen = Miete + gesetzliche Rente; Erbe zählt nicht als laufendes Einkommen.</p>
+   </div>
+
+   <div class=grp>
+    <h2>🎁 Erbe</h2>
+    <label class=chk><input type=checkbox id=erbe_on checked> Erbe in der Prognose berücksichtigen</label>
+    <div class=field><span class=fl>Erbe Barvermögen (heute)</span><input type=number id=erbe step=10000><span class=fu>€</span></div>
+    <div class=field><span class=fl>Erwartet mit deinem Alter</span><input type=number id=erbe_alter step=1><span class=fu>Jahre</span></div>
+    <p class=hint>Barvermögen fließt im Erbschaftsjahr in den ETF-Topf (heutige Kaufkraft, mit Inflation hochgerechnet). Zeitpunkt = 🎁 im Chart. Häkchen aus = Prognose ganz ohne Erbe. Erbe zählt nicht als laufendes Einkommen; nur Miete und Rente zählen in der Einkommen-Betrachtung.</p>
+    <div class=subh>🏠 Geerbte Immobilie — dieselben Parameter &amp; Berechnung wie deine eigene, aktiv ab Erbschaft</div>
+    <div class=field><span class=fl>Wert (heute)</span><input type=number id=erbe_immo step=10000><span class=fu>€</span></div>
+    <div class=field><span class=fl>Restschuld</span><input type=number id=erbe_immo_schuld step=10000><span class=fu>€</span></div>
+    <div class=field><span class=fl>Tilgung (Rate)</span><input type=number id=erbe_immo_tilgung step=50><span class=fu>€/Mon</span></div>
+    <div class=field><span class=fl>Wertsteigerung</span><input type=number id=erbe_immo_wachstum step=0.1><span class=fu>% p.a.</span></div>
+    <div class=field><span class=fl>Netto-Mietrendite</span><input type=number id=erbe_immo_rendite step=0.1><span class=fu>% p.a.</span></div>
+    <div class=field><span class=fl>Fürs Alter verkaufen</span><input type=number id=erbe_immo_anteil step=5><span class=fu>%</span></div>
+    <p class=hint>Wert 0 = kein Immobilien-Erbe. Ab dem Erbschaftsjahr <b>exakt wie deine eigene Immobilie</b> gerechnet: wirft Miete ab (deckt Bedarf), wächst mit ihrer Wertsteigerung, Restschuld wird getilgt, optionaler Teilverkauf bei Renteneintritt. So siehst du, wie weit die Mieten tragen.</p>
+   </div>
+
+   <div class=grp>
+    <h2>🎚️ Szenario (Annahmen)</h2>
+    <p class=hint>Setzt Inflation + alle Renditen auf typische Spannweiten. Danach frei nachjustieren.</p>
+    <div class=szen>
+     <button class=szb data-s=kons>🛡️ Konservativ</button>
+     <button class=szb data-s=basis>⚖️ Basis</button>
+     <button class=szb data-s=opti>🚀 Optimistisch</button>
+    </div>
+    <div class=field><span class=fl>Inflation</span><input type=number id=inflation step=0.1><span class=fu>% p.a.</span></div>
+    <p class=hint>EZB-Ziel 2 %, langfristig-realistisch ~2,5 %. Konservativ = höhere Inflation + niedrigere Renditen.</p>
+    <div class=actions>
+     <button class=btn id=resetBtn>↺ Zurücksetzen</button>
+     <button class=btn id=istBtn title="Depotwert, Immobilienwert, Restschuld und Tilgung aus der Vermögensseite übernehmen">💰 Ist-Werte übernehmen</button>
+    </div>
+    <p class=hint id=istHint>Übernimmt die berechneten Startwerte aus <a href="/vermoegen">💰 Vermögen</a>
+     (Depot aus dem Export, Immobilien aus Kaufpreis/Vergleichsverkäufen, Restschuld aus dem Kreditvertrag)
+     statt sie von Hand zu schätzen. Überschreibt nur diese vier Felder.</p>
+   </div>
+  </div>
+
+  <!-- ============ ERGEBNIS ============ -->
+  <div>
+   <div class=modeToggle><button class=modebtn data-m=real>Kaufkraft (heute)</button><button class=modebtn data-m=nominal>Nominal</button></div>
+   <div class=verdict id=verdict><div class=vh>…</div><div class=vd></div></div>
+   <div class=kpis id=kpis></div>
+   <div class=chartcard>
+    <h2 style="margin-bottom:6px">Vermögensverlauf</h2>
+    <canvas id=chart></canvas>
+    <div class=legend><span><i class=sw style="border-bottom:3px solid #4f8cff"></i> Liquides Kapital (nominal)</span><span><i class=sw style="border-bottom:3px solid #7ee0a0"></i> Gesamtvermögen inkl. Immobilie</span><span><i class=sw style="border-bottom:2px dashed #9aa4b2"></i> Liquides Kapital real (Kaufkraft heute)</span><span><i class=swv style="border-left:2px dashed #4f8cff"></i> Renteneintritt</span><span><i class=swv style="border-left:2px dashed #f0b46b"></i> 🎁 Erbe</span></div>
+    <div class=hint style="margin-top:8px">↔ Fahre mit der Maus über das Diagramm (oder tippe/ziehe auf dem Handy) — der Strich zeigt für jedes Jahr, was rein- und rausgeht.</div>
+    <div id=yearhead style="font-weight:700;font-size:15px;margin:14px 0 8px"></div>
+    <div class=kpis id=yearkpi></div>
+   </div>
+   <div class=grp>
+    <h2>🔎 Herleitung</h2>
+    <table class=det id=det></table>
+    <p class=disc>Vereinfachte Hochrechnung, keine Steuer-/Abgeltungsteuer- oder Krankenkassen-Effekte, keine Rendite-Schwankungen (fixe Durchschnittswerte).
+    Reale Renditen schwanken stark; nutze die Szenarien als Bandbreite. Erbschaften/Übertragungen werden ohne Steuern modelliert. Dies ist keine Anlageberatung, sondern ein Denk-Werkzeug zum Rumspielen.</p>
+   </div>
+  </div>
+ </div>
+</div>
+<script>
+const FIELDS=['alter','rentenalter','endalter','bedarf','rente_gesetzlich','rente_anpassung','inflation','etf_start','sparrate','etf_rendite','etf_rendite_rente','etf_fees','abgaben','immo_wert','immo_schuld','immo_tilgung','immo_wachstum','immo_rendite','immo_anteil','erbe','erbe_immo','erbe_immo_schuld','erbe_immo_tilgung','erbe_immo_wachstum','erbe_immo_rendite','erbe_immo_anteil','erbe_alter'];
+const DEF={alter:40,rentenalter:67,endalter:90,bedarf:4000,rente_gesetzlich:1500,rente_anpassung:1.5,inflation:2.5,etf_start:100000,sparrate:1000,etf_rendite:6.5,etf_rendite_rente:4.5,etf_fees:0.2,abgaben:20,immo_wert:400000,immo_schuld:200000,immo_tilgung:600,immo_wachstum:2,immo_rendite:3,immo_anteil:0,erbe:200000,erbe_immo:0,erbe_immo_schuld:0,erbe_immo_tilgung:0,erbe_immo_wachstum:2,erbe_immo_rendite:3,erbe_immo_anteil:0,erbe_alter:65,erbe_on:true};
+const SZEN={
+ kons:{inflation:3,etf_rendite:5,etf_rendite_rente:3.5,immo_wachstum:1,abgaben:30},
+ basis:{inflation:2.5,etf_rendite:6.5,etf_rendite_rente:4.5,immo_wachstum:2,abgaben:20},
+ opti:{inflation:2,etf_rendite:8,etf_rendite_rente:5.5,immo_wachstum:3,abgaben:20}
+};
+const $=id=>document.getElementById(id);
+const eur=x=>Math.round(x).toLocaleString('de-DE')+' €';
+const num=v=>{v=String(v==null?'':v).trim().replace(',','.');return v===''?NaN:parseFloat(v);};
+function read(){const o={};FIELDS.forEach(f=>{const v=num($(f).value);o[f]=isFinite(v)?v:DEF[f];});o.erbe_on=$('erbe_on').checked;o.immo_anteil=Math.min(100,Math.max(0,o.immo_anteil));o.abgaben=Math.min(40,Math.max(0,o.abgaben));o.mode=MODE;return o;}
+let LAST=null, CURSOR=null, GEOM=null, MODE='real';   // MODE: 'real'=heutige Kaufkraft (Default) | 'nominal'
+
+function calc(){
+ try{
+ const P=read();
+ const infl=P.inflation/100, gAcc=P.etf_rendite/100, gDec=P.etf_rendite_rente/100;
+ const reApp=P.immo_wachstum/100, reY=P.immo_rendite/100, rAnp=P.rente_anpassung/100, quote=Math.min(0.3,Math.max(0,P.abgaben/100));
+ const yrsAcc=Math.max(0,P.rentenalter-P.alter), yrsRet=Math.max(0,P.endalter-P.rentenalter+1);  // inkl. Endalter
+ const erbeOn=P.erbe_on && (P.erbe>0||P.erbe_immo>0), erbeAge=Math.min(P.endalter,Math.max(P.alter,Math.round(P.erbe_alter)));  // in Horizont geklemmt
+ const rentToday=P.immo_wert*reY/12;
+ const incomeToday=rentToday+P.rente_gesetzlich;
+ // Immobilien-Portfolio: eigene (aktiv ab jetzt) + geerbte (aktiv ab Erbschaft). BEIDE via identische Logik.
+ const own ={val:P.immo_wert, debt:P.immo_schuld, til:P.immo_tilgung, app:P.immo_wachstum/100, y:P.immo_rendite/100, sell:Math.min(100,Math.max(0,P.immo_anteil)), active:true,  sold:false, payoff:null, eigen:true};
+ const heir={val:0, debt:0, til:P.erbe_immo_tilgung, app:P.erbe_immo_wachstum/100, y:P.erbe_immo_rendite/100, sell:Math.min(100,Math.max(0,P.erbe_immo_anteil)), active:false, sold:false, payoff:null, eigen:false};
+ const props=[own,heir];
+ let cap=P.etf_start;
+ let capAtR=null, netWorthAtR=null, propAtR=P.immo_wert, rentAtR=rentToday, debtAtR=P.immo_schuld,
+     payoffAge=null, depl=null, saleAtR=0, erbeNom=0, erbeImmoNom=0;
+ const S=[];
+ for(let a=P.alter;a<=P.endalter;a++){
+   const t=a-P.alter, iF=Math.pow(1+infl,t), capStart=cap;
+   let inErbe=0,inSale=0,inSpar=0,inRent=0,inPension=0,outSpend=0,outTilgung=0,outTax=0,inErbeImmo=0,rentEigen=0,rentErbe=0;
+   if(erbeOn && a===erbeAge){                                            // Erbschaft: Bar -> Topf, geerbte Immobilie aktivieren
+     inErbe=P.erbe*iF; erbeNom=inErbe;
+     heir.active=true; heir.val=P.erbe_immo*Math.pow(1+heir.app,t); heir.debt=P.erbe_immo_schuld;
+     inErbeImmo=heir.val; erbeImmoNom=heir.val;
+   }
+   for(const pr of props){ if(!pr.active) continue;                     // JE Immobilie exakt gleiche Rechnung
+     const rent=Math.max(0,pr.val)*pr.y; if(pr.eigen) rentEigen+=rent; else rentErbe+=rent;
+     if(a===P.rentenalter && pr.sell>0 && !pr.sold){                    // Teilverkauf bei Renteneintritt
+       const eq=Math.max(0,pr.val-pr.debt); inSale+=eq*(pr.sell/100);
+       const keep=1-pr.sell/100; pr.val*=keep; pr.debt*=keep; pr.sold=true; }
+     if(pr.debt>1){ const til=Math.min(pr.til*12, pr.debt); pr.debt-=til; outTilgung+=til; }   // Tilgung
+     if(pr.debt<=1 && pr.payoff===null && (pr.eigen?P.immo_schuld:P.erbe_immo_schuld)>1) pr.payoff=a;
+   }
+   const rent=rentEigen+rentErbe;
+   if(a<P.rentenalter){ inSpar=P.sparrate*12; inRent=rent; }            // Ansparphase: sparen + Miete rein
+   else { inRent=rent; inPension=P.rente_gesetzlich*12*Math.pow(1+rAnp,t); outSpend=P.bedarf*12*iF;
+     const netGap=outSpend-inPension-inRent; if(netGap>0) outTax=netGap*quote/(1-quote); } // Rentenphase inkl. Endalter; Abgaben auf Netto-Entnahme
+   if(a===P.rentenalter){ capAtR=capStart+inErbe+inSale; saleAtR=inSale;
+     let eqS=0,valS=0,rentS=0,debtS=0;
+     for(const pr of props){ if(!pr.active) continue; eqS+=Math.max(0,pr.val-pr.debt); valS+=pr.val; rentS+=Math.max(0,pr.val)*pr.y; debtS+=pr.debt; }
+     netWorthAtR=capAtR+eqS; propAtR=valS; rentAtR=rentS/12; debtAtR=debtS; }
+   cap=capStart+inErbe+inSale+inSpar+inRent+inPension-outSpend-outTilgung-outTax;  // Kapital nach Cashflow
+   const baseR=(a<P.rentenalter)?gAcc:gDec; const effR=Math.max(-0.99,baseR-P.etf_fees/100); const growth=cap>0?cap*effR:0;           // Wertentwicklung (kein Zins auf leeren Topf, Gebühren abgezogen)
+   const capEnd=cap+growth;
+   let eqNow=0,valNow=0,debtNow=0;
+   for(const pr of props){ if(!pr.active) continue; pr.val*=(1+pr.app); eqNow+=Math.max(0,pr.val-pr.debt); valNow+=pr.val; debtNow+=pr.debt; }   // Immobilien wachsen
+   if(capEnd<0 && depl===null) depl=a;
+   S.push({age:a, cap:capEnd, net:capEnd+eqNow, real:capEnd/Math.pow(1+infl,t+1), prop:valNow, debt:debtNow,
+     capStart, inSpar, inRent, inRentErbe:rentErbe, inPension, inErbe, inErbeImmo, inSale, outSpend, outTilgung, outTax, growth});
+   cap=capEnd;
+ }
+ payoffAge=own.payoff;                                                  // "schuldenfrei mit" bezieht sich auf die eigene Immobilie
+ if(capAtR===null){ capAtR=S.length?S[0].cap:P.etf_start; netWorthAtR=capAtR; }
+ const endCap=S.length?S[S.length-1].cap:0, propEnd=(own.active?own.val:0)+(heir.active?heir.val:0);
+ // Kennzahlen konsistent aus der Sim (Endkapital ist linear in Zusatz-Kapital)
+ const discRet=Math.pow(1+gDec,yrsRet);
+ const surplusAtR=discRet>0?endCap/discRet:endCap;                     // >0 Überschuss / <0 Lücke bei Rente
+ const FVf=gAcc>1e-9?(1+gAcc)*(Math.pow(1+gAcc,yrsAcc)-1)/gAcc:yrsAcc; // FV von 1/Jahr über Ansparphase
+ const impact=12*FVf*discRet;                                          // Endkapital-Wirkung von 1€/Mon mehr sparen
+ const extraM=(endCap<0&&impact>0)?(-endCap)/impact:0;
+ const lessM=(endCap>0&&impact>0)?Math.min(P.sparrate,endCap/impact):0;
+ const inflAcc=Math.pow(1+infl,yrsAcc), inflEnd=Math.pow(1+infl,Math.max(0,P.endalter-P.alter+1));
+ render(P,{yrsAcc,yrsRet,capAtR,netWorthAtR,propAtR,propEnd,rentToday,rentAtR,sale:saleAtR,erbeNom,erbeImmoNom,erbeOn,erbeAge,
+   debtAtR,payoffAge,endCap,depl,surplusAtR,extraM,lessM,inflAcc,inflEnd,incomeToday,S});
+ LAST={S,P,erbeOn,erbeAge};
+ save();
+ }catch(err){
+   const v=$('verdict'); if(v){ v.className='verdict bad';
+     v.querySelector('.vh').textContent='⚠ Fehler in der Berechnung';
+     v.querySelector('.vd').textContent=String((err&&err.message)||err); }
+   if(window.console) console.error(err);
+ }
+}
+
+function render(P,R){
+ const M=(nom,defl)=>MODE==='real'?eur(nom/defl):eur(nom);
+ const ALT=(nom,defl)=>MODE==='real'?eur(nom)+' nominal':eur(nom/defl)+' heute';
+ // Verdict
+ const v=$('verdict');
+ if(R.depl!==null){
+   v.className='verdict bad';
+   v.querySelector('.vh').textContent=(R.depl<P.endalter)?'⚠ Geld reicht nur bis Alter '+R.depl:'⚠ Knapp — reicht nicht ganz bis '+P.endalter;
+   let d='Am Ende fehlen <b>'+M(Math.max(0,-R.endCap),R.inflEnd)+'</b>.';
+   if(R.extraM>0) d+=' Mit <b>'+eur(R.extraM)+' / Monat</b> zusätzlich wäre es gedeckt — oder später in Rente, weniger Bedarf, mehr Miete/Verkauf der Immobilie.';
+   v.querySelector('.vd').innerHTML=d;
+ }else{
+   v.className='verdict ok';
+   v.querySelector('.vh').textContent='✓ Dein Vermögen trägt bis Alter '+P.endalter;
+   let d='Liquides Restvermögen mit '+P.endalter+': <b>'+M(R.endCap,R.inflEnd)+'</b> ('+ALT(R.endCap,R.inflEnd)+'). Puffer bei Renteneintritt: <b>'+M(R.surplusAtR,R.inflAcc)+'</b>.';
+   if(R.lessM>1) d+=' Du könntest ~<b>'+eur(R.lessM)+' / Monat</b> weniger sparen und kämst noch aus.';
+   v.querySelector('.vd').innerHTML=d;
+ }
+ // KPIs
+ const gapPos=R.surplusAtR>=0;
+ const bedarfHeute=Math.max(0,P.bedarf-P.rente_gesetzlich-R.rentToday);
+ const kp=[
+  {v:R.yrsAcc+' J.',l:'Jahre bis zur Rente',s:P.alter+' → '+P.rentenalter},
+  {v:eur(R.incomeToday)+' /M',l:'Einkommen · Miete + Rente',s:'Erbe nicht enthalten'},
+  {v:M(R.capAtR,R.inflAcc),l:'Liquides Kapital bei Rente',s:'≈ '+ALT(R.capAtR,R.inflAcc)},
+  {v:M(R.netWorthAtR,R.inflAcc),l:'Gesamtvermögen bei Rente',s:'inkl. Immobilie · ≈ '+ALT(R.netWorthAtR,R.inflAcc)},
+  {v:M(Math.abs(R.surplusAtR),R.inflAcc),l:(gapPos?'Überschuss':'Lücke')+' bei Renteneintritt',s:'≈ '+ALT(Math.abs(R.surplusAtR),R.inflAcc)+' · '+R.yrsRet+' J. Entnahme',c:gapPos?'pos':'neg'},
+  {v:eur(bedarfHeute)+' /M',l:'Aus Depot zu decken (heute)',s:eur(P.bedarf)+' − '+eur(P.rente_gesetzlich)+' Rente − '+eur(R.rentToday)+' Miete'},
+  (R.depl!==null)?{v:eur(R.extraM)+' /M',l:'Zusätzlich nötige Sparrate',s:'zu bereits '+eur(P.sparrate)+' /Mon',c:'neg'}
+             :{v:'gedeckt ✓',l:'Zusätzliche Sparrate nötig',s:'aktueller Plan reicht',c:'pos'}
+ ];
+ $('kpis').innerHTML=kp.map(k=>'<div class=kpi><div class="v '+(k.c||'')+'">'+k.v+'</div><div class=l>'+k.l+'</div><div class=s>'+k.s+'</div></div>').join('');
+ // Herleitung
+ const det=[
+  ['ETF/Depot heute',eur(P.etf_start)],
+  ['+ Sparplan',eur(P.sparrate)+' /Mon · '+R.yrsAcc+' Jahre'],
+  ['ETF-Gebühren',P.etf_fees>0?P.etf_fees.toFixed(2)+' % p.a.':'—'],
+  ['Immobilienwert heute → Rente → '+P.endalter,eur(P.immo_wert)+' → '+eur(R.propAtR)+' → '+eur(R.propEnd)],
+  ['Einkommen heute · Miete + Rente',eur(R.rentToday)+' /Mon Miete + '+eur(P.rente_gesetzlich)+' /Mon Rente'],
+  ['Netto-Miete heute → bei Rente',eur(R.rentToday)+' /Mon → '+eur(R.rentAtR)+' /Mon'],
+  ['Restschuld heute → bei Rente',eur(P.immo_schuld)+' → '+eur(R.debtAtR)],
+  ['Tilgung',P.immo_tilgung>0?eur(P.immo_tilgung)+' /Mon'+(R.payoffAge?' · schuldenfrei mit '+R.payoffAge:(P.immo_schuld>0?' · bleibt Restschuld':'')):'—'],
+  ['Immobilien-Verkauf bei Rente',R.sale>0?eur(R.sale):'—'],
+  ['Erbe bar',(R.erbeOn&&P.erbe>0)?eur(P.erbe)+' (heute) → '+eur(R.erbeNom)+' mit '+R.erbeAge+' · kein laufendes Einkommen':'—'],
+  ['Erbe Immobilie',(R.erbeOn&&P.erbe_immo>0)?eur(P.erbe_immo)+' (heute) → '+eur(R.erbeImmoNom)+' mit '+R.erbeAge+' · Miete '+eur(R.erbeImmoNom*P.erbe_immo_rendite/100/12)+'/Mon · kein laufendes Einkommen':'—'],
+  ['Gesetzl. Rente heute → bei Rente',eur(P.rente_gesetzlich)+' /Mon → '+eur(P.rente_gesetzlich*Math.pow(1+P.rente_anpassung/100,R.yrsAcc))+' /Mon'],
+  ['Bedarf 1. Rentenjahr (nominal)',eur(P.bedarf*12*R.inflAcc)+' /Jahr'],
+  ['Entnahmedauer',R.yrsRet+' Jahre']
+ ];
+ $('det').innerHTML=det.map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td></tr>').join('');
+ if(CURSOR==null || CURSOR<P.alter || CURSOR>P.endalter) CURSOR=P.rentenalter;   // Standard: Renteneintritt
+ drawChart(R.S,P,{erbeOn:R.erbeOn,erbeAge:R.erbeAge,cursor:CURSOR});
+ renderYear(R.S,P,CURSOR);
+}
+// Jahres-Detail (Zuflüsse/Abflüsse des per Cursor gewählten Jahres) als KPIs unter dem Chart
+function renderYear(S,P,age){
+ const e=S.find(s=>s.age===age); if(!e)return;
+ let baseYear=2026; try{baseYear=new Date().getFullYear();}catch(_){}
+ const yr=baseYear+(age-P.alter);
+ const phase=(age<P.rentenalter)?'Ansparphase':(age<P.endalter?'Rentenphase':'Planungsende');
+ const infl=P.inflation/100, t=age-P.alter;
+ const dfF=MODE==='real'?Math.pow(1+infl,t):1, dfE=MODE==='real'?Math.pow(1+infl,t+1):1;
+ const m=x=>MODE==='real'?eur(x/dfF):eur(x); const mE=x=>MODE==='real'?eur(x/dfE):eur(x); // Cashflows (Jahresmitte) / Stände (Jahresende)
+ const mNom=x=>eur(x), mReal=x=>eur(x/dfE);
+ const rein=e.inSpar+e.inRent+e.inPension+e.inErbe+e.inSale;
+ const income=e.inRent+e.inPension;
+ const raus=e.outSpend+(e.outTilgung||0)+(e.outTax||0), delta=rein-raus+e.growth;
+ const cIn=[], cOut=[];
+ if(e.inSpar) cIn.push('Sparrate '+m(e.inSpar));
+ if(e.inRent){ const rOwn=e.inRent-(e.inRentErbe||0); if(rOwn>0.5) cIn.push('🏠 Miete '+m(rOwn)); if(e.inRentErbe>0.5) cIn.push('🏠 Miete geerbt '+m(e.inRentErbe)); }
+ if(e.inPension) cIn.push('gesetzl. Rente '+m(e.inPension));
+ if(e.inErbe) cIn.push('🎁 Erbe '+m(e.inErbe));
+ if(e.inErbeImmo) cIn.push('🏠 Immobilie geerbt '+mNom(e.inErbeImmo)+' nominal'+(MODE==='real'?' · ≈ '+mReal(e.inErbeImmo)+' heute':'')+' · ohne Steuern');
+ if(e.inSale) cIn.push('🏠 Verkauf '+m(e.inSale));
+ if(e.outSpend) cOut.push('Bedarf '+m(e.outSpend));
+ if(e.outTax) cOut.push('Steuern '+m(e.outTax));
+ if(e.outTilgung) cOut.push('🏠 Tilgung '+m(e.outTilgung));
+ const g=e.growth;
+ const capAlt=MODE==='real'?eur(e.cap)+' nominal':eur(e.real)+' heute';
+ const altF=x=>MODE==='real'?eur(x)+' nom.':eur(x/dfF)+' heute';
+ const altE=x=>MODE==='real'?eur(x)+' nom.':eur(x/dfE)+' heute';
+ const tiles=[
+  {v:'+ '+m(rein),l:'Rein · Zuflüsse /Jahr',c:'pos',s:'≈ '+altF(rein)+(cIn.length?' — '+cIn.join(' · '):'')},
+  {v:'+ '+m(income),l:'Einkommen · Miete + Rente',c:'pos',s:'≈ '+altF(income)+' · Erbe nicht enthalten'},
+  {v:raus?('− '+m(raus)):'—',l:'Raus · Abflüsse /Jahr',c:raus?'neg':'',s:raus?('≈ '+altF(raus)+(cOut.length?' — '+cOut.join(' · '):'')):'noch keine'},
+  {v:(g>=0?'+ ':'− ')+m(Math.abs(g)),l:'Wertentwicklung Depot',c:g>=0?'pos':'neg',s:'≈ '+altF(Math.abs(g))+' · Kurs-/Zinsgewinn'},
+  {v:(delta>=0?'+ ':'− ')+m(Math.abs(delta)),l:'Netto-Veränderung Depot',c:delta>=0?'pos':'neg',s:'≈ '+altF(Math.abs(delta))+' · Rein−Raus+Wertentw.'},
+  {v:mE(e.cap),l:'Liquides Kapital (Jahresende)',s:'≈ '+capAlt},
+  {v:mE(e.net),l:'Gesamtvermögen',s:'≈ '+altE(e.net)+' · Immobilie '+mE(e.prop)+(e.debt>1?' · Restschuld '+mE(e.debt):'')}
+ ];
+ const erbeLabel=e.inErbeImmo>0?(MODE==='real'?'+'+mNom(e.inErbeImmo)+' nominal · ≈ '+mReal(e.inErbeImmo)+' heute':'+'+mNom(e.inErbeImmo)+' nominal'):'';
+ $('yearhead').innerHTML='📅 Alter '+age+' · ~'+yr+' · <span style="color:#9aa4b2">'+phase+'</span>'+(e.inErbeImmo>0?' · <span style="color:#f0b46b">🎁 Immobilie geerbt ('+erbeLabel+')</span>':'');
+ $('yearkpi').innerHTML=tiles.map(k=>'<div class=kpi><div class="v '+(k.c||'')+'">'+k.v+'</div><div class=l>'+k.l+'</div>'+(k.s?'<div class=s>'+k.s+'</div>':'')+'</div>').join('');
+}
+function setCursor(age){ if(!LAST)return; CURSOR=age;
+ drawChart(LAST.S,LAST.P,{erbeOn:LAST.erbeOn,erbeAge:LAST.erbeAge,cursor:age});
+ renderYear(LAST.S,LAST.P,age);
+}
+
+function kfmt(v){const a=Math.abs(v);if(a>=1e6)return (v/1e6).toLocaleString('de-DE',{maximumFractionDigits:1})+' Mio';if(a>=1e3)return Math.round(v/1e3)+'k';return Math.round(v)+'';}
+function drawChart(S,P,ex){
+ ex=ex||{};
+ const cv=$('chart'); if(!cv||!S.length)return;
+ const W=(cv.parentElement.clientWidth||760), Hh=280, dpr=window.devicePixelRatio||1;
+ cv.width=W*dpr; cv.height=Hh*dpr; cv.style.width='100%'; cv.style.height=Hh+'px';
+ const ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,W,Hh);
+ const padL=62,padR=14,padT=16,padB=24, x0=padL,x1=W-padR,y0=padT,y1=Hh-padB;
+ const aMin=S[0].age,aMax=S[S.length-1].age;
+ const infl=P.inflation/100;
+ const seriesMain=MODE==='real'?S.map(s=>s.real):S.map(s=>s.cap);
+ const seriesTotal=MODE==='real'?S.map(s=>s.net/Math.pow(1+infl,s.age-P.alter+1)):S.map(s=>s.net);
+ const seriesAlt=MODE==='real'?S.map(s=>s.cap):S.map(s=>s.real);
+ const vals=seriesMain.concat(seriesTotal).concat(seriesAlt);
+ let vMax=Math.max(0,...vals), vMin=Math.min(0,...vals); if(vMax===vMin)vMax=vMin+1;
+ const p=(vMax-vMin)*0.08; vMax+=p; vMin-=p;
+ const sx=a=>x0+(a-aMin)/((aMax-aMin)||1)*(x1-x0);
+ const sy=v=>y1-(v-vMin)/(vMax-vMin)*(y1-y0);
+ GEOM={x0,x1,aMin,aMax,W};
+ ctx.font='11px system-ui,Arial'; ctx.textBaseline='middle';
+ for(let i=0;i<=4;i++){const val=vMin+(vMax-vMin)*i/4, y=sy(val);
+   ctx.strokeStyle=Math.abs(val)<1e-6?'#3a4252':'#20242e'; ctx.lineWidth=1;
+   ctx.beginPath();ctx.moveTo(x0,y);ctx.lineTo(x1,y);ctx.stroke();
+   ctx.fillStyle='#6b7280';ctx.textAlign='right';ctx.fillText(kfmt(val),x0-8,y);}
+ const xr=sx(P.rentenalter);
+ ctx.strokeStyle='#4f8cff';ctx.setLineDash([4,4]);ctx.lineWidth=1;
+ ctx.beginPath();ctx.moveTo(xr,y0);ctx.lineTo(xr,y1);ctx.stroke();ctx.setLineDash([]);
+ if(ex.erbeOn && ex.erbeAge>=aMin && ex.erbeAge<=aMax){const xe=sx(ex.erbeAge);
+   ctx.strokeStyle='#f0b46b';ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(xe,y0);ctx.lineTo(xe,y1);ctx.stroke();ctx.setLineDash([]);
+   ctx.fillStyle='#f0b46b';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText('🎁',xe,y0);}
+ ctx.fillStyle='#6b7280';ctx.textAlign='center';ctx.textBaseline='top';
+ for(let a=Math.ceil(aMin/5)*5;a<=aMax;a+=5)ctx.fillText(a,sx(a),y1+6);
+ const yBase=sy(Math.max(vMin,Math.min(vMax,0)));
+ ctx.beginPath();S.forEach((s,i)=>{const x=sx(s.age),y=sy(seriesTotal[i]);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
+ ctx.strokeStyle='#7ee0a0';ctx.lineWidth=1.5;ctx.stroke();
+ ctx.beginPath();S.forEach((s,i)=>{const x=sx(s.age),y=sy(seriesAlt[i]);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
+ ctx.strokeStyle='#9aa4b2';ctx.lineWidth=1.4;ctx.setLineDash([5,3]);ctx.stroke();ctx.setLineDash([]);
+ ctx.beginPath();S.forEach((s,i)=>{const x=sx(s.age),y=sy(seriesMain[i]);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
+ ctx.lineTo(sx(aMax),yBase);ctx.lineTo(sx(aMin),yBase);ctx.closePath();
+ ctx.fillStyle='rgba(79,140,255,0.12)';ctx.fill();
+ ctx.beginPath();S.forEach((s,i)=>{const x=sx(s.age),y=sy(seriesMain[i]);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
+ ctx.strokeStyle='#4f8cff';ctx.lineWidth=2;ctx.stroke();
+ // Jahres-Cursor (Scrubber) + Punkte auf beiden Linien
+ if(ex.cursor!=null && ex.cursor>=aMin && ex.cursor<=aMax){
+   const xc=sx(ex.cursor);
+   ctx.strokeStyle='#e6e6e6';ctx.globalAlpha=0.55;ctx.lineWidth=1;
+   ctx.beginPath();ctx.moveTo(xc,y0);ctx.lineTo(xc,y1);ctx.stroke();ctx.globalAlpha=1;
+   const e=S.find(s=>s.age===ex.cursor);
+   if(e){ const idx=S.findIndex(s=>s.age===ex.cursor);
+     ctx.fillStyle='#7ee0a0';ctx.beginPath();ctx.arc(xc,sy(seriesTotal[idx]),3.5,0,6.29);ctx.fill();
+     ctx.fillStyle='#9aa4b2';ctx.beginPath();ctx.arc(xc,sy(seriesAlt[idx]),3.5,0,6.29);ctx.fill();
+     ctx.fillStyle='#4f8cff';ctx.beginPath();ctx.arc(xc,sy(seriesMain[idx]),3.5,0,6.29);ctx.fill(); }
+ }
+}
+
+// ---- Persistenz: Server (settings-Tabelle) primär, localStorage als Cache ----
+let saveTimer=null;
+function save(){
+ const o=read();
+ try{localStorage.setItem('vorsorge_plan',JSON.stringify(o));}catch(e){}
+ $('savestat').textContent='… speichere';
+ clearTimeout(saveTimer);
+ saveTimer=setTimeout(async()=>{
+   try{const r=await fetch('/api/vorsorge',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan:o})});
+     $('savestat').textContent=r.ok?'gespeichert ✓':'lokal gespeichert';}
+   catch(e){$('savestat').textContent='lokal gespeichert (Server offline)';}
+ },600);
+}
+function setAll(obj){FIELDS.forEach(f=>{if(obj[f]!==undefined)$(f).value=obj[f];});
+ if(obj.erbe_on!==undefined)$('erbe_on').checked=!!obj.erbe_on;
+ if(obj.mode) MODE=obj.mode;}
+function setMode(m){ MODE=m; document.querySelectorAll('.modebtn').forEach(b=>b.classList.toggle('on',b.dataset.m===m)); calc(); }
+async function load(){
+ let data=null;
+ try{const r=await fetch('/api/vorsorge'); if(r.ok){const j=await r.json(); if(j&&j.plan)data=j.plan;}}catch(e){}
+ if(!data){try{data=JSON.parse(localStorage.getItem('vorsorge_plan')||'null');}catch(e){}}
+ setAll(Object.assign({},DEF,data||{}));
+ FIELDS.forEach(f=>{$(f).addEventListener('input',calc);$(f).addEventListener('change',calc);});
+ $('erbe_on').addEventListener('change',calc);
+ document.querySelectorAll('.szb').forEach(b=>{b.onclick=()=>{if(b.dataset.s){const s=SZEN[b.dataset.s];Object.keys(s).forEach(k=>$(k).value=s[k]);calc();}else if(b.dataset.tax!=null){$('abgaben').value=b.dataset.tax;calc();}};});
+ $('resetBtn').onclick=()=>{setAll(DEF);calc();};
+ $('istBtn').onclick=async()=>{
+  const h=$('istHint'), old=h.innerHTML;
+  try{
+   const d=await (await fetch('/api/vermoegen')).json();
+   if(d.fehler||!d.vorsorge){h.innerHTML='<b style="color:#ff8a8a">Ist-Werte nicht verfügbar:</b> '+(d.fehler||'keine Daten');return;}
+   const v=d.vorsorge;
+   ['etf_start','immo_wert','immo_schuld','immo_tilgung'].forEach(k=>{if(v[k]!=null)$(k).value=v[k];});
+   calc(); save();
+   const de=d.stichtag.slice(8)+'.'+d.stichtag.slice(5,7)+'.'+d.stichtag.slice(0,4);
+   h.innerHTML='<b style="color:#7ee0a0">Übernommen</b> (Stand '+de+'): Depot '+
+     v.etf_start.toLocaleString('de-DE')+' €, Immobilien '+v.immo_wert.toLocaleString('de-DE')+
+     ' € (Mittelwert der Spanne), Restschuld '+v.immo_schuld.toLocaleString('de-DE')+' €.';
+   setTimeout(()=>{h.innerHTML=old;},12000);
+  }catch(e){h.innerHTML='<b style="color:#ff8a8a">Laden fehlgeschlagen:</b> '+e;}
+ };
+ document.querySelectorAll('.modebtn').forEach(b=>{b.classList.toggle('on',b.dataset.m===MODE);b.onclick=()=>setMode(b.dataset.m);});
+ // Jahres-Scrubber: Maus/Touch über dem Chart wählt das Jahr
+ const cv=$('chart'); cv.style.cursor='crosshair';
+ const toAge=clientX=>{const rect=cv.getBoundingClientRect(); if(!GEOM||!rect.width)return null;
+   const mx=(clientX-rect.left)*(GEOM.W/rect.width);
+   let a=Math.round(GEOM.aMin+(mx-GEOM.x0)/((GEOM.x1-GEOM.x0)||1)*(GEOM.aMax-GEOM.aMin));
+   return Math.max(GEOM.aMin,Math.min(GEOM.aMax,a));};
+ cv.addEventListener('mousemove',e=>{const a=toAge(e.clientX);if(a!=null)setCursor(a);});
+ cv.addEventListener('touchstart',e=>{const a=toAge(e.touches[0].clientX);if(a!=null){setCursor(a);e.preventDefault();}},{passive:false});
+ cv.addEventListener('touchmove',e=>{const a=toAge(e.touches[0].clientX);if(a!=null){setCursor(a);e.preventDefault();}},{passive:false});
+ window.addEventListener('resize',()=>{if(LAST)drawChart(LAST.S,LAST.P,{erbeOn:LAST.erbeOn,erbeAge:LAST.erbeAge,cursor:CURSOR});});
+ calc();
+ $('savestat').textContent=data?'geladen ✓':'Standardwerte';
+}
+load();
+</script></body></html>

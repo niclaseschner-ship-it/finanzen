@@ -1,0 +1,76 @@
+{
+  "_hinweis": "VORLAGE für die Vermögensansicht. Kopieren nach positionen.json (bleibt lokal, siehe .gitignore). Hier stehen NUR Dinge, die nirgends maschinell stehen: Kaufpreise, Anteile, Kreditkonditionen, Bewertungsparameter. Salden und Depotbestände liest vermoegen.py direkt aus den Export-Dateien. Danach: python vermoegen/vermoegen.py",
+
+  "_stichtag": "Datum, auf das sich der Snapshot bezieht — üblicherweise das Datum der Exporte.",
+  "stichtag": "2026-01-31",
+
+  "sicht": "Haushalt Musterfrau",
+  "sicht_hinweis": "Wessen Vermögen gezählt wird und mit welchem Anteil. Erscheint als Fußnote in der Ansicht — hier gehört hin, was sonst niemand nachvollziehen kann (z.B. Erbanteile, hälftige Zurechnung).",
+
+  "_spanne_hinweis": "Optional. Ergänzt die Zeile unter dem Nettovermögen und erklärt, woher die Spannbreite kommt (meist das grob bewertete Objekt). Leer lassen = Satzteil fällt weg.",
+  "spanne_hinweis": "im Wesentlichen aus Musterstadt",
+
+  "_nicht_enthalten": "Optional. Was bewusst NICHT mitgezählt wird — erscheint als Fußnote. Wichtig für die Nachvollziehbarkeit: sonst rätselt man später, warum eine Position fehlt. Leer lassen = Satz fällt weg.",
+  "nicht_enthalten": "Einzelaktien und Kleinanlagen (nachzutragen), Auto (abgeschrieben), Mietkaution (Durchlaufposten, netto null).",
+
+  "_konten": "Girokonten, Tagesgeld, Sparkonten. 'datei' ist relativ: 'konten/...' liegt im Eingangsordner des Projekts, 'vermoegen/...' im Vermögensordner. 'format' ist 'dkb' oder 'gls'. Gelesen wird nur der SALDO, keine Umsätze — deshalb keine Doppelzählung mit der Ausgaben-Statistik.",
+  "konten": [
+    {
+      "name": "Bank Haushalt",
+      "iban": "DE00000000000000000001",
+      "format": "dkb",
+      "datei": "konten/31-01-2026_Umsatzliste_Girokonto_DE00000000000000000001.csv"
+    },
+    {
+      "name": "Bank Tagesgeld",
+      "iban": "DE00000000000000000003",
+      "format": "dkb",
+      "datei": "vermoegen/eingang/31-01-2026_Umsatzliste_Tagesgeld_DE00000000000000000003.csv"
+    }
+  ],
+
+  "_depots": "Depot-Export der Bank (Bestandsliste, kein Umsatzexport).",
+  "depots": [
+    { "name": "Bank Depot 123456789", "datei": "vermoegen/depot/depot-export-31.01.2026.csv" }
+  ],
+
+  "_immobilien": "Bewertung ist immer eine Schätzung — sie wird deshalb hergeleitet statt behauptet. 'anteil': 1.0 = ganz, 0.333 = ein Drittel. 'guete': 'exakt' | 'gut' | 'grob' (erscheint als Etikett neben dem Wert). 'methode': 'vergleichswert_index' = realer Ankerpreis, mit einem Preisindex auf heute fortgeschrieben. 'spanne_pct': Unsicherheit als Bandbreite, 0.05 = ±5 %. 'gegenprobe' und 'anker_quelle' sind Freitext und erscheinen unter 'Herleitung der Bewertungen' — hier gehört die Rechnung hin, die man in einem Jahr nicht mehr erinnert.",
+  "immobilien": [
+    {
+      "id": "musterstadt",
+      "name": "Musterstadt, Musterstraße 1",
+      "detail": "Eigentumswohnung, 75 m², 2. OG, Baujahr 1985, vermietet",
+      "anteil": 1.0,
+      "anteil_text": "je 1/2 zwei Personen = 1/1 Haushalt",
+      "guete": "gut",
+      "methode": "vergleichswert_index",
+      "anker_wert": 200000,
+      "anker_datum": "2021-06",
+      "anker_quelle": "Kaufpreis lt. Kaufvertrag, ohne Nebenkosten",
+      "index_name": "Beispiel-Preisindex, Eigentumswohnungen",
+      "index_von": 220.0,
+      "index_von_stand": "2021-06",
+      "index_bis": 215.0,
+      "index_bis_stand": "2025-12",
+      "spanne_pct": 0.05,
+      "gegenprobe": "200.000 € / 75 m² = 2.667 €/m² gegen 3.100 €/m² Durchschnitt vor Ort = 14 % darunter, plausibel für Baujahr und Lage."
+    }
+  ],
+
+  "_darlehen": "Wird aus den Konditionen auf den Stichtag gerechnet (Annuität), nicht abgeschrieben — deshalb 'exakt'. 'objekt' verweist auf immobilien[].id, damit die Ansicht je Objekt netto rechnen kann. 'zins_nominal': 0.018 = 1,8 %. 'verifikation' ist Freitext: womit wurde der gerechnete Stand gegengeprüft (z.B. Kontoauszug vom …).",
+  "darlehen": [
+    {
+      "id": "darlehen-musterstadt",
+      "objekt": "musterstadt",
+      "name": "Bausparkasse, Darlehen Nr. 000000",
+      "konto": "DE00000000000000000005",
+      "betrag": 150000.0,
+      "zins_nominal": 0.018,
+      "rate": 550.0,
+      "erste_rate": "2021-08-01",
+      "zinsbindung_bis": "2031-07-31",
+      "anteil": 1.0,
+      "verifikation": "Gerechneter Stand gegen Kontoauszug 12/2025 geprüft, Abweichung < 50 €."
+    }
+  ]
+}

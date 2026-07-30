@@ -1,0 +1,141 @@
+<!doctype html><html lang=de><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><title>Finanzen · Verträge</title>
+<style>
+ body{font-family:system-ui,Arial,sans-serif;margin:0;background:#0f1117;color:#e6e6e6;font-size:14px}
+ .bar{position:sticky;top:0;background:#11141c;padding:10px;border-bottom:1px solid #262b36;display:flex;gap:10px;align-items:center;z-index:5}
+ a{color:#9aa4b2;text-decoration:none;font-weight:600}
+ .wrap{padding:16px 28px;max-width:1600px;margin:0 auto}
+ .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:8px 0 18px}
+ .kpi{background:#171a23;border:1px solid #262b36;border-radius:12px;padding:14px}
+ .kpi .v{font-size:22px;font-weight:700}.kpi .l{color:#9aa4b2;font-size:12px;margin-top:3px}
+ table{width:100%;border-collapse:collapse}td,th{padding:6px 8px;border-bottom:1px solid #1e232e;vertical-align:middle}
+ th{position:sticky;top:48px;background:#11141c;color:#9aa4b2;text-align:left;cursor:default}
+ .r{text-align:right;white-space:nowrap}
+ select,input{background:#1b1f2a;color:#e6e6e6;border:1px solid #2c323f;border-radius:7px;padding:5px 7px;font-size:13px}
+ .nm{width:230px} .b{background:#222a38;border:1px solid #2c323f;color:#cbd5e1;border-radius:6px;padding:4px 9px;cursor:pointer;font-weight:600}
+ .b.ok{background:#16301d;border-color:#2c6b3f;color:#7ee0a0} .b.no{background:#301717;border-color:#6b2c2c;color:#ff8a8a}
+ .pill{font-size:11px;border-radius:6px;padding:1px 7px}
+ .s-confirmed{background:#16301d;color:#7ee0a0}.s-candidate{background:#2a2f3a;color:#cbd5e1}.s-rejected{background:#301717;color:#ff8a8a}
+ .sepa{color:#7ee0a0;font-size:11px}.karte{color:#9aa4b2;font-size:11px}
+ .ein{color:#7ee0a0}.aus{color:#ff8a8a}
+ .zw{color:#7f9cc7;font-size:11px;margin-top:3px}
+ .akt{background:#16301d;color:#7ee0a0}.exp{background:#3a2a17;color:#f0b46b}
+ tr.expired{opacity:.6}
+ .tgl{background:#222a38;border:1px solid #2c323f;color:#9aa4b2;border-radius:6px;cursor:pointer;padding:0 6px;font-size:12px}
+ .man{color:#f0b46b;font-size:11px}.man .rs{color:#7f9cc7;cursor:pointer;text-decoration:underline}
+ .cnt{background:#222a38;border:1px solid #2c323f;color:#cbd5e1;border-radius:6px;padding:2px 8px;cursor:pointer;font-size:13px}
+ .up{color:#ff8a8a;font-size:11px}.dn{color:#7ee0a0;font-size:11px}
+ #ov{position:fixed;inset:0;background:#000a;display:none;z-index:60;align-items:center;justify-content:center}
+ #mod{background:#11141c;border:1px solid #3a4252;border-radius:12px;max-width:760px;width:92%;max-height:80vh;overflow:auto;padding:16px;box-shadow:0 12px 40px #000b}
+ #mod h3{margin:0 0 4px}#mod .x{float:right;background:#2a3343;border:0;color:#cbd5e1;border-radius:7px;padding:5px 10px;cursor:pointer}
+ #mod table{font-size:13px}#mod td,#mod th{padding:5px 8px}
+ tr.rej{opacity:.45} .hint{color:#6b7280;font-size:12px}
+ #msg{margin-left:auto;color:#9aa4b2}
+</style></head><body>
+<div class=bar>
+ <a href="/">✏️ Editor</a><a href="/statistik.html">📊 Statistik</a>
+ <b style="color:#4f8cff">📑 Verträge</b> <a href="/reisen">🏖️ Reisen</a> <a href="/import">📥 Import</a> <a href="/vermoegen">💰 Vermögen</a> <a href="/vorsorge">🎯 Vorsorge</a>
+ <span>Jahr: <select id=yr onchange=draw()></select></span>
+ <label class=hint><input type=checkbox id=hiderej onchange=draw()> abgelehnte ausblenden</label>
+ <label class=hint><input type=checkbox id=hideexp onchange=draw()> ausgelaufene ausblenden</label>
+ <span id=msg></span>
+</div>
+<div class=wrap>
+<div class=kpis id=kpis></div>
+<p class=hint>Mechanisch erkannt (dominanter Betrag + Rhythmus). „SEPA-Lastschrift" = echtes Mandat (meist echter Vertrag);
+„Überweisung/Karte" oft nur ein Stammladen → ggf. ablehnen. Kategorie-Änderung gilt sofort für <b>alle</b> Buchungen des Vertrags.</p>
+<table><thead><tr><th>Status</th><th>Name</th><th>Kategorie</th><th>Rhythmus</th>
+<th class=r>Ø Betrag (6 Mon)</th><th class=r>letzter Betrag</th><th class=r>≈ /Monat</th>
+<th class=r>Anzahl</th><th>Art</th><th>Aktiv / letzte Zahlung</th></tr></thead>
+<tbody id=tb></tbody></table>
+<h3 id=dh style="margin-top:22px"></h3><div id=detail></div>
+</div>
+<script src="/shared.js"></script>
+<script>
+let C=[],CATS=[];
+const fmt=x=>x.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
+const esc=s=>{const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML;};
+// Pfeil, wenn der letzte Betrag spürbar (>2%) vom 6-Monats-Schnitt abweicht
+function delta(c){ if(!c.betrag) return '';
+ const d=(c.letzter-c.betrag)/c.betrag; if(Math.abs(d)<0.02) return '';
+ return d>0?` <span class=up>▲${Math.round(d*100)}%</span>`:` <span class=dn>▼${Math.round(-d*100)}%</span>`;}
+function showTx(c){    // Buchungen des Vertrags INLINE darunter (gleiche Detailtabelle wie überall)
+ document.getElementById('dh').textContent='📑 '+(c.name||'')+(c.zweck?' · '+c.zweck:'')+'  (Ø6M '+fmt(c.betrag)+' €)';
+ BK.loadInto('detail','/api/rows?contract='+encodeURIComponent(c.id));
+ document.getElementById('dh').scrollIntoView({behavior:'smooth',block:'start'});
+}
+const inYear=c=>{const y=document.getElementById('yr').value;
+ return y==='Alle'||((c.erste||'').slice(0,4)<=y&&(c.letzte||'').slice(0,4)>=y);};
+let FS;
+async function load(){
+ await BK.init();
+ CATS=(await (await fetch('/api/meta')).json()).cats;
+ C=await (await fetch('/api/contracts')).json();
+ const ys=[...new Set(C.flatMap(c=>[(c.erste||'').slice(0,4),(c.letzte||'').slice(0,4)]).filter(Boolean))].sort();
+ yr.innerHTML=['Alle',...ys].map(y=>`<option>${y}</option>`).join(''); yr.value=ys[ys.length-1]||'Alle';
+ FS=BK.filterState('vertraege'); const s=FS.load();   // Filter über Seitenwechsel merken
+ if(s){ if(s.yr!=null&&[...yr.options].some(o=>o.value===s.yr))yr.value=s.yr;
+   if(s.hiderej!=null)document.getElementById('hiderej').checked=s.hiderej;
+   if(s.hideexp!=null)document.getElementById('hideexp').checked=s.hideexp; }
+ draw();
+}
+function kpis(){
+ // laufende Fixbelastung = NUR aktive, nicht abgelehnte Verträge (ausgelaufene zählen nicht), im Jahr
+ const act=C.filter(c=>c.status!=='rejected'&&c.aktiv&&inYear(c));
+ const aus=act.filter(c=>c.richtung==='Ausgabe').reduce((s,c)=>s+c.monatlich,0);
+ const ein=act.filter(c=>c.richtung==='Einnahme').reduce((s,c)=>s+c.monatlich,0);
+ const nC=C.filter(c=>c.status==='candidate'&&inYear(c)).length;
+ const nExp=C.filter(c=>c.status!=='rejected'&&!c.aktiv&&inYear(c)).length;
+ document.getElementById('kpis').innerHTML=[
+  ['Fixe Ausgaben ≈/Mon',fmt(aus)+' €'],['Fixe Einnahmen ≈/Mon',fmt(ein)+' €'],
+  ['Netto fix ≈/Mon',fmt(ein-aus)+' €'],['aktive Verträge',act.length],
+  ['offen (zu prüfen)',nC],['ausgelaufen',nExp]
+ ].map(([l,v])=>`<div class=kpi><div class=v>${v}</div><div class=l>${esc(l)}</div></div>`).join('');
+}
+function draw(){
+ kpis(); const hide=document.getElementById('hiderej').checked;
+ const tb=document.getElementById('tb'); tb.innerHTML='';
+ const hexp=document.getElementById('hideexp').checked;
+ if(FS)FS.save({yr:yr.value,hiderej:hide,hideexp:hexp});
+ for(const c of C){
+  if(hide&&c.status==='rejected')continue;
+  if(hexp&&!c.aktiv)continue;
+  if(!inYear(c))continue;
+  const tr=document.createElement('tr');
+  if(c.status==='rejected')tr.className='rej'; else if(!c.aktiv)tr.className='expired';
+  const opts=CATS.map(x=>`<option${x===c.kategorie?' selected':''}>${esc(x)}</option>`).join('');
+  const sepa=c.typ.startsWith('SEPA');
+  const life=(c.aktiv?'<span class="pill akt">aktiv</span>':'<span class="pill exp">ausgelaufen</span>')
+     +` <button class=tgl title="Status umschalten">↔</button>`
+     +(c.aktiv_manual?` <span class=man title="manuell gesetzt – Klick = zurück auf Automatik">✋<a class=rs> auto</a></span>`:'');
+  tr.innerHTML=`<td><button class="b ok" data-a=confirmed title="bestätigen">✓</button>
+     <button class="b no" data-a=rejected title="ablehnen">✗</button>
+     <div class="pill s-${c.status}">${c.status}</div></td>
+   <td><input class=nm value="${esc(c.name)}">${c.zweck?'<div class=zw>↳ '+esc(c.zweck)+'</div>':''}</td>
+   <td><select class=cat>${opts}</select></td>
+   <td>${esc(c.rhythmus)}</td>
+   <td class="r ${c.richtung==='Einnahme'?'ein':'aus'}">${fmt(c.betrag)} €</td>
+   <td class="r">${fmt(c.letzter)} €${delta(c)}</td>
+   <td class=r>${fmt(c.monatlich)} €</td>
+   <td class=r><button class=cnt title="Buchungen anzeigen">${c.anzahl} ▸</button></td>
+   <td><span class="${sepa?'sepa':'karte'}">${esc(c.typ)}</span></td>
+   <td class=hint>${life}<div>letzte: ${c.letzte} (vor ${c.seit} T.)</div></td>`;
+  tr.querySelector('.cat').onchange=e=>save(c,{category:e.target.value});
+  tr.querySelector('.nm').onchange=e=>save(c,{name:e.target.value});
+  tr.querySelector('.cnt').onclick=()=>showTx(c);
+  tr.querySelector('.tgl').onclick=()=>save(c,{aktiv:c.aktiv?0:1});   // umschalten (manuell)
+  const rs=tr.querySelector('.rs'); if(rs)rs.onclick=()=>save(c,{aktiv:null}); // zurück auf Automatik
+  tr.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>save(c,{status:b.dataset.a}));
+  tb.appendChild(tr);
+ }
+}
+async function save(c,patch){
+ document.getElementById('msg').textContent='speichere… (rechnet neu)';
+ const res=await (await fetch('/api/contract_edit',{method:'POST',
+   headers:{'Content-Type':'application/json'},body:JSON.stringify({id:c.id,...patch})})).json();
+ if(res.contracts)C=res.contracts;
+ document.getElementById('msg').textContent='gespeichert ✓ – Statistik aktualisiert';
+ draw();
+}
+load();
+</script></body></html>

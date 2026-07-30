@@ -1,0 +1,689 @@
+<!doctype html><html lang=de><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>Finanzen · Demo</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+ :root{--bg:#0f1117;--bg2:#171a23;--bg3:#141823;--line:#262b36;--line2:#1e232e;
+  --txt:#e6e6e6;--mut:#9aa4b2;--dim:#6b7280;--acc:#4f8cff;--pos:#7ee0a0;--neg:#ff8a8a}
+ *{box-sizing:border-box}
+ body{font-family:system-ui,Arial,sans-serif;margin:0;background:var(--bg);color:var(--txt);font-size:14px}
+ .topbar{position:sticky;top:0;z-index:20;background:#11141c;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:4px;padding:10px 18px;flex-wrap:wrap}
+ .brand{font-weight:800;font-size:16px;margin-right:14px}
+ .brand .dot{color:var(--acc)}
+ .tab{background:none;border:0;color:var(--mut);font-weight:600;font-size:14px;padding:8px 13px;
+  border-radius:8px;cursor:pointer}
+ .tab:hover{background:#1b1f2a;color:#cbd5e1}
+ .tab.active{color:#fff;background:var(--acc)}
+ .demobadge{margin-left:auto;font-size:11px;color:#f0b46b;border:1px solid #5a4421;background:#231b10;
+  border-radius:20px;padding:4px 11px;font-weight:600}
+ .wrap{max-width:1750px;margin:0 auto;padding:22px 30px 80px}
+ .page{display:none} .page.on{display:block;animation:fade .25s ease}
+ @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+ h1{font-size:24px;margin:6px 0 4px} h2{font-size:17px;margin:30px 0 10px;border-bottom:1px solid var(--line);padding-bottom:7px}
+ h3{margin:14px 0 6px}
+ .sub{color:var(--mut);font-size:14px;max-width:820px;line-height:1.55}
+ .hint{color:var(--dim);font-size:12px}
+ .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:16px 0}
+ .kpi{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:14px}
+ .kpi .v{font-size:22px;font-weight:700} .kpi .l{color:var(--mut);font-size:12px;margin-top:3px}
+ canvas{background:var(--bg2);border-radius:12px;padding:10px;margin-top:10px}
+ select,input{background:#1b1f2a;color:var(--txt);border:1px solid #2c323f;border-radius:8px;padding:6px 9px;font-size:13px}
+ table{width:100%;border-collapse:collapse;font-size:14px} td,th{padding:6px 8px;border-bottom:1px solid var(--line2);vertical-align:top}
+ th{color:var(--mut);text-align:left} .r{text-align:right;white-space:nowrap}
+ .neg{color:var(--neg)}.pos{color:var(--pos)}
+ .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:8px 0}
+ .fbtn{background:#222a38;border:1px solid #2c323f;color:#cbd5e1;border-radius:7px;padding:6px 11px;cursor:pointer;font-size:13px}
+ .fbtn:hover{background:#2a3343}
+ #catfilter{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:2px 14px;
+  background:var(--bg3);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:8px 0}
+ #catfilter label{display:flex;align-items:center;gap:7px;font-size:13px;padding:2px 0;cursor:pointer}
+ #catfilter .amt{margin-left:auto;font-size:12px}#catfilter .amt.neg{color:var(--neg)}#catfilter .amt.pos{color:var(--pos)}
+ .filterbadge{color:#f0b46b;font-size:13px}
+ .detail{background:var(--bg3);border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:12px;min-height:40px}
+ .detail td{vertical-align:top}.detail .dctx{color:var(--mut);font-size:12px;max-width:520px}
+ .detail .why{color:var(--dim);font-size:11px}.detail .prod{color:var(--pos);font-weight:600;font-size:13px}
+ .detail .mail{color:#7f9cc7;font-size:11px}
+ .vtgtag{background:#3a2f4d;color:#c9b6ec;border-radius:5px;padding:0 5px;font-size:10px;vertical-align:middle}
+ .chip{background:#26324a;border-radius:6px;padding:1px 6px;margin:1px;display:inline-block;font-size:12px}
+ .card{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:18px;margin-top:12px}
+ .pill{font-size:11px;border-radius:6px;padding:1px 7px}
+ .s-confirmed{background:#16301d;color:var(--pos)}.s-candidate{background:#2a2f3a;color:#cbd5e1}.s-rejected{background:#301717;color:var(--neg)}
+ .akt{background:#16301d;color:var(--pos)}.exp{background:#3a2a17;color:#f0b46b}
+ .sepa{color:var(--pos);font-size:11px}.karte{color:var(--mut);font-size:11px}
+ .ein{color:var(--pos)}.aus{color:var(--neg)}
+ .zw{color:#7f9cc7;font-size:11px;margin-top:3px}
+ .orte{color:#9ec1ff}
+ tr.rej{opacity:.45}
+ .b{background:#222a38;border:1px solid #2c323f;color:#cbd5e1;border-radius:6px;padding:4px 9px;cursor:pointer;font-weight:600}
+ .b.ok{background:#16301d;border-color:#2c6b3f;color:var(--pos)} .b.no{background:#301717;border-color:#6b2c2c;color:var(--neg)}
+ /* Intro */
+ .lead{font-size:16px;line-height:1.6;max-width:880px;color:#d7dde6}
+ .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px} @media(max-width:900px){.grid2{grid-template-columns:1fr}}
+ .src{display:flex;gap:12px;align-items:flex-start}
+ .srcic{font-size:22px;line-height:1}
+ .flow{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;margin:14px 0}
+ .step{flex:1;min-width:150px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:13px 14px;position:relative;margin:6px}
+ .step .n{position:absolute;top:-10px;left:13px;background:var(--acc);color:#fff;border-radius:50%;width:22px;height:22px;
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+ .step .t{font-weight:700;margin:4px 0 4px;font-size:14px}
+ .step .d{color:var(--mut);font-size:12px;line-height:1.45}
+ .step .tag{display:inline-block;margin-top:7px;font-size:11px;color:#9ec1ff;background:#1c2740;border-radius:5px;padding:1px 6px}
+ .arrow{align-self:center;color:#3a4252;font-size:20px;margin:0 -2px}
+ .princ{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+ .princ .card{margin:0}
+ .princ b{color:var(--acc)}
+ code{background:#1b1f2a;padding:2px 6px;border-radius:5px;color:#9ec1ff;font-size:13px}
+ /* Import timeline */
+ .trow{display:flex;align-items:center;gap:10px;height:30px}
+ .tlabel{width:200px;flex:none;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .track{position:relative;flex:1;height:16px;background:#10131a;border-radius:5px}
+ .barseg{position:absolute;top:0;bottom:0;border-radius:5px}
+ .seg-Bank{background:linear-gradient(90deg,#2b5cc4,#4f8cff)}.seg-Mail{background:linear-gradient(90deg,#7b4fc4,#b98cff)}
+ #ovl{position:absolute;left:210px;right:0;top:0;pointer-events:none}
+ .yline{position:absolute;top:0;bottom:0;border-left:1px dashed #2c323f}
+ .ylab{position:absolute;top:-2px;font-size:10px;color:var(--dim);transform:translateX(3px)}
+ #band{position:absolute;top:0;bottom:22px;background:rgba(79,140,255,.12);border-left:2px solid var(--acc);border-right:2px solid var(--acc)}
+ .axis{position:relative;height:20px;margin-left:210px}
+ .t-Bank{background:#1c2740;color:#9ec1ff}.t-Mail{background:#2a2333;color:#d9b3ff}
+</style></head><body>
+
+<div class=topbar>
+ <span class=brand>Finanzen<span class=dot>·</span>Auswertung</span>
+ <button class="tab active" data-p=intro>① Intro</button>
+ <button class=tab data-p=statistik>📊 Statistik</button>
+ <button class=tab data-p=vertraege>📑 Verträge</button>
+ <button class=tab data-p=reisen>🏖️ Reisen</button>
+ <button class=tab data-p=import>📥 Import</button>
+ <button class=tab data-p=editor>✏️ Editor</button>
+ <span class=demobadge>● DEMO · anonyme Dummy-Daten</span>
+</div>
+
+<div class=wrap>
+
+<!-- ============ INTRO ============ -->
+<section id=p-intro class="page on">
+ <h1>Was dieses Programm macht</h1>
+ <p class=lead>Es verwandelt rohe <b>Kontoauszüge</b> – ergänzt um <b>E-Mail-Belege</b> – in eine
+  durchsuchbare, kategorisierte <b>Ausgaben-Statistik</b>. Eine einzige lokale SQLite-Datei ist die
+  Wahrheit; jede Auswertung wird daraus <b>reproduzierbar</b> neu berechnet. Der Anspruch:
+  <b>mechanisch &amp; nachvollziehbar statt Blackbox</b> – Buchungen kommen 1:1 aus der Bank
+  (nie erfunden), Kategorien sind eine ableitbare Schicht, die man jederzeit neu rechnen kann.</p>
+ <p class=hint>Diese Demo läuft komplett im Browser mit <b>frei erfundenen Dummy-Daten</b> eines
+  fiktiven Haushalts – keine echten Konten, Namen oder Beträge. Alle Reiter oben sind klickbar und live.</p>
+
+ <h2>Angebundene Datenquellen</h2>
+ <div class=grid2 id=introsrc></div>
+
+ <h2>Prozess-Flow — von Rohdaten zur aggregierten Statistik</h2>
+ <p class=sub>Eine idempotente Pipeline. Jeder Schritt nutzt nur das Ergebnis des vorherigen,
+  schreibt in die DB und ist beliebig oft wiederholbar – neue Kontoexporte werden einfach
+  nachgeladen, manuelle Entscheidungen bleiben über stabile Buchungs-IDs erhalten.</p>
+ <div class=flow id=flow></div>
+
+ <h2>Der Kategorisierungs-Trichter</h2>
+ <p class=sub>So bekommt jede Buchung genau eine Kategorie – von der sichersten Quelle zur unsichersten.
+  Was nicht greift, fällt nie weg, sondern landet sichtbar in „Sonstiges".</p>
+ <div class=card><ol style="margin:0;line-height:1.9;padding-left:20px">
+  <li><b>Systemgrenze</b> — interne Umbuchungen zwischen eigenen Konten raus; Sparen/Kredit/Einnahme aus der Kontenkarte.</li>
+  <li><b>Regeln</b> — Gläubiger-ID &gt; Händler-Stichwort. Erst spezifisch, dann breite Muster (z.B. <code>ristorante</code> → Restaurant).</li>
+  <li><b>Branchen-Lookup</b> — unbekannte Kartenhändler einmalig via OpenStreetMap nachgeschlagen &amp; gecacht.</li>
+  <li><b>KI-Vorschlag</b> — nur für den Long-Tail, mit Konfidenz &amp; reviewbar.</li>
+  <li><b>Manuelle Schicht</b> — deine eigene Korrektur schlägt alles und bleibt stabil.</li>
+  <li><b>Reise-Erkennung</b> — bestätigte Reise stempelt ihre Buchungen auf „Urlaub".</li>
+ </ol></div>
+
+ <h2>Prinzipien</h2>
+ <div class=princ>
+  <div class=card><b>Rohdaten unantastbar</b><div class=hint style="margin-top:6px">Buchungen 1:1 aus der Bank. Kategorien/Labels sind eine ableitbare Schicht – jederzeit neu rechenbar.</div></div>
+  <div class=card><b>Nichts fällt still weg</b><div class=hint style="margin-top:6px">Status statt Löschen. Ohne Treffer → sichtbar als „Sonstiges" markiert, nie verschwunden.</div></div>
+  <div class=card><b>Mechanik vor KI</b><div class=hint style="margin-top:6px">Deterministische Regeln zuerst; KI ist das Skalpell für den Rest, nicht der Bagger.</div></div>
+  <div class=card><b>Alles lokal</b><div class=hint style="margin-top:6px">Bankdaten verlassen den Rechner nie. Reine Standardbibliothek, kein Cloud-Dienst.</div></div>
+ </div>
+</section>
+
+<!-- ============ STATISTIK ============ -->
+<section id=p-statistik class=page>
+ <h1>📊 Finanz-Statistik <span class=hint id=stand></span></h1>
+ <div class=toolbar>
+  <span>Jahr: <select id=yr></select></span>
+  <button class=fbtn id=tgF>▾ Kategorien ein/aus</button>
+  <button class=fbtn id=cAll>alle</button>
+  <button class=fbtn id=cNone>keine</button>
+  <span>🏷️ <select id=lf></select></span>
+  <button class=fbtn id=resetAll>⟳ alle Buchungen</button>
+  <span class=filterbadge id=fbadge></span>
+  <span class=hint>· Filter-Zahlen = Netto · Balken anklicken → Buchungen</span>
+ </div>
+ <div id=catfilter></div>
+ <div class=kpis id=kpis></div>
+ <h2>Einnahmen vs. Ausgaben pro Monat</h2><canvas id=c1 height=95></canvas>
+ <h2>Ausgaben pro Monat nach Kategorie</h2><canvas id=c2 height=110></canvas>
+ <h2>Kategorie-Ranking (Zeitraum)</h2><canvas id=c3 height=110></canvas>
+ <h3 id=dh class=hint style="margin-top:14px">Klick auf einen Balken/eine Kategorie zeigt hier die Buchungen.</h3>
+ <div id=detail class=detail></div>
+ <h2>🏖️ Reisen</h2>
+ <table id=tripsT><tr><th>Reise (Orte)</th><th>Zeit</th><th class=r>Kosten</th></tr></table>
+</section>
+
+<!-- ============ VERTRÄGE ============ -->
+<section id=p-vertraege class=page>
+ <h1>📑 Verträge <span class=hint>(= wiederkehrende Fixkosten)</span></h1>
+ <div class=kpis id=vkpis></div>
+ <p class=hint>Mechanisch erkannt (dominanter Betrag + Rhythmus). „SEPA-Lastschrift" = echtes Mandat (meist echter Vertrag);
+  „Überweisung/Karte" oft nur ein Stammladen → ggf. ablehnen. In der echten App propagiert eine Kategorie-Änderung sofort auf <b>alle</b> Buchungen des Vertrags.</p>
+ <table><thead><tr><th>Status</th><th>Name</th><th>Kategorie</th><th>Rhythmus</th>
+  <th class=r>Ø Betrag</th><th class=r>≈ /Monat</th><th class=r>Anzahl</th><th>Art</th><th>Aktiv / letzte Zahlung</th></tr></thead>
+  <tbody id=vtb></tbody></table>
+ <h3 id=vdh style="margin-top:22px"></h3><div id=vdetail class=detail style="display:none"></div>
+</section>
+
+<!-- ============ REISEN ============ -->
+<section id=p-reisen class=page>
+ <h1>🏖️ Reisen</h1>
+ <div class=kpis id=rkpis></div>
+ <p class=hint>Reise = zusammenhängend &gt;2 Tage außerhalb der Heimatregion (mehrere Orte = EINE Reise).
+  Bestätige echte Reisen (✓) oder lehne Transit/Tagesausflüge ab (✗). Klick auf „Buchungen" zeigt, was dazugehört.</p>
+ <table><thead><tr><th>Status</th><th>Name</th><th>Zeitraum</th><th>Orte</th>
+  <th class=r>Buchungen</th><th class=r>Kosten</th></tr></thead><tbody id=rtb></tbody></table>
+ <h3 id=rdh style="margin-top:22px"></h3><div id=rdetail class=detail style="display:none"></div>
+</section>
+
+<!-- ============ IMPORT ============ -->
+<section id=p-import class=page>
+ <h1>📥 Import</h1>
+ <h2>Datenquellen</h2>
+ <table><thead><tr><th>Quelle</th><th>Typ</th><th>Vorhandener Zeitraum</th>
+  <th class=r>Buchungen/Mails</th><th>Letztes Update</th><th>Pflege</th></tr></thead>
+  <tbody id=stab></tbody></table>
+
+ <h2>Berücksichtigter Zeitraum</h2>
+ <p class=hint>Alle Auswertungen nutzen nur diesen Zeitraum. Vorschlag = nur <b>vollständige Monate,
+  in denen ALLE Quellen Daten haben</b> (laufender Monat bleibt immer draußen).</p>
+ <div class=card>
+  <div id=chart></div>
+  <div class=axis id=axis></div>
+  <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:14px">
+   <label>von <input type=month id=vonI></label>
+   <label>bis <input type=month id=bisI></label>
+   <button class=fbtn id=sugBtn>Vorschlag übernehmen (<span id=sugTxt>–</span>)</button>
+   <span class=hint id=pmsg></span>
+  </div>
+ </div>
+
+ <h2>Kontodaten einspielen</h2>
+ <div class=card>
+  <b>Bank-CSV-Upload</b>
+  <p class=hint>CSV-Export von DKB oder GLS wählen (Format wird automatisch erkannt). Mehrere gleichzeitig möglich; Überlappungen werden dedupliziert.</p>
+  <input type=file disabled> <button class=fbtn disabled>hochladen</button>
+  <p class=hint style="margin-top:10px">Danach <b>„Daten verarbeiten"</b> → liest alle Konten neu ein und baut die Auswertung neu auf;
+   <b>manuelle Kategorien/Verträge/Reisen bleiben erhalten</b> (stabile Buchungs-IDs).</p>
+  <button class=fbtn disabled>🔄 Daten verarbeiten</button>
+  <p class=hint style="color:#f0b46b;margin-top:8px">(In der Demo deaktiviert – Upload/Verarbeitung gibt es nur in der lauffähigen Version.)</p>
+ </div>
+</section>
+
+<!-- ============ EDITOR ============ -->
+<section id=p-editor class=page>
+ <h1>✏️ Editor</h1>
+ <div class=toolbar>
+  <select id=efcat><option value="">— Kategorie —</option></select>
+  <input id=efsearch placeholder="Suche Händler/Kontext…" style="width:240px">
+  <label><input type=checkbox id=efonly> nur „Sonstiges"</label>
+  <span class=hint>Jede Buchung prüfbar: Kategorie/Labels setzen, ignorieren. <span style="color:#f0b46b">Demo: Änderungen nur temporär.</span></span>
+ </div>
+ <table><thead><tr><th>Datum</th><th class=r>Betrag</th><th>Händler</th><th>Kategorie</th>
+  <th>Labels</th><th>Kontext</th></tr></thead><tbody id=etb></tbody></table>
+ <p class=hint id=ecount style="margin-top:10px"></p>
+</section>
+
+</div>
+
+<script>
+/* ============================================================
+   DEMO-DATENGENERATOR  (deterministisch, anonym, 12 Monate)
+   ============================================================ */
+const seed=20240701;
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);
+ t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const rng=mulberry32(seed);
+const ri=(lo,hi)=>Math.floor(rng()*(hi-lo+1))+lo;
+const pick=a=>a[Math.floor(rng()*a.length)];
+const round2=x=>Math.round(x*100)/100;
+const exp=(lo,hi)=>-round2(rng()*(hi-lo)+lo);     // Ausgabe (negativ)
+const pad=n=>String(n).padStart(2,'0');
+
+// 12 Monate: 2024-07 .. 2025-06
+const MONTHS=[]; for(let i=0;i<12;i++){const d=new Date(2024,6+i,1);MONTHS.push(d.getFullYear()+'-'+pad(d.getMonth()+1));}
+const dim=(ym)=>new Date(+ym.slice(0,4),+ym.slice(5,7),0).getDate();
+const dateIn=(ym,day)=>ym+'-'+pad(Math.min(day,dim(ym)));
+
+const POOLS={
+ 'Lebensmittel/Drogerie':['REWE','ALDI SÜD','EDEKA Krämer','Lidl','dm-drogerie markt','denn’s Biomarkt','Rossmann'],
+ 'Restaurant/Café':['Café Central','Trattoria Bella','Burger Bros','Pizzeria Roma','Bäckerei Hofmann','Sushi Yoko','Eiscafé Venezia'],
+ 'Mobilität':['Shell','Aral','TotalEnergies','DB Vertrieb','Stadtwerke ÖPNV','Parkhaus City'],
+ 'Shopping/Haushalt':['Amazon','IKEA','Zalando','OBI','MediaMarkt','H&M','Decathlon'],
+ 'Gesundheit':['Apotheke am Markt','Praxis Dr. Berg','Optiker Lemke','Physio Vital'],
+ 'Freizeit/Hobby':['Kino CineStar','Thalia','Kletterhalle Nord','Schwimmbad Aqua','Stadtbücherei'],
+ 'Kinder':['Spielwaren Krause','Kinderarzt Dr. Sahin','Buchladen Lesemaus'],
+ 'Bargeld':['Geldautomat'],
+ 'Spenden/Geschenke':['Ärzte ohne Grenzen','Floristik Blum','Geschenkeladen']
+};
+let TX=[],id=0;
+function add(o){o.id='tx'+(++id);o.bt=o.bt||(o.b>0?'Einnahme':'Konsum');o.fx=o.fx||0;o.vtg=o.vtg||0;
+ o.art=o.art||'Kartenzahlung';o.lab=o.lab||'';o.prod=o.prod||'';o.ctx=o.ctx||'';o.status=o.status||'ok';
+ o.src=o.src||'Regel';o.ml=o.ml||0;o.m=o.d.slice(0,7);TX.push(o);}
+
+// ---- Wiederkehrend / Verträge ----
+const RECUR=[
+ {name:'Gehalt Arbeitgeber',h:'NORDTEC GmbH',day:28,b:3380,c:'Einnahme',typ:'SEPA-Lastschrift',richtung:'Einnahme',rhythmus:'monatlich',zweck:'Gehalt',vtg:1},
+ {name:'Gehalt Partner',h:'Stadt Musterstadt',day:30,b:1810,c:'Einnahme',typ:'SEPA-Lastschrift',richtung:'Einnahme',rhythmus:'monatlich',zweck:'Bezüge',vtg:1},
+ {name:'Kindergeld',h:'Familienkasse',day:9,b:250,c:'Einnahme',typ:'SEPA-Lastschrift',richtung:'Einnahme',rhythmus:'monatlich',zweck:'Kindergeld',vtg:1},
+ {name:'Miete',h:'Hausverwaltung Lindner',day:1,b:-1150,c:'Wohnen',typ:'SEPA-Lastschrift',richtung:'Ausgabe',rhythmus:'monatlich',zweck:'Kaltmiete + NK',fx:1,vtg:1},
+ {name:'Stadtwerke Strom',h:'Stadtwerke Musterstadt',day:5,b:-92,c:'Wohnen',typ:'SEPA-Lastschrift',richtung:'Ausgabe',rhythmus:'monatlich',zweck:'Abschlag Strom',fx:1,vtg:1},
+ {name:'Internet & Festnetz',h:'Telekom Deutschland',day:4,b:-44.95,c:'Abo/Digital',typ:'SEPA-Lastschrift',richtung:'Ausgabe',rhythmus:'monatlich',zweck:'MagentaZuhause',fx:1,vtg:1},
+ {name:'Mobilfunk',h:'o2 Telefonica',day:15,b:-24.99,c:'Abo/Digital',typ:'SEPA-Lastschrift',richtung:'Ausgabe',rhythmus:'monatlich',zweck:'Mobilfunkvertrag',fx:1,vtg:1},
+ {name:'Netflix',h:'Netflix',day:18,b:-13.99,c:'Abo/Digital',typ:'SEPA-Lastschrift',richtung:'Ausgabe',rhythmus:'monatlich',zweck:'Streaming',fx:1,vtg:1},
+ {name:'Spotify',h:'Spotify',day:22,b:-10.99,c:'Abo/Digital',typ:'SEPA-Lastschrift',richtung:'Ausgabe',rhythmus:'monatlich',zweck:'Musik-Abo',fx:1,vtg:1},
+ {name:'Fitnessstudio',h:'FitX',day:2,b:-29.90,c:'Freizeit/Hobby',typ:'SEPA-Lastschrift',richtung:'Ausgabe',rhythmus:'monatlich',zweck:'Mitgliedschaft',fx:1,vtg:1},
+ {name:'Kita-Beitrag',h:'Kita Sonnenschein',day:3,b:-185,c:'Kinder',typ:'SEPA-Lastschrift',richtung:'Ausgabe',rhythmus:'monatlich',zweck:'Betreuungsbeitrag',fx:1,vtg:1},
+ {name:'Haftpflicht & Hausrat',h:'HUK-COBURG',day:6,b:-21.40,c:'Versicherung',typ:'SEPA-Lastschrift',richtung:'Ausgabe',rhythmus:'monatlich',zweck:'VS 4471-..',fx:1,vtg:1},
+ {name:'ETF-Sparplan',h:'Trade Republic',day:7,b:-300,c:'Sparen/Invest',bt:'Sparen',typ:'SEPA-Lastschrift',richtung:'Ausgabe',rhythmus:'monatlich',zweck:'MSCI World',vtg:1},
+ {name:'Rundfunkbeitrag',h:'Beitragsservice',day:15,b:-55.08,c:'Wohnen',typ:'SEPA-Lastschrift',richtung:'Ausgabe',rhythmus:'quartalsweise',zweck:'Rundfunk',fx:1,vtg:1,every:3,start:0},
+ {name:'Kfz-Versicherung',h:'Allianz',day:12,b:-486,c:'Versicherung',typ:'SEPA-Lastschrift',richtung:'Ausgabe',rhythmus:'jährlich',zweck:'KR-..',fx:1,vtg:1,every:12,start:5},
+ {name:'Sportverein (ausgelaufen)',h:'TV Musterstadt',day:10,b:-12,c:'Freizeit/Hobby',typ:'SEPA-Lastschrift',richtung:'Ausgabe',rhythmus:'monatlich',zweck:'Mitgliedsbeitrag',fx:1,vtg:1,until:4}
+];
+RECUR.forEach((r,ri_)=>{
+ MONTHS.forEach((m,mi)=>{
+  if(r.until!=null && mi>r.until) return;
+  if(r.every){ if(((mi-(r.start||0))%r.every)!==0) return; }
+  add({d:dateIn(m,r.day),b:r.b,h:r.h,c:r.c,bt:r.bt,fx:r.fx,vtg:1,art:r.typ.startsWith('SEPA')?'SEPA-Lastschrift':'Überweisung',
+   vz:r.zweck,src:'Vertrag',_cid:'c'+ri_});
+ });
+});
+
+// ---- Variable Ausgaben pro Monat ----
+MONTHS.forEach(m=>{
+ const n={'Lebensmittel/Drogerie':ri(8,13),'Restaurant/Café':ri(3,7),'Mobilität':ri(2,4),
+  'Shopping/Haushalt':ri(1,4),'Gesundheit':ri(0,2),'Freizeit/Hobby':ri(0,3),'Kinder':ri(0,2),
+  'Bargeld':ri(0,2),'Spenden/Geschenke':rng()<0.25?1:0};
+ const rng_amt={'Lebensmittel/Drogerie':[14,95],'Restaurant/Café':[8,58],'Mobilität':[18,78],
+  'Shopping/Haushalt':[15,180],'Gesundheit':[9,70],'Freizeit/Hobby':[8,45],'Kinder':[10,60],
+  'Bargeld':[50,200],'Spenden/Geschenke':[15,60]};
+ for(const c in n){ for(let k=0;k<n[c];k++){
+  const h=pick(POOLS[c]); const[a,bmax]=rng_amt[c];
+  const o={d:dateIn(m,ri(2,27)),b:exp(a,bmax),h,c,art:c==='Bargeld'?'Bargeldauszahlung':'Kartenzahlung'};
+  if(h==='Amazon'){o.art='Online';o.ml=1;o.ctx='Bestellbestätigung Amazon';o.prod=pick(['USB-C Kabel 2m','Bücherregal','Kinderbuch-Set','Laufschuhe','Kaffeebohnen 1kg']);}
+  if(h==='Zalando'){o.art='Online';o.ml=1;o.prod=pick(['Sneaker','Winterjacke','T-Shirt 3er']);}
+  if(c==='Restaurant/Café')o.lab='essen-ausser-haus';
+  add(o);
+ }}
+});
+
+// ---- Reisen (zusammenhängende Auswärtstage) ----
+const TRIPDEF=[
+ {id:'TRIP-2024-08',name:'Gardasee Sommer',start:'2024-08-03',ende:'2024-08-14',orte:'Riva, Malcesine, Verona',status:'confirmed',
+  places:['Camping Bella Italia','Ristorante Al Porto','Supermercato Famila','Autostrada Maut','Gelateria Lago','Lidl Italia','Esso Verona'],amts:[[180,420],[22,65],[20,80],[8,40],[6,18],[15,55],[55,80]]},
+ {id:'TRIP-2025-03',name:'Berlin Städtetrip',start:'2025-03-14',ende:'2025-03-17',orte:'Berlin',status:'confirmed',
+  places:['Hotel Mitte','Curry 36','DB Vertrieb','Museum Pass','Café Einstein','BVG Ticket'],amts:[[260,320],[9,22],[40,120],[18,30],[12,38],[9,20]]},
+ {id:'TRIP-2024-10',name:'',start:'2024-10-19',ende:'2024-10-20',orte:'Freiburg, Titisee',status:'candidate',
+  places:['Tankstelle Aral','Gasthof Bären','Parkhaus Titisee'],amts:[[45,70],[35,80],[3,9]]}
+];
+TRIPDEF.forEach((t,ti)=>{
+ const s=new Date(t.start),e=new Date(t.ende),days=Math.round((e-s)/864e5)+1;
+ const count=t.id==='TRIP-2024-08'?16:t.id==='TRIP-2025-03'?9:4;
+ for(let k=0;k<count;k++){
+  const off=ri(0,days-1);const d=new Date(s.getTime()+off*864e5);
+  const pi=ri(0,t.places.length-1);const[a,b]=t.amts[pi];
+  const h=t.places[pi];
+  let c='Restaurant/Café';
+  if(/Camping|Hotel|Gasthof/.test(h))c='Freizeit/Hobby';
+  else if(/Supermercato|Lidl|Famila/.test(h))c='Lebensmittel/Drogerie';
+  else if(/Maut|Esso|Tankstelle|Aral|DB|BVG|Parkhaus/.test(h))c='Mobilität';
+  else if(/Museum/.test(h))c='Freizeit/Hobby';
+  add({d:d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()),b:exp(a,b),h,c,
+   art:'Kartenzahlung',lab:(t.status!=='rejected'&&t.id!=='TRIP-2024-10')?'urlaub,'+t.id:t.id,
+   _trip:t.id,src:'Reise'});
+ }
+});
+
+// einige „Sonstiges" (Long-Tail, ehrlich)
+['SL APP*EXO','PayPal *Ref 8841','Lastschrift 2210','RYS GmbH','Kartenzahlung 0049'].forEach((h,i)=>{
+ add({d:dateIn(MONTHS[ri(0,11)],ri(2,27)),b:exp(9,60),h,c:'Sonstiges',status:'unkategorisiert',src:'—',art:'Online'});
+});
+
+TX.sort((a,b)=>a.d<b.d?1:-1);
+
+/* ---- abgeleitete Strukturen ---- */
+const CATS=[...new Set(TX.map(t=>t.c))];
+const catOrder=['Einnahme','Wohnen','Lebensmittel/Drogerie','Restaurant/Café','Mobilität','Kinder',
+ 'Versicherung','Abo/Digital','Freizeit/Hobby','Shopping/Haushalt','Gesundheit','Spenden/Geschenke',
+ 'Bargeld','Sparen/Invest','Sonstiges'];
+CATS.sort((a,b)=>{const ia=catOrder.indexOf(a),ib=catOrder.indexOf(b);return (ia<0?99:ia)-(ib<0?99:ib);});
+
+// Verträge
+const CONTRACTS=RECUR.map((r,i)=>{
+ const tx=TX.filter(t=>t._cid==='c'+i);
+ const last=tx[0]; const fac=r.rhythmus==='jährlich'?1/12:r.rhythmus==='quartalsweise'?1/3:1;
+ const aktiv=r.until!=null?false:true;
+ const lastDate=tx.length?tx.map(t=>t.d).sort().slice(-1)[0]:'';
+ const seit=lastDate?Math.round((new Date('2025-06-30')-new Date(lastDate))/864e5):0;
+ return {id:'c'+i,name:r.name,kategorie:r.c,rhythmus:r.rhythmus,betrag:Math.abs(r.b),
+  monatlich:round2(Math.abs(r.b)*fac),anzahl:tx.length,typ:r.typ,richtung:r.richtung,
+  aktiv,seit,letzte:lastDate,zweck:r.zweck,status:'confirmed',_cid:'c'+i};
+});
+// ein paar Kandidaten/abgelehnte zur Demonstration
+CONTRACTS.push({id:'cx1',name:'REWE',kategorie:'Lebensmittel/Drogerie',rhythmus:'wöchentlich',betrag:48.20,
+ monatlich:0,anzahl:31,typ:'Überweisung/Karte',richtung:'Ausgabe',aktiv:true,seit:3,letzte:'2025-06-27',zweck:'',status:'candidate'});
+CONTRACTS.push({id:'cx2',name:'Geldautomat',kategorie:'Bargeld',rhythmus:'unregelmäßig',betrag:120,
+ monatlich:0,anzahl:14,typ:'Überweisung/Karte',richtung:'Ausgabe',aktiv:true,seit:8,letzte:'2025-06-22',zweck:'',status:'rejected'});
+
+// Reisen mit berechneten Kosten
+const TRIPS=TRIPDEF.map(t=>{
+ const tx=TX.filter(x=>x._trip===t.id);
+ const start=tx.map(x=>x.d).sort()[0]||t.start, ende=tx.map(x=>x.d).sort().slice(-1)[0]||t.ende;
+ const tage=Math.round((new Date(t.ende)-new Date(t.start))/864e5)+1;
+ return {id:t.id,name:t.name,orte:t.orte,start:t.start,ende:t.ende,tage,
+  n:tx.length,kosten:round2(tx.reduce((s,x)=>s+Math.abs(x.b),0)),status:t.status};
+});
+
+// Quellen (Import)
+const SOURCES=[
+ {name:'DKB Girokonto (Haushalt)',typ:'Bank',von:'2024-07-01',bis:'2025-06-28',n:TX.filter(t=>t.b<0).length+340,update:'2025-06-29',sync:'Upload'},
+ {name:'GLS Girokonto (privat)',typ:'Bank',von:'2024-07-01',bis:'2025-06-22',n:286,update:'2025-06-23',sync:'Upload'},
+ {name:'Gmail Postfach',typ:'Mail',von:'2024-01-01',bis:'2025-06-29',n:9842,update:'2025-06-29',sync:'Sync'},
+ {name:'GMX Postfach',typ:'Mail',von:'2014-03-01',bis:'2025-06-28',n:9508,update:'2025-06-28',sync:'Sync'}
+];
+const PERIOD={von:'2024-07',bis:'2025-05',suggest:{von:'2024-07',bis:'2025-05'}};
+
+/* ============================================================
+   GEMEINSAME HELFER + DETAILTABELLE
+   ============================================================ */
+const PAL=['#4f8cff','#34d399','#f59e0b','#ef4444','#a78bfa','#22d3ee','#f472b6','#84cc16',
+ '#fb923c','#60a5fa','#2dd4bf','#facc15','#c084fc','#fca5a5','#94a3b8','#4ade80','#e879f9','#38bdf8'];
+const COL=Object.fromEntries(CATS.map((c,i)=>[c,PAL[i%PAL.length]]));
+const fmt=x=>Math.round(x).toLocaleString('de-DE');
+const fmt2=x=>x.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
+const esc=s=>{const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML;};
+const chips=s=>(s||'').split(',').map(x=>x.trim()).filter(x=>x&&!x.startsWith('TRIP-'))
+ .map(l=>`<span class=chip>${esc(l)}</span>`).join('');
+
+function renderDetail(el,title,rows){
+ const h=document.querySelector(el.dataset.head);
+ if(h)h.textContent=title+' · '+rows.length+' Buchungen';
+ el.style.display='block';
+ el.innerHTML='<table><thead><tr><th>Datum</th><th class=r>Betrag</th><th>Händler / Kontext</th>'
+  +'<th>Kategorie</th><th>Labels</th></tr></thead><tbody>'
+  +rows.map(r=>`<tr>
+    <td>${r.d}</td>
+    <td class="r ${r.b<0?'neg':'pos'}">${fmt2(r.b)} €</td>
+    <td>${esc(r.h)}${r.vtg?' <span class=vtgtag>Vertrag</span>':''}
+      ${r.vz?`<div class=dctx>${esc(r.vz)}</div>`:''}
+      ${r.prod?`<div class=prod>🛒 ${esc(r.prod)}</div>`:''}
+      ${r.ctx?`<div class=mail>✉ ${esc(r.ctx)}</div>`:''}
+      <div class=why>${esc(r.src||'')} · ${esc(r.art||'')}</div></td>
+    <td>${esc(r.c)}</td>
+    <td>${chips(r.lab)}</td></tr>`).join('')+'</tbody></table>';
+ if(h)h.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+/* ============================================================
+   NAV / ROUTING
+   ============================================================ */
+const pages=['intro','statistik','vertraege','reisen','import','editor'];
+let built={};
+function show(p){
+ pages.forEach(x=>{document.getElementById('p-'+x).classList.toggle('on',x===p);});
+ document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.p===p));
+ if(!built[p]){({intro:buildIntro,statistik:buildStat,vertraege:buildVtg,reisen:buildReisen,
+   import:buildImport,editor:buildEditor})[p]();built[p]=true;}
+ if(p==='import')setTimeout(renderChart,30);   // braucht sichtbare Breite
+ try{history.replaceState(null,'','#'+p);}catch(e){}   // file:// kann werfen
+}
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>show(t.dataset.p));
+
+/* ============================================================
+   INTRO
+   ============================================================ */
+function buildIntro(){
+ const srcs=[
+  {ic:'🏦',t:'Bank-Konten (CSV)',d:'DKB & GLS Girokonten. Export als CSV, Format wird automatisch erkannt; Überlappungen werden dedupliziert. Die Buchung ist die Wahrheit der Geldflüsse.'},
+  {ic:'📧',t:'E-Mail-Postfächer',d:'Gmail (mbox) & GMX (Thunderbird). Liefern Belege & Produktdetails – „PayPal *Ref" wird so zu „Laufschuhe". Nur als Kontext, nie als Buchung.'},
+  {ic:'🗺️',t:'OpenStreetMap',d:'Unbekannte Kartenhändler werden einmalig nachgeschlagen (Branche → Kategorie) und gecacht. Gratis, kein Schlüssel, keine Beträge nach außen.'},
+  {ic:'🧠',t:'KI (nur Long-Tail)',d:'Für unklare Restposten ein reviewbarer Vorschlag mit Konfidenz – als Skalpell, nicht als Bagger. Deine manuelle Korrektur schlägt immer alles.'}
+ ];
+ document.getElementById('introsrc').innerHTML=srcs.map(s=>
+  `<div class="card src"><div class=srcic>${s.ic}</div><div><b>${s.t}</b>
+   <div class=hint style="margin-top:5px;line-height:1.5">${s.d}</div></div></div>`).join('');
+ const steps=[
+  {t:'Konto zusammenführen',d:'Alle Bank-CSV vereinen, Überlappungen robust deduplizieren.',tag:'parse_konten'},
+  {t:'Ingest + Systemgrenze',d:'CSV → DB. Interne Umbuchungen raus, Sparen/Kredit/Einnahme markieren.',tag:'ingest'},
+  {t:'Enrich',d:'Signale je Buchung: Zahlungsart, Händler, Ort, echtes Kaufdatum, Gläubiger-ID, wiederkehrend.',tag:'enrich'},
+  {t:'Match',d:'Buchung ↔ E-Mail/Beleg verknüpfen (Amazon-Nr / PayPal / Betrag+Händler+Datum).',tag:'match'},
+  {t:'Regeln + KI + Reisen + Verträge',d:'Kategorie (genau 1) + Labels (n). Trichter von sicher zu unsicher.',tag:'rules'},
+  {t:'Aggregation',d:'Dimensionales Modell: Fakt Buchung × Konto/Typ/Kategorie/Label/Trip/Vertrag → jede Frage = Filter + Group-by.',tag:'frontend'}
+ ];
+ document.getElementById('flow').innerHTML=steps.map((s,i)=>
+  `<div class=step><div class=n>${i+1}</div><div class=t>${s.t}</div><div class=d>${s.d}</div>
+    <div class=tag>${s.tag}</div></div>`+(i<steps.length-1?'<div class=arrow>→</div>':'')).join('');
+}
+
+/* ============================================================
+   STATISTIK
+   ============================================================ */
+const BT=['Einnahme','Konsum','Sparen'];
+let sel=new Set(CATS), charts=[];
+const yrS=()=>document.getElementById('yr'), lfS=()=>document.getElementById('lf');
+const YEARS=[...new Set(MONTHS.map(m=>m.slice(0,4)))].sort();
+function buildStat(){
+ const yr=yrS();['Alle',...YEARS].forEach(y=>{const o=document.createElement('option');o.textContent=y;yr.appendChild(o);});
+ yr.value=YEARS[YEARS.length-1];
+ const lf=lfS();lf.innerHTML='<option value="">alle Labels</option>';
+ const LABC={};TX.forEach(t=>(t.lab||'').split(',').filter(Boolean).forEach(l=>{if(!l.startsWith('TRIP-'))LABC[l]=(LABC[l]||0)+1;}));
+ Object.keys(LABC).sort((a,b)=>LABC[b]-LABC[a]).forEach(l=>{const o=document.createElement('option');
+  o.value=l;o.textContent='nur: '+l+' ('+LABC[l]+')';lf.appendChild(o);});
+ document.getElementById('detail').dataset.head='#dh';
+ document.getElementById('stand').textContent='· Demo-Daten '+MONTHS[0]+' bis '+MONTHS[11];
+ yr.onchange=render;lf.onchange=render;
+ document.getElementById('tgF').onclick=()=>{const f=document.getElementById('catfilter');
+  f.style.display=f.style.display==='none'?'grid':'none';};
+ document.getElementById('cAll').onclick=()=>{sel=new Set(CATS);buildFilter();render();};
+ document.getElementById('cNone').onclick=()=>{sel=new Set();buildFilter();render();};
+ document.getElementById('resetAll').onclick=()=>{sel=new Set(CATS);yr.value='Alle';lf.value='';buildFilter();render();};
+ buildFilter();render();
+}
+function buildFilter(){
+ const net={};TX.forEach(t=>net[t.c]=(net[t.c]||0)+t.b);
+ document.getElementById('catfilter').innerHTML=CATS.map(c=>{const v=net[c]||0;
+  return `<label><input type=checkbox value="${esc(c)}" ${sel.has(c)?'checked':''}>
+   <span>${esc(c)}</span><span class="amt ${v<0?'neg':'pos'}">${fmt(v)} €</span></label>`;}).join('');
+ document.querySelectorAll('#catfilter input').forEach(cb=>cb.onchange=()=>{
+  cb.checked?sel.add(cb.value):sel.delete(cb.value);render();});
+}
+const yok=m=>{const y=yrS().value;return y==='Alle'||m.startsWith(y);};
+const lok=t=>{const l=lfS().value;return !l||(','+(t.lab||'')+',').includes(','+l+',');};
+function agg(){
+ const months=MONTHS.filter(yok),mi={};months.forEach((m,i)=>mi[m]=i);
+ const z=()=>Array(months.length).fill(0);
+ const a={ein:z(),kon:z(),spar:z(),fix:z(),catm:{}};
+ for(const t of TX){if(!yok(t.m)||!sel.has(t.c)||!lok(t))continue;const i=mi[t.m];
+  if(t.bt==='Einnahme')a.ein[i]+=t.b;
+  else if(t.bt==='Sparen')a.spar[i]+=-t.b;
+  else{a.kon[i]+=-t.b;(a.catm[t.c]=a.catm[t.c]||z())[i]+=-t.b;}
+  if(t.fx)a.fix[i]+=-t.b;}
+ a.months=months;return a;
+}
+function render(){
+ const A=agg(),labels=A.months,sum=a=>a.reduce((x,y)=>x+y,0),n=labels.length||1;
+ const parts=[];if(sel.size!==CATS.length)parts.push(`${sel.size}/${CATS.length} Kategorien`);
+ if(lfS().value)parts.push('Label: '+lfS().value);if(yrS().value!=='Alle')parts.push('Jahr '+yrS().value);
+ document.getElementById('fbadge').textContent=parts.length?'· Filter aktiv: '+parts.join(' · '):'';
+ document.getElementById('kpis').innerHTML=[
+  ['Ø Einnahmen/Mon',sum(A.ein)/n],['Ø Ausgaben/Mon',sum(A.kon)/n],['Ø Fixkosten/Mon',sum(A.fix)/n],
+  ['Ø Sparen/Mon',sum(A.spar)/n],['Netto-Cashflow',sum(A.ein)-sum(A.kon)-sum(A.spar)]
+ ].map(([l,v])=>`<div class=kpi><div class=v>${fmt(v)} €</div><div class=l>${esc(l)}</div></div>`).join('');
+ charts.forEach(c=>c.destroy());charts=[];
+ const axc={ticks:{color:'#9aa4b2'},grid:{color:'#222834'}};
+ charts.push(new Chart(c1,{type:'bar',data:{labels,datasets:[
+   {label:'Einnahmen',data:A.ein,backgroundColor:'#34d399'},
+   {label:'Ausgaben',data:A.kon,backgroundColor:'#ef4444'},
+   {label:'Sparen',data:A.spar,backgroundColor:'#4f8cff'}]},
+   options:{onClick:(e,el)=>{if(!el.length)return;const m=labels[el[0].index],bt=BT[el[0].datasetIndex];
+     detail(`${bt} · ${m}`,TX.filter(t=>t.m===m&&t.bt===bt&&sel.has(t.c)&&lok(t)));},
+    plugins:{legend:{labels:{color:'#cbd5e1'}}},scales:{x:axc,y:axc}}}));
+ const konCats=Object.keys(A.catm).sort((x,y)=>sum(A.catm[y])-sum(A.catm[x]));
+ charts.push(new Chart(c2,{type:'bar',data:{labels,datasets:konCats.map(c=>(
+   {label:c,data:A.catm[c],backgroundColor:COL[c]||'#94a3b8'}))},
+   options:{onClick:(e,el)=>{if(!el.length)return;const m=labels[el[0].index],cat=konCats[el[0].datasetIndex];
+     detail(`${cat} · ${m}`,TX.filter(t=>t.m===m&&t.c===cat&&lok(t)));},
+    plugins:{legend:{labels:{color:'#cbd5e1',boxWidth:12,font:{size:10}}}},
+    scales:{x:{stacked:true,...axc},y:{stacked:true,...axc}}}}));
+ const curCt=konCats.map(c=>[c,sum(A.catm[c])]).filter(x=>x[1]>0);
+ charts.push(new Chart(c3,{type:'bar',data:{labels:curCt.map(x=>x[0]),
+   datasets:[{data:curCt.map(x=>x[1]),backgroundColor:curCt.map(x=>COL[x[0]]||'#94a3b8')}]},
+   options:{indexAxis:'y',onClick:(e,el)=>{if(!el.length)return;const cat=curCt[el[0].index][0];
+     detail(`${cat} · Zeitraum`,TX.filter(t=>yok(t.m)&&t.c===cat&&lok(t)));},
+    plugins:{legend:{display:false}},scales:{x:axc,y:axc}}}));
+ document.getElementById('tripsT').innerHTML='<tr><th>Reise (Orte)</th><th>Zeit</th><th class=r>Kosten</th></tr>'+
+  TRIPS.filter(t=>t.status!=='rejected'&&(yrS().value==='Alle'||t.start.startsWith(yrS().value))).map(t=>
+   `<tr><td>${esc(t.name||t.orte)}</td><td>${t.start.slice(0,7)}</td><td class=r>${fmt(t.kosten)} €</td></tr>`).join('');
+}
+function detail(title,rows){renderDetail(document.getElementById('detail'),title,rows);}
+
+/* ============================================================
+   VERTRÄGE
+   ============================================================ */
+function buildVtg(){
+ document.getElementById('vdetail').dataset.head='#vdh';
+ const act=CONTRACTS.filter(c=>c.status!=='rejected'&&c.aktiv);
+ const aus=act.filter(c=>c.richtung==='Ausgabe').reduce((s,c)=>s+c.monatlich,0);
+ const ein=act.filter(c=>c.richtung==='Einnahme').reduce((s,c)=>s+c.monatlich,0);
+ document.getElementById('vkpis').innerHTML=[
+  ['Fixe Ausgaben ≈/Mon',fmt2(aus)+' €'],['Fixe Einnahmen ≈/Mon',fmt2(ein)+' €'],
+  ['Netto fix ≈/Mon',fmt2(ein-aus)+' €'],['aktive Verträge',act.length],
+  ['offen (zu prüfen)',CONTRACTS.filter(c=>c.status==='candidate').length],
+  ['ausgelaufen',CONTRACTS.filter(c=>c.status!=='rejected'&&!c.aktiv).length]
+ ].map(([l,v])=>`<div class=kpi><div class=v>${v}</div><div class=l>${esc(l)}</div></div>`).join('');
+ const tb=document.getElementById('vtb');tb.innerHTML='';
+ CONTRACTS.forEach(c=>{
+  const tr=document.createElement('tr');if(c.status==='rejected')tr.className='rej';if(!c.aktiv)tr.style.opacity=.6;
+  const sepa=c.typ.startsWith('SEPA');
+  tr.innerHTML=`<td><div class="pill s-${c.status}">${c.status}</div></td>
+   <td><b>${esc(c.name)}</b>${c.zweck?'<div class=zw>↳ '+esc(c.zweck)+'</div>':''}</td>
+   <td>${esc(c.kategorie)}</td><td>${esc(c.rhythmus)}</td>
+   <td class="r ${c.richtung==='Einnahme'?'ein':'aus'}">${fmt2(c.betrag)} €</td>
+   <td class=r>${fmt2(c.monatlich)} €</td>
+   <td class=r><button class=fbtn>${c.anzahl} ▸</button></td>
+   <td><span class="${sepa?'sepa':'karte'}">${esc(c.typ)}</span></td>
+   <td class=hint><span class="pill ${c.aktiv?'akt':'exp'}">${c.aktiv?'aktiv':'ausgelaufen'}</span>
+     <div>letzte: ${c.letzte||'–'}${c.seit?' (vor '+c.seit+' T.)':''}</div></td>`;
+  tr.querySelector('button').onclick=()=>renderDetail(document.getElementById('vdetail'),
+   '📑 '+c.name,TX.filter(t=>t._cid===c._cid||(c.id==='cx1'&&t.h==='REWE')||(c.id==='cx2'&&t.h==='Geldautomat')));
+  tb.appendChild(tr);
+ });
+}
+
+/* ============================================================
+   REISEN
+   ============================================================ */
+function buildReisen(){
+ document.getElementById('rdetail').dataset.head='#rdh';
+ const ok=TRIPS.filter(t=>t.status==='confirmed'),cand=TRIPS.filter(t=>t.status==='candidate');
+ const sum=ok.reduce((s,t)=>s+t.kosten,0);
+ document.getElementById('rkpis').innerHTML=[
+  ['Bestätigte Reisen',ok.length],['Summe (bestätigt)',fmt(sum)+' €'],
+  ['Ø pro Reise',ok.length?fmt(sum/ok.length)+' €':'–'],['offen (zu prüfen)',cand.length]
+ ].map(([l,v])=>`<div class=kpi><div class=v>${v}</div><div class=l>${esc(l)}</div></div>`).join('');
+ const tb=document.getElementById('rtb');tb.innerHTML='';
+ TRIPS.forEach(t=>{
+  const tr=document.createElement('tr');if(t.status==='rejected')tr.className='rej';
+  tr.innerHTML=`<td><div class="pill s-${t.status}">${t.status}</div></td>
+   <td><b>${esc(t.name||'—')}</b></td>
+   <td>${t.start} … ${t.ende}<div class=hint>${t.tage} Tage</div></td>
+   <td class=orte>${esc(t.orte)}</td>
+   <td class=r><button class=fbtn>${t.n} ▸</button></td>
+   <td class=r>${fmt(t.kosten)} €</td>`;
+  tr.querySelector('button').onclick=()=>renderDetail(document.getElementById('rdetail'),
+   '🏖️ '+(t.name||t.orte),TX.filter(x=>x._trip===t.id));
+  tb.appendChild(tr);
+ });
+}
+
+/* ============================================================
+   IMPORT (Timeline)
+   ============================================================ */
+function buildImport(){
+ const tb=document.getElementById('stab');
+ tb.innerHTML=SOURCES.map(s=>`<tr><td><b>${esc(s.name)}</b></td>
+   <td><span class="pill t-${s.typ}">${s.typ}</span></td>
+   <td>${s.von} … ${s.bis}</td><td class=r>${s.n.toLocaleString('de-DE')}</td>
+   <td>${s.update}</td><td class=hint>${s.sync==='Upload'?'CSV-Upload':'Live-Sync (Mail)'}</td></tr>`).join('');
+ document.getElementById('vonI').value=PERIOD.von;document.getElementById('bisI').value=PERIOD.bis;
+ document.getElementById('sugTxt').textContent=PERIOD.suggest.von+' … '+PERIOD.suggest.bis;
+ document.getElementById('sugBtn').onclick=()=>{document.getElementById('vonI').value=PERIOD.suggest.von;
+  document.getElementById('bisI').value=PERIOD.suggest.bis;drawBand();
+  document.getElementById('pmsg').textContent='Vorschlag übernommen';};
+ document.getElementById('vonI').onchange=drawBand;document.getElementById('bisI').onchange=drawBand;
+}
+const day=s=>Date.parse(s),monStart=ym=>ym?ym+'-01':'',
+ monEnd=ym=>{if(!ym)return'';const d=new Date(+ym.slice(0,4),+ym.slice(5,7),0);return ym+'-'+pad(d.getDate());};
+let _g=null;
+function renderChart(){
+ const S=SOURCES.filter(s=>s.von&&s.bis),chart=document.getElementById('chart'),axis=document.getElementById('axis');
+ chart.innerHTML='';axis.innerHTML='';
+ const gmin=Math.min(...S.map(s=>day(s.von))),gmax=Math.max(...S.map(s=>day(s.bis))),span=gmax-gmin||1;
+ _g={gmin,span};const pos=t=>(day(t)-gmin)/span*100;
+ S.forEach(s=>{const row=document.createElement('div');row.className='trow';
+  row.innerHTML=`<div class=tlabel>${esc(s.name)}</div>
+   <div class=track><div class="barseg seg-${s.typ}" style="left:${pos(s.von).toFixed(2)}%;width:${Math.max(0.6,pos(s.bis)-pos(s.von)).toFixed(2)}%"></div></div>`;
+  chart.appendChild(row);});
+ const ovl=document.createElement('div');ovl.id='ovl';ovl.style.height=(S.length*30)+'px';
+ const y0=new Date(gmin).getFullYear(),y1=new Date(gmax).getFullYear();
+ for(let y=y0;y<=y1+1;y++){const x=(Date.parse(y+'-01-01')-gmin)/span*100;if(x<0||x>100)continue;
+  const ln=document.createElement('div');ln.className='yline';ln.style.left=x+'%';ovl.appendChild(ln);
+  const lb=document.createElement('div');lb.className='ylab';lb.style.left=x+'%';lb.textContent=y;axis.appendChild(lb);}
+ const band=document.createElement('div');band.id='band';ovl.appendChild(band);chart.appendChild(ovl);
+ drawBand();
+}
+function drawBand(){const band=document.getElementById('band');if(!band||!_g)return;
+ const v=monStart(document.getElementById('vonI').value),b=monEnd(document.getElementById('bisI').value);
+ if(!v||!b){band.style.display='none';return;}band.style.display='block';
+ let l=(day(v)-_g.gmin)/_g.span*100,r=(day(b)-_g.gmin)/_g.span*100;
+ l=Math.max(0,Math.min(100,l));r=Math.max(0,Math.min(100,r));
+ band.style.left=l+'%';band.style.width=Math.max(0,r-l)+'%';}
+
+/* ============================================================
+   EDITOR
+   ============================================================ */
+function buildEditor(){
+ const fc=document.getElementById('efcat');
+ fc.innerHTML='<option value="">— Kategorie —</option>'+CATS.map(c=>`<option>${esc(c)}</option>`).join('');
+ const draw=()=>{
+  const q=(document.getElementById('efsearch').value||'').toLowerCase();
+  const fcv=fc.value,only=document.getElementById('efonly').checked;
+  let rows=TX.filter(t=>(!fcv||t.c===fcv)&&(!only||t.c==='Sonstiges')
+   &&(!q||(t.h+' '+t.vz+' '+t.ctx).toLowerCase().includes(q)));
+  const total=rows.length;rows=rows.slice(0,150);
+  document.getElementById('etb').innerHTML=rows.map(r=>`<tr>
+    <td>${r.d}</td><td class="r ${r.b<0?'neg':'pos'}">${fmt2(r.b)} €</td>
+    <td>${esc(r.h).slice(0,34)}${r.vtg?' <span class=vtgtag>Vertrag</span>':''}</td>
+    <td><select data-id="${r.id}">${CATS.map(c=>`<option${c===r.c?' selected':''}>${esc(c)}</option>`).join('')}</select></td>
+    <td>${chips(r.lab)}</td>
+    <td class=dctx>${esc((r.vz||'').slice(0,80))}${r.prod?'<div class=prod>🛒 '+esc(r.prod)+'</div>':''}
+      <div class=why>${esc(r.src)} · ${esc(r.status)}</div></td></tr>`).join('');
+  document.getElementById('etb').querySelectorAll('select').forEach(s=>s.onchange=()=>{
+   const t=TX.find(x=>x.id===s.dataset.id);if(t){t.c=s.value;t.src='manual';t.status='ok';
+     if(!sel.has(t.c))sel.add(t.c);}
+   if(built.statistik){buildFilter();render();}  // Statistik live nachziehen (kein DOM-Neuaufbau)
+  });
+  document.getElementById('ecount').textContent=`${total} Buchungen gefiltert${total>150?' (zeige erste 150)':''}.`;
+ };
+ fc.onchange=draw;document.getElementById('efsearch').oninput=draw;document.getElementById('efonly').onchange=draw;
+ draw();
+}
+
+/* start */
+const start=(location.hash||'#intro').slice(1);
+show(pages.includes(start)?start:'intro');
+</script>
+</body></html>

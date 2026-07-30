@@ -1,0 +1,177 @@
+"""Gemeinsame DB-Helfer + Schema fuer die Ausgaben-Datenbank.
+Eine SQLite-DB ist die Wahrheitsschicht; Rohdaten bleiben unangetastet.
+"""
+import os, sqlite3, datetime, re
+
+# ---- Konfiguration: ALLE Pfade an einer Stelle -----------------------------
+# Per Umgebungsvariable überschreibbar -> niemand muss den Quellcode editieren.
+# Defaults = bisheriges Setup (damit ein bestehender Lauf unverändert weiterläuft).
+# BASE = der Projektordner. Default: der Ordner, in dem dieses Repo liegt (nicht ein
+# fester Pfad) -> ein Clone läuft ohne Env-Variablen und ohne Code-Änderung.
+BASE     = os.environ.get("FINANZEN_BASE", os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Eingang für Bank-CSV-Exporte (= Upload-Ziel der Import-Seite). Liegt im Projekt,
+# damit das Projekt keine Ordner außerhalb braucht.
+BANK_DIR = os.environ.get("FINANZEN_BANK", os.path.join(BASE, "konten"))
+# Zusammengeführte Konto-CSV, die parse_konten.py aus allen Exporten baut.
+BANK_CSV = os.environ.get("FINANZEN_BANK_CSV", os.path.join(BASE, "output", "transaktionen.csv"))
+# Elternordner des Bank-Eingangs. Nur noch von vermoegen.py genutzt, um relative
+# 'konten/...'-Pfade aus positionen.json aufzulösen. Name ist historisch (Steuerprojekt);
+# wird mit der Konfig-Umstellung (Schritt 3) abgelöst.
+STEUER_DIR = os.path.dirname(BANK_DIR)
+
+_PP_PREFIX = re.compile(r"^\s*\d{6,}/PP\.\d+\.PP/\.?\s*")
+_PP_INLINE = re.compile(r"/PP\.\d+\.PP/\.?")
+_CODE_TAIL = re.compile(r"(?i)\b(EREF|MREF|CRED|IBAN|BIC|SVWZ|MANDATE|GLA?EUBIGER)\b.*$")
+_PP_SENDER = re.compile(r"(?i)\s*·?\s*PayPal Europe.*$")
+def clean_disp(s):
+    """Kryptische Bank-/PayPal-Codes für die ANZEIGE entfernen (Händler/Zweck lesbar machen).
+    Verändert NICHT die gespeicherten Daten – nur was im Frontend gezeigt wird."""
+    s = s or ""
+    s = _PP_PREFIX.sub("", s)        # '1049.../PP.2794.PP/.' am Anfang
+    s = _CODE_TAIL.sub("", s)        # ab EREF/MREF/CRED/IBAN/BIC abschneiden
+    s = _PP_INLINE.sub(" ", s)
+    s = _PP_SENDER.sub("", s)        # '· PayPal Europe S a r l …' am Ende
+    s = re.sub(r"\bVISA Debitkartenumsatz vom\b", "Karte", s, flags=re.I)
+    s = re.sub(r"\s+", " ", s).strip(" .,/-")
+    return s
+DB_PATH = os.path.join(BASE, "finanzen.db")
+ATTACH_DIR = os.path.join(BASE, "attachments")
+OUTPUT_DIR = os.path.join(BASE, "output")
+
+def current_month(today=None):
+    """Laufender Monat als 'YYYY-MM' = obere Grenze der Analysen, wenn period_bis leer ist.
+    Der laufende Monat zaehlt bewusst MIT (frisch importierter Monat soll sofort sichtbar
+    sein). Er ist angebrochen - Monatsvergleiche und Durchschnitte enthalten ihn also als
+    Teilmonat, der je nach Importdatum zu niedrig ausfaellt."""
+    d = today or datetime.date.today()
+    return f"{d.year}-{d.month:02d}"
+
+# Buchungen, die NICHT in eine Reise gehoeren, obwohl sie in ihrem Zeitraum liegen: per X
+# ignoriert. Eine Quelle fuer trip_detect (Zuordnung) und die Kosten-Anzeige (Reise-Seite,
+# Statistik) - sonst laufen die beiden auseinander, sobald im Editor etwas geaendert wird.
+# Bewusst NICHT ueber die Kategorie: Reise-Buchungen sind durchgehend feinkategorisiert
+# (Restaurant/Freizeit/Lebensmittel), das ist die Aufschluesselung INNERHALB der Reise und
+# kein Ausschluss. Nur das X sagt "gehoert nicht dazu".
+TRIP_TX_EXCL_SQL = """coalesce(m.ignore,0)=1"""
+
+def trip_costs(con):
+    """{trip_id: kosten} live aus den Labels, mit manueller Schicht. Nicht aus trips.kosten
+    lesen - die Spalte ist der Stand des letzten trip_detect-Laufs, waehrend ein Editor-Save
+    nur tx_manual schreibt."""
+    # distinct tx_id: eine Buchung kann dasselbe Trip-Label doppelt tragen (trip-detect
+    # automatisch + manual von Hand) - ohne das zaehlt sie doppelt.
+    return {tid: round(k or 0) for tid, k in con.execute(f"""
+        select l.label, sum(-t.betrag)
+        from (select distinct tx_id, label from tx_labels where label like 'TRIP-%') l
+        join transactions t on t.id=l.tx_id
+        left join tx_manual m on m.tx_id=t.id
+        where t.flow='ausgabe' and not ({TRIP_TX_EXCL_SQL})
+        group by l.label""")}
+
+def _ensure_settings(con):
+    con.execute("CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY, val TEXT)")
+
+def get_setting(key, default=None, con=None):
+    own = con is None
+    if own: con = connect()
+    _ensure_settings(con)
+    r = con.execute("select val from settings where key=?", (key,)).fetchone()
+    if own: con.close()
+    return r[0] if r and r[0] not in (None, "") else default
+
+def set_setting(key, val, con=None):
+    own = con is None
+    if own: con = connect()
+    _ensure_settings(con)
+    con.execute("insert or replace into settings(key,val) values(?,?)", (key, val))
+    con.commit()
+    if own: con.close()
+
+def period_bounds():
+    """Berücksichtigter Analyse-Zeitraum als ('YYYY-MM','YYYY-MM').
+    von = settings.period_von (sonst '' = unbegrenzt nach unten);
+    bis = settings.period_bis (sonst der laufende Monat).
+    Kein Kalender-Deckel mehr: der laufende Monat zaehlt mit, damit ein frisch importierter
+    Monat sofort in der Statistik steht. Wer nur vollstaendige Monate auswerten will, setzt
+    period_bis auf der Import-Seite auf den Vormonat."""
+    von = get_setting("period_von", "") or ""
+    bis = get_setting("period_bis", "") or current_month()
+    return von, bis
+
+SCHEMA = """
+CREATE TABLE IF NOT EXISTS transactions (
+    id              TEXT PRIMARY KEY,   -- hash, idempotent
+    konto           TEXT,
+    datum           TEXT,               -- ISO YYYY-MM-DD
+    jahr            INTEGER,
+    monat           TEXT,               -- YYYY-MM
+    betrag          REAL,
+    gegenpartei     TEXT,
+    verwendungszweck TEXT,
+    buchungstext    TEXT,
+    iban_gegen      TEXT,
+    glaeubiger_id   TEXT,
+    quelle          TEXT,
+    flow            TEXT,               -- intern | ausgabe | einnahme
+    is_internal     INTEGER,            -- 0/1 (zwischen eigenen Giro-Konten/GEZ -> raus)
+    preset_category TEXT,               -- aus Kontenkarte (z.B. Sparen/Invest, Kredit, Einnahme:*)
+    preset_note     TEXT
+);
+CREATE INDEX IF NOT EXISTS ix_tx_datum  ON transactions(datum);
+CREATE INDEX IF NOT EXISTS ix_tx_betrag ON transactions(betrag);
+CREATE INDEX IF NOT EXISTS ix_tx_monat  ON transactions(monat);
+CREATE INDEX IF NOT EXISTS ix_tx_flow   ON transactions(flow);
+
+CREATE TABLE IF NOT EXISTS mails (
+    id              TEXT PRIMARY KEY,   -- hash, idempotent
+    mailbox         TEXT,               -- gmail | gmx
+    message_id      TEXT,
+    msg_date        TEXT,               -- ISO
+    jahr            INTEGER,
+    from_name       TEXT,
+    from_addr       TEXT,
+    sender_domain   TEXT,
+    subject         TEXT,
+    body_text       TEXT,               -- decodiert, gekuerzt
+    has_attachment  INTEGER
+);
+CREATE INDEX IF NOT EXISTS ix_mail_date   ON mails(msg_date);
+CREATE INDEX IF NOT EXISTS ix_mail_jahr   ON mails(jahr);
+CREATE INDEX IF NOT EXISTS ix_mail_domain ON mails(sender_domain);
+
+CREATE TABLE IF NOT EXISTS attachments (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    mail_id         TEXT,
+    filename        TEXT,
+    content_type    TEXT,
+    size            INTEGER,
+    saved_path      TEXT,
+    extracted_text  TEXT
+);
+CREATE INDEX IF NOT EXISTS ix_att_mail ON attachments(mail_id);
+
+-- Verarbeitungsprotokoll, damit nichts still verschwindet
+CREATE TABLE IF NOT EXISTS ingest_log (
+    ts      TEXT,
+    step    TEXT,
+    detail  TEXT
+);
+"""
+
+def connect():
+    con = sqlite3.connect(DB_PATH)
+    con.execute("PRAGMA journal_mode=WAL;")
+    con.execute("PRAGMA synchronous=NORMAL;")
+    return con
+
+def init():
+    os.makedirs(ATTACH_DIR, exist_ok=True)
+    os.makedirs(OUTPUT_DIR, exist_ok=True)   # sonst scheitert frontend/liste im frischen Clone
+    con = connect()
+    con.executescript(SCHEMA)
+    con.commit()
+    con.close()
+    print("Schema ok ->", DB_PATH)
+
+if __name__ == "__main__":
+    init()

@@ -1,0 +1,182 @@
+
+window.BK=(function(){
+ const esc=s=>{const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML;};
+ const fmt=x=>Math.round(x).toLocaleString('de-DE');
+ const fmt2=x=>Number(x).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
+ let META={cats:[],labels:[]};
+ function ensureDom(){
+   if(document.getElementById('bkstyle'))return;
+   const st=document.createElement('style'); st.id='bkstyle'; st.textContent=`
+    .bk-tbl{width:100%;border-collapse:collapse;font-size:14px}
+    .bk-tbl td,.bk-tbl th{padding:6px 8px;border-bottom:1px solid #232834;vertical-align:top}
+    .bk-tbl th{color:#9aa4b2;text-align:left}.bk-r{text-align:right;white-space:nowrap}
+    .bk-neg{color:#ff8a8a}.bk-pos{color:#7ee0a0}
+    .bk-tbl select,.bk-tbl input{background:#1b1f2a;color:#e6e6e6;border:1px solid #2c323f;border-radius:7px;padding:4px 6px;font-size:13px}
+    .bk-komm{width:150px}
+    tr.bk-rev>td{background:#13251a} tr.bk-ign{opacity:.4}
+    tr.bk-unsaved>td{background:#3a1620;outline:1px solid #ff8a8a}
+    .bk-prod{color:#7ee0a0;font-weight:600;font-size:13px;margin:2px 0}
+    .bk-ctx{color:#c2c9d6;font-size:12px;max-width:420px}.bk-mr{color:#7f9cc7;font-size:11px}.bk-why{color:#6b7280;font-size:11px}
+    .bk-chip{background:#26324a;border-radius:6px;padding:1px 6px;margin:1px;display:inline-block;font-size:12px}
+    .bk-lbe{background:#2a3343;border:0;color:#9aa4b2;border-radius:6px;cursor:pointer;padding:1px 7px}
+    .bk-lc{cursor:pointer;min-width:140px}
+    .bk-b{background:#222a38;border:1px solid #2c323f;color:#cbd5e1;border-radius:6px;cursor:pointer;padding:2px 7px;font-weight:600}
+    .bk-okb{background:#16301d;border-color:#2c6b3f;color:#7ee0a0}.bk-nob{background:#301717;border-color:#6b2c2c;color:#ff8a8a}
+    .bk-mailbtn{background:#22324a;border:1px solid #2c4060;color:#9ec1ff;border-radius:6px;cursor:pointer;padding:1px 7px;font-size:11px}
+    .bk-vtg{background:#3a2f4d;color:#c9b6ec;border-radius:5px;padding:0 5px;font-size:10px;vertical-align:middle}
+    #bklp{position:fixed;z-index:60;background:#11141c;border:1px solid #3a4252;border-radius:10px;width:270px;box-shadow:0 8px 30px #000a;display:none}
+    #bklp .lphd{padding:10px 12px 6px}
+    #bklp .lq{width:100%;box-sizing:border-box;background:#1b1f2a;color:#e6e6e6;border:1px solid #2c323f;border-radius:7px;padding:7px 9px;font-size:13px}
+    #bklp .lplist{max-height:42vh;overflow:auto;padding:4px 12px 6px}#bklp .lo{display:block;padding:3px 0;font-size:13px;cursor:pointer}
+    #bklp .lo.on{color:#7ee0a0;font-weight:600}
+    #bklp .lnew{padding:6px 9px;margin:2px 0 6px;background:#16301d;color:#7ee0a0;border:1px solid #2c6b3f;border-radius:7px;cursor:pointer;font-size:13px}
+    #bklp .lpfoot{padding:8px 12px;border-top:1px solid #2c323f}
+    #bklp button{background:#4f8cff;border:0;color:#fff;border-radius:7px;padding:6px 10px;cursor:pointer}#bklp .sec{background:#2a3343;color:#cbd5e1}
+    #bkov{position:fixed;inset:0;background:#000a;display:none;z-index:70;align-items:center;justify-content:center}
+    #bkmod{background:#11141c;border:1px solid #3a4252;border-radius:12px;max-width:820px;width:92%;max-height:82vh;overflow:auto;padding:16px}
+    #bkmod .x{float:right;background:#2a3343;border:0;color:#cbd5e1;border-radius:7px;padding:5px 10px;cursor:pointer}
+    .bk-mailbody{white-space:pre-wrap;font-size:13px;line-height:1.45;color:#dfe5ee;background:#141823;border:1px solid #232834;border-radius:8px;padding:10px;margin:6px 0;overflow-wrap:anywhere}`;
+   document.head.appendChild(st);
+   const lp=document.createElement('div'); lp.id='bklp'; document.body.appendChild(lp);
+   const ov=document.createElement('div'); ov.id='bkov'; ov.innerHTML='<div id=bkmod></div>'; document.body.appendChild(ov);
+   ov.addEventListener('click',e=>{if(e.target.id==='bkov')ov.style.display='none';});
+   document.addEventListener('mousedown',e=>{const l=document.getElementById('bklp');
+     if(l.style.display==='block'&&!l.contains(e.target)&&!e.target.closest('.bk-lc'))l.style.display='none';});
+   document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.getElementById('bklp').style.display='none';document.getElementById('bkov').style.display='none';}});
+ }
+ async function init(){ ensureDom(); try{META=await (await fetch('/api/meta')).json();}catch(e){} return META; }
+ const chips=s=>(s||'').split(',').map(x=>x.trim()).filter(Boolean).map(l=>`<span class=bk-chip>${esc(l)}</span>`).join('');
+ const catOptions=c=>META.cats.map(x=>`<option${x===c?' selected':''}>${esc(x)}</option>`).join('')+`<option value="__new__">➕ neue Kategorie…</option>`;
+ async function save(r,patch,tr,onChange){
+   const body=Object.assign({tx_id:r.id,scope:'tx',src:'detail'},patch);  // NUR geändertes Feld (merge-sicher)
+   try{
+     const resp=await fetch('/api/edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+     if(!resp.ok) throw new Error('HTTP '+resp.status);
+     const j=await resp.json(); if(!j.row) throw new Error('keine Bestätigung');
+     Object.assign(r,j.row);
+     if(tr){tr.classList.remove('bk-unsaved');tr.classList.toggle('bk-ign',!!r.ignore);tr.classList.toggle('bk-rev',!!r.reviewed&&!r.ignore);}
+     if(onChange)onChange();
+   }catch(e){ if(tr)tr.classList.add('bk-unsaved'); alert('⚠ NICHT gespeichert: '+e.message+'\nServer erreichbar?'); }
+ }
+ function _lev(a,b){const m=a.length,n=b.length;if(!m)return n;if(!n)return m;let p=[];for(let j=0;j<=n;j++)p[j]=j;
+   for(let i=1;i<=m;i++){let c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c;}return p[n];}
+ function _lscore(L,Q){if(L===Q)return 1000;if(L.startsWith(Q))return 600-L.length;const i=L.indexOf(Q);if(i>=0)return 400-i;
+   const d=_lev(L,Q),md=Math.max(1,Math.floor(Q.length/3));if(d<=md)return 350-d*30;
+   let p=0;while(p<L.length&&p<Q.length&&L[p]===Q[p])p++;if(p>=3)return 150+p;return -1;}
+ function _rank(Q,sel){const ql=Q.toLowerCase(),pool=[...new Set([...(META.labels||[]),...sel])];
+   let it=pool.map(l=>({l,on:sel.has(l),s:ql?_lscore(l.toLowerCase(),ql):0}));
+   if(ql)it=it.filter(x=>x.on||x.s>=0);
+   it.sort((a,b)=>(b.on-a.on)||(b.s-a.s)||a.l.localeCompare(b.l));return it;}
+ function openLabels(r,tr,e,onChange){
+   const lp=document.getElementById('bklp');
+   const sel=new Set((r.labels||'').split(',').map(x=>x.trim()).filter(Boolean));
+   lp.innerHTML=`<div class=lphd><input id=bklq class=lq placeholder="suchen oder neu… ⏎" autocomplete=off></div>`
+    +`<div class=lplist id=bkll></div>`
+    +`<div class=lpfoot><button id=bkls>Übernehmen</button> <button id=bklc class=sec>Abbrechen</button></div>`;
+   lp.style.display='block';
+   const q=lp.querySelector('#bklq'),list=lp.querySelector('#bkll');
+   const draw=()=>{const Q=q.value.trim(),exact=(META.labels||[]).some(l=>l.toLowerCase()===Q.toLowerCase());
+     let h=(Q&&!exact)?`<div class=lnew id=bklnew>➕ „${esc(Q)}" anlegen</div>`:'';
+     const it=_rank(Q,sel);
+     h+=it.map(x=>`<label class="lo${x.on?' on':''}"><input type=checkbox value="${esc(x.l)}" ${x.on?'checked':''}> ${esc(x.l)}</label>`).join('');
+     if(!it.length&&!(Q&&!exact))h+='<div class=bk-why style="padding:4px">nichts gefunden</div>';
+     list.innerHTML=h;
+     const nw=list.querySelector('#bklnew');if(nw)nw.onclick=()=>addNew(Q);
+     list.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.onchange=()=>{cb.checked?sel.add(cb.value):sel.delete(cb.value);
+       cb.parentElement.classList.toggle('on',cb.checked);});};
+   const addNew=async v=>{v=(v||'').trim();if(!v)return;
+     try{const res=await (await fetch('/api/addlabel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:v})})).json();META.labels=res.labels||META.labels;}catch(_){}
+     sel.add(v);q.value='';draw();q.focus();};
+   const toggle=l=>{sel.has(l)?sel.delete(l):sel.add(l);q.value='';draw();q.focus();};
+   q.addEventListener('input',draw);
+   q.addEventListener('keydown',ev=>{
+     if(ev.key==='Enter'){ev.preventDefault();const Q=q.value.trim();if(!Q)return apply();
+       const c=_rank(Q,new Set()).filter(x=>x.s>=300);
+       if(c.length)toggle(c[0].l);else addNew(Q);}
+     else if(ev.key==='Escape')lp.style.display='none';});
+   function apply(){r.labels=[...sel].join(',');
+     tr.querySelector('.bk-lc').innerHTML=chips(r.labels)+'<button type=button class=bk-lbe>＋</button>';
+     tr.querySelector('.bk-lc').addEventListener('click',ev=>openLabels(r,tr,ev,onChange));
+     lp.style.display='none';save(r,{labels:r.labels},tr,onChange);}
+   lp.querySelector('#bkls').onclick=apply;
+   lp.querySelector('#bklc').onclick=()=>lp.style.display='none';
+   draw();
+   const w=lp.offsetWidth,h=lp.offsetHeight;
+   lp.style.left=Math.max(8,Math.min(e.clientX,innerWidth-w-12))+'px'; lp.style.top=Math.max(8,Math.min(e.clientY,innerHeight-h-12))+'px';
+   q.focus();
+ }
+ async function onCatChange(r,tr,sel,onChange){
+   if(sel.value==='__new__'){const name=(prompt('Neue Kategorie:')||'').trim();
+     if(!name){sel.value=r.cat;return;}
+     try{const res=await (await fetch('/api/addcat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})})).json();META.cats=res.cats||META.cats;}catch(e){}
+     sel.innerHTML=catOptions(name);}
+   r.cat=sel.value; save(r,{category:r.cat},tr,onChange);
+ }
+ async function showMail(txid){
+   const ov=document.getElementById('bkov'),mod=document.getElementById('bkmod');
+   mod.innerHTML='<button class=x onclick="document.getElementById(\'bkov\').style.display=\'none\'">schließen ✕</button><div class=bk-why>lädt…</div>';
+   ov.style.display='flex';
+   const m=await (await fetch('/api/mail?tx_id='+encodeURIComponent(txid))).json();
+   let h='<button class=x onclick="document.getElementById(\'bkov\').style.display=\'none\'">schließen ✕</button>';
+   if(!m.found){h+='<p class=bk-why>Keine direkt verknüpfte Beleg-Mail.</p>';}
+   else{h+=`<h3>${esc(m.subject||'(kein Betreff)')}</h3><div class=bk-why>${esc(m.from||'')} · ${esc(m.date||'')} · Treffer: <b style="color:${m.sure?'#7ee0a0':'#f0b46b'}">${esc(m.match_art||'')}</b></div>`;
+     h+=`<pre class=bk-mailbody>${esc(m.body||'')}</pre>`;(m.attachments||[]).forEach(a=>{h+=`<h4>📎 ${esc(a.name)}</h4><pre class=bk-mailbody>${esc(a.text)}</pre>`;});}
+   const rel=m.related||[];
+   if(rel.length){h+=`<h4>📬 Mails dieses Händlers (±Tage) — nur Info, KEINE Buchungen</h4>`;
+     rel.forEach(x=>{h+=`<div style="border-top:1px solid #232834;padding-top:6px;margin-top:6px"><b>${esc(x.subject)}</b><div class=bk-why>${esc(x.from)} · ${esc(x.date)}</div><pre class=bk-mailbody style="max-height:150px">${esc(x.snippet)}</pre></div>`;});}
+   mod.innerHTML=h;
+ }
+ // KANONISCHE Detailtabelle – überall identisch
+ function renderBookings(container,rows,opts){
+   opts=opts||{}; const onChange=opts.onChange;
+   const cont=typeof container==='string'?document.getElementById(container):container;
+   rows=rows.slice().sort((a,b)=>Math.abs(b.b)-Math.abs(a.b));
+   const sum=rows.reduce((s,r)=>s+(-r.b),0);
+   let h=`<div class=bk-why>${rows.length} Buchungen · ${fmt(sum)} € · ✓ geprüft / ✗ ignorieren · Kategorie+Labels+Kommentar direkt änderbar</div>`;
+   h+='<table class=bk-tbl><thead><tr><th>Prüfen</th><th>Datum</th><th class=bk-r>Betrag</th><th>Händler / Kontext</th><th>Kategorie</th><th>Labels</th><th>Kommentar</th></tr></thead><tbody>';
+   rows.slice(0,400).forEach((r,i)=>{
+     const mail=r.ctx?`<div class=bk-mr>✉ ${esc(r.ctx).slice(0,150)}</div>`:'';
+     const prod=r.prod?`<div class=bk-prod>🛒 ${esc(r.prod)}</div>`:'';
+     const mbtn=(r.ml||r.art==='PayPal')?` <button class=bk-mailbtn>✉ Mail</button>`:'';
+     h+=`<tr data-i=${i} class="${r.ignore?'bk-ign':(r.reviewed?'bk-rev':'')}">
+       <td><button class="bk-b bk-okb" data-a=rev title="geprüft/ok">✓</button> <button class="bk-b bk-nob" data-a=ign title="ignorieren (raus aus Statistik)">✗</button></td>
+       <td>${r.d}${r.vtg?' <span class=bk-vtg>Vertrag</span>':''}</td>
+       <td class="bk-r ${r.b<0?'bk-neg':'bk-pos'}">${fmt2(r.b)} €</td>
+       <td>${esc(r.h).slice(0,40)}${mbtn}${prod}<div class=bk-ctx>${esc(r.vz||'').slice(0,150)}${mail}<div class=bk-why>${esc(r.art||'')} · 🏷️ ${esc(r.why||r.src||'')}</div></div></td>
+       <td><select data-f=cat>${catOptions(r.cat)}</select></td>
+       <td class=bk-lc>${chips(r.labels)}<button type=button class=bk-lbe>＋</button></td>
+       <td><input data-f=note class=bk-komm value="${esc(r.note||'')}" placeholder="was war das?"></td></tr>`;
+   });
+   if(rows.length>400)h+=`<tr><td colspan=7 class=bk-why>… ${rows.length-400} weitere</td></tr>`;
+   h+='</tbody></table>'; cont.innerHTML=h;
+   cont.querySelectorAll('tbody tr[data-i]').forEach(tr=>{
+     const r=rows[+tr.dataset.i];
+     const selc=tr.querySelector('[data-f=cat]'); if(selc)selc.addEventListener('change',()=>onCatChange(r,tr,selc,onChange));
+     const noi=tr.querySelector('[data-f=note]'); if(noi)noi.addEventListener('change',()=>{r.note=noi.value;save(r,{note:r.note},tr,onChange);});
+     const lc=tr.querySelector('.bk-lc'); if(lc)lc.addEventListener('click',e=>openLabels(r,tr,e,onChange));
+     const mb=tr.querySelector('.bk-mailbtn'); if(mb)mb.addEventListener('click',()=>showMail(r.id));
+     tr.querySelector('[data-a=rev]').addEventListener('click',()=>{save(r,{reviewed:r.reviewed?0:1},tr,onChange);});
+     tr.querySelector('[data-a=ign]').addEventListener('click',()=>{save(r,{ignore:r.ignore?0:1},tr,onChange);});
+   });
+ }
+ async function loadInto(container,url,opts){
+   const cont=typeof container==='string'?document.getElementById(container):container;
+   cont.innerHTML='<div class=bk-why>lädt…</div>';
+   const rows=await (await fetch(url)).json(); renderBookings(cont,rows,opts);
+ }
+ // Filter-Persistenz pro Seite: bleibt beim Seitenwechsel erhalten, NUR bei hartem Neuladen (F5)
+ // wird zurückgesetzt. clear() = manueller Reset ("alle Buchungen").
+ function filterState(key){
+   const K='filt:'+key;
+   let isReload=false;
+   try{const nav=performance.getEntriesByType('navigation')[0];isReload=nav&&nav.type==='reload';}catch(e){}
+   if(isReload){try{sessionStorage.removeItem(K);}catch(e){}}
+   return {
+     reloaded:isReload,
+     load(){if(isReload)return null;try{return JSON.parse(sessionStorage.getItem(K)||'null');}catch(e){return null;}},
+     save(o){try{sessionStorage.setItem(K,JSON.stringify(o));}catch(e){}},
+     clear(){try{sessionStorage.removeItem(K);}catch(e){}}
+   };
+ }
+ return {init,renderBookings,loadInto,showMail,fmt,fmt2,esc,filterState,get META(){return META;}};
+})();

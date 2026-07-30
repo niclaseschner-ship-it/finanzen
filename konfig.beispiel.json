@@ -1,0 +1,62 @@
+{
+  "_hinweis": "VORLAGE. Kopieren nach konfig.json und ausfüllen — konfig.json ist per .gitignore ausgeschlossen und bleibt lokal. Prüfen mit: python scripts/konfig.py",
+
+  "haushalt": {
+    "name": "Haushalt Musterfrau",
+
+    "_eigene_namen": "Eigene Nachnamen/Vornamen und die von Vermietern, WG, Familie. Verhindert, dass Privatmails als Beleg-Kontext an einer Buchung landen. Kleinschreibung.",
+    "eigene_namen": ["musterfrau", "anna", "bernd"],
+
+    "_heimat_orte": "Wohnort + Nachbarorte. Ein Einkauf hier gilt als 'zuhause' und beendet eine Reise. Ohne diese Liste ist der Alltag eine Dauerreise. Kleinschreibung, Teilstrings erlaubt ('musterst' trifft 'Musterstadt').",
+    "heimat_orte": ["musterstadt", "musterdorf", "nachbarhausen"],
+
+    "_orte_ohne_suchwert": "Orte, die in den eigenen Buchungen ständig vorkommen und als Suchbegriff nichts unterscheiden — z.B. die Region oder die Stadt einer eigenen Immobilie. Andere Frage als heimat_orte; Doppelungen sind erlaubt.",
+    "orte_ohne_suchwert": ["musterland", "musterkreis"]
+  },
+
+  "_kategorien": "Genau EINE pro Buchung. Reihenfolge = Reihenfolge in den Auswahlfeldern. Die vier Systemkategorien am Ende (Einnahme, Sparen/Invest, Umbuchung intern, Sonstiges) werden aus der Kontenkarte bzw. als Rest vergeben — bitte drinlassen. Eigene ergänzen (z.B. 'Immobilie Musterstadt', 'Nebengewerbe').",
+  "kategorien": [
+    "Lebensmittel/Drogerie", "Restaurant/Café", "Mobilität", "Versicherung",
+    "Gesundheit", "Kinder", "Freizeit/Hobby", "Urlaub", "Shopping/Haushalt",
+    "Abo/Digital", "Wohnen", "Gebühren", "Dienstleistung", "Spenden/Geschenke",
+    "Bargeld", "Einnahme", "Sparen/Invest", "Kredit/Immobilie",
+    "Umbuchung intern", "PayPal (ungeklärt)", "Sonstiges"
+  ],
+
+  "_kategorien_immer_vertrag": "Eigene Kategorien, deren Buchungen immer das Label 'vertrag' (= Fixkosten) bekommen. Versicherung, Abo/Digital und Kredit/Immobilie sind schon fest eingebaut.",
+  "kategorien_immer_vertrag": [],
+
+  "_kategorien_nicht_reise": "Eigene Kategorien, die nie zu einer Reise gehören (z.B. ein Nebengewerbe mit Auslandsumsätzen). Abos, Sparen, Versicherung, Gebühren, Kredit, Einnahmen sind schon fest ausgeschlossen.",
+  "kategorien_nicht_reise": [],
+
+  "_kategorien_kein_konsum": "Eigene Kategorien, die kein Konsum sind, sondern Vermögensumschichtung oder Objektkosten (z.B. 'Immobilie X'). Wirkt in den Konsum-Auswertungen unter scripts/extra/. Sparen, Kredit, Umbuchung und Einnahmen sind schon fest ausgeschlossen.",
+  "kategorien_kein_konsum": [],
+
+  "konten": {
+    "_hinweis": "Die Systemgrenze. Wichtigster Teil der Konfiguration: falsch gesetzt, zählen eigene Umbuchungen als Ausgaben und die Statistik ist doppelt so hoch. IBANs stehen in den Kontoexporten in der Spalte der Gegenseite.",
+
+    "_eigene_giro": "Eigene Girokonten = das 'System'. Überweisungen zwischen diesen Konten sind keine Ausgaben und fallen aus der Auswertung. Der Name erscheint als Kontospalte.",
+    "eigene_giro": {
+      "DE00000000000000000001": "Bank-Haushalt",
+      "DE00000000000000000002": "Bank-Zweitkonto"
+    },
+
+    "_weitere_intern": "Weitere eigene Konten, deren Umbuchungen ebenfalls intern sind, die aber keine Girokonten sind. Meist leer lassen. ACHTUNG: Konten Dritter hier NICHT eintragen — echte Zahlungen an Vermieter o.ä. fielen sonst aus der Auswertung.",
+    "weitere_intern": {},
+
+    "_zuordnung": "Konten, die außerhalb liegen, aber feststehend zugeordnet sind: Depot, Darlehen, Gehalt, Kindergeld. Diese Buchungen zählen mit und bekommen eine Vorgabe-Kategorie, die keine Händlerregel überschreiben kann. 'kategorie' muss in der Liste 'kategorien' oben stehen. 'notiz' ist frei, 'name' optional (überschreibt die Kontospalte).",
+    "zuordnung": {
+      "DE00000000000000000003": { "kategorie": "Sparen/Invest", "notiz": "Depot/ETF" },
+      "DE00000000000000000004": { "kategorie": "Einnahme", "notiz": "Gehalt" },
+      "DE00000000000000000005": { "kategorie": "Kredit/Immobilie", "notiz": "Darlehen" }
+    }
+  },
+
+  "_eigene_regeln": "Eigene Kategorisierungsregeln — für Händler, die nur den eigenen Haushalt betreffen (Hausverwaltung, Vermieter, Stammlokal). Die breiten Regeln für gängige Händler (Supermärkte, Tankstellen, Bäckereien, Behörden, Streaming …) sind als SEED/SEED2 in scripts/rules.py eingebaut und gelten für jeden. typ: 'haendler_kw' (Händlername enthält Muster) | 'verwendung_kw' (Verwendungszweck) | 'creditor' (Gläubiger-ID, am zuverlässigsten). prio: höher gewinnt. labels: Komma-getrennt.",
+  "eigene_regeln": [
+    { "name": "Hausverwaltung", "prio": 12, "typ": "haendler_kw", "muster": "weg musterstrasse",
+      "kategorie": "Wohnen", "labels": "hausgeld,fixkosten" },
+    { "name": "Miete", "prio": 12, "typ": "haendler_kw", "muster": "max mustermann",
+      "kategorie": "Wohnen", "labels": "wohnen,miete,fixkosten" }
+  ]
+}

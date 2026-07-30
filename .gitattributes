@@ -1,0 +1,8 @@
+# Zeilenenden normalisieren: im Repo LF, im Arbeitsverzeichnis das, was Windows will.
+# Ohne das erzeugt jeder Wechsel Windows <-> Pi/Linux Diff-Rauschen über ganze Dateien.
+* text=auto eol=lf
+*.py   text eol=lf
+*.md   text eol=lf
+*.json text eol=lf
+*.csv  text eol=lf
+*.html text eol=lf
