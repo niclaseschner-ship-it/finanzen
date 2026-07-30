@@ -67,7 +67,7 @@
 </div>
 <script>
 let D=null;
-const esc=s=>{const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML;};
+const esc=s=>{const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML.replace(/"/g,'&quot;').replace(/'/g,'&#39;');};  // textContent maskiert " nicht — in value="..." waere das eine Luecke
 const day=s=>Date.parse(s);
 const monStart=ym=>ym?ym+'-01':'';
 const monEnd=ym=>{if(!ym)return'';const y=+ym.slice(0,4),m=+ym.slice(5,7);const d=new Date(y,m,0);

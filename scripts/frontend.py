@@ -5,7 +5,37 @@
 - Jahr-Filter clientseitig; Nav zu liste.html
 """
 import json, re, db, datetime
+
+def json_fuer_script(obj):
+    """JSON so einbetten, dass es ein <script>-Element nicht sprengen kann.
+
+    json.dumps maskiert '<' und '/' nicht. Ein Verwendungszweck wie
+    "</script><img src=x onerror=...>" beendet sonst das Skript-Element und der Rest
+    wird als HTML ausgefuehrt — und Verwendungszwecke bestimmt, wer ueberweist.
+    Die drei Ersetzungen sind in JSON-Strings zulaessig und aendern den Wert nicht."""
+    return (json.dumps(obj, ensure_ascii=False)
+            .replace("<", r"\u003c").replace(">", r"\u003e").replace("&", r"\u0026"))
+
 from collections import defaultdict, Counter
+import os
+
+CHART_JS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "seiten", "chart.min.js")
+
+def chart_js_bereitstellen():
+    """Chart.js neben die erzeugte Seite legen (statt vom CDN zu laden).
+
+    Die Seite traegt alle Buchungen als JSON in sich; ein Skript von fremdem Server
+    koennte sie mitlesen. Deshalb liegt die Bibliothek im Projekt — und wird hierher
+    kopiert, damit die Datei auch beim direkten Oeffnen im Browser gefunden wird."""
+    ziel = os.path.join(db.OUTPUT_DIR, "chart.min.js")
+    try:
+        if not os.path.exists(ziel) or os.path.getsize(ziel) != os.path.getsize(CHART_JS):
+            os.makedirs(db.OUTPUT_DIR, exist_ok=True)
+            with open(CHART_JS, "rb") as q, open(ziel, "wb") as z:
+                z.write(q.read())
+    except OSError as e:
+        print(f"  Hinweis: chart.min.js konnte nicht kopiert werden ({e})")
+
 
 BT = ["Einnahme", "Konsum", "Sparen"]   # kein "Asset" mehr – Camper/Kredit = normale Ausgaben
 
@@ -87,7 +117,7 @@ def run():
 
     tmpl = r"""<!doctype html><html lang=de><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>Finanzen · Statistik</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="chart.min.js"></script>
 <style>
  body{font-family:system-ui,Arial,sans-serif;margin:0;background:#0f1117;color:#e6e6e6}
  .wrap{max-width:1850px;margin:0 auto;padding:20px 30px}
@@ -164,7 +194,7 @@ const PAL=['#4f8cff','#34d399','#f59e0b','#ef4444','#a78bfa','#22d3ee','#f472b6'
  '#fb923c','#60a5fa','#2dd4bf','#facc15','#c084fc','#fca5a5','#94a3b8','#4ade80','#e879f9','#38bdf8'];
 const COL=Object.fromEntries(D.cats.map((c,i)=>[c,PAL[i%PAL.length]]));   // feste Farbe je Kategorie
 const fmt=x=>Math.round(x).toLocaleString('de-DE');
-const esc=s=>{const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML;};
+const esc=s=>{const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML.replace(/"/g,'&quot;').replace(/'/g,'&#39;');};  // textContent maskiert " nicht — in value="..." waere das eine Luecke
 const isImmo=c=>/Immobilie|Kredit\/Immobilie/.test(c);
 let charts=[], sel=new Set(D.cats), META={cats:D.cats,labels:[]};   // ausgewählte Kategorien
 const yok=m=>{const y=yr.value;return y==='Alle'||m.startsWith(y);};
@@ -288,8 +318,9 @@ async function init(){
 init();
 </script></div></body></html>"""
     period = (MINM+" – "+MAXM) if MINM else ("bis "+MAXM)
-    out = (tmpl.replace("__DATA__", json.dumps(data, ensure_ascii=False))
+    out = (tmpl.replace("__DATA__", json_fuer_script(data))
               .replace("__MAXM__", MAXM).replace("__PERIOD__", period))
+    chart_js_bereitstellen()
     p = db.os.path.join(db.BASE, "output", "statistik.html")
     with open(p, "w", encoding="utf-8") as f:
         f.write(out)

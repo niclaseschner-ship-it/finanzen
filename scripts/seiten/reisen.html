@@ -42,7 +42,7 @@ Bestätige echte Reisen (✓) oder lehne Transit/Tagesausflüge ab (✗). Klick 
 <script>
 let T=[], FS;
 const fmt=x=>Math.round(x).toLocaleString('de-DE');
-const esc=s=>{const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML;};
+const esc=s=>{const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML.replace(/"/g,'&quot;').replace(/'/g,'&#39;');};  // textContent maskiert " nicht — in value="..." waere das eine Luecke
 async function load(){ await BK.init(); T=await (await fetch('/api/trips')).json();
  const ys=[...new Set(T.flatMap(t=>[t.start.slice(0,4),t.ende.slice(0,4)]))].sort();
  yr.innerHTML=['Alle',...ys].map(y=>`<option>${y}</option>`).join(''); yr.value=ys[ys.length-1]||'Alle';

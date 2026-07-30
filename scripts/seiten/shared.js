@@ -1,6 +1,6 @@
 
 window.BK=(function(){
- const esc=s=>{const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML;};
+ const esc=s=>{const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML.replace(/"/g,'&quot;').replace(/'/g,'&#39;');};  // textContent maskiert " nicht — in value="..." waere das eine Luecke
  const fmt=x=>Math.round(x).toLocaleString('de-DE');
  const fmt2=x=>Number(x).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
  let META={cats:[],labels:[]};

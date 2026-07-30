@@ -30,8 +30,8 @@ Config zu schreiben — brüchig. Und ohne Schritt 1 ist jede Weitergabe ein Dat
 
 | draußen | warum |
 |---|---|
-| `finanzen.db` (+WAL/SHM), `*.csv` | alle Buchungen, ~190 MB |
-| `attachments/` | ~2,2 GB Mailbelege |
+| `finanzen.db` (+WAL/SHM), `*.csv` | alle Buchungen, mehrere hundert MB |
+| `attachments/` | mehrere GB Mailbelege |
 | `output/*`, `vermoegen/vermoegen.html` | generiert, jederzeit neu rechenbar — und voller echter Zahlen |
 | `konten/`, `vermoegen/eingang/`, `vermoegen/depot/`, `vermoegen/immobilien/` | Rohdaten-Eingang |
 | `vermoegen/positionen.json`, `konfig.json` | persönliche Fakten (Kaufpreise, Anteile, IBANs) |
@@ -59,7 +59,7 @@ scheitern. Wird in Schritt 2 zusätzlich im Code abgesichert.
 **Kein Remote.** Bewusst offen: erst wenn Schritte 2–3 durch sind und der Inhalt
 nachweislich sauber ist, lohnt die Frage GitHub privat vs. nur lokal.
 
-**Noch nicht weitergebbar nach diesem Schritt:** `ingest_transactions.py` enthält 15 echte
+**Noch nicht weitergebbar nach diesem Schritt:** `ingest_transactions.py` enthält die echten
 IBANs, `rules.py` die Heimatregion. Das räumt Schritt 3 — der `.gitignore` schützt nur vor
 dem Massendaten-Leak (DB, Anhänge, Exporte).
 
@@ -78,7 +78,7 @@ sofort in Schritt 1 ab. Das Projekt war nicht selbstständig.
 - **Defaults sind jetzt relativ zum Repo:** `BASE` = Ordner dieses Repos (statt festem
   `<Projektordner>`), `BANK_DIR` = `<BASE>/konten`, `BANK_CSV` =
   `<BASE>/output/transaktionen.csv`. Ein frischer Clone läuft damit ohne Env-Variablen.
-- Die 7 Kontoexporte aus `~/<altes-projekt>/konten/` sind nach `finanzen/konten/` **kopiert,
+- Die vorhandenen Kontoexporte aus `~/<altes-projekt>/konten/` sind nach `finanzen/konten/` **kopiert,
   nicht verschoben** — das Altprojekt 2025 bleibt vollständig lauffähig.
 - `db.init()` legt jetzt auch `output/` an (vorher tat das nur `extra/report.py`).
 - `parse_konten.run()` bricht bei leerem Eingang nicht mehr hart ab, wenn schon eine
@@ -87,7 +87,7 @@ sofort in Schritt 1 ab. Das Projekt war nicht selbstständig.
   Fehlerhandling der Import-Seite (`except Exception`) nicht gefangen worden.
 
 **Verifiziert:** `parse_konten.py` erzeugt aus demselben Eingang eine **byte-identische**
-`transaktionen.csv` wie die Altprojekt-Version (2759 Buchungen, `diff` leer) — vor und
+`transaktionen.csv` wie die Altprojekt-Version (rund 2.700 Buchungen, `diff` leer) — vor und
 nach der Pfadumstellung. `vermoegen.py` löst seine Pfade weiter korrekt auf, die erzeugte
 `vermoegen.html` ist ebenfalls byte-identisch. Alle 15 Module importierbar.
 
@@ -132,7 +132,7 @@ Kontenkarte.
   ist kein Zuhause (sonst würde eine Reise dort fälschlich getrennt), taugt aber als
   Suchwort nichts. Doppelnennungen sind erlaubt.
 
-**Grenze zwischen `rules.py` und `konfig.json`:** In `rules.py` bleiben die ~460 breiten
+**Grenze zwischen `rules.py` und `konfig.json`:** In `rules.py` bleiben die mehreren hundert breiten
 Regeln für gängige deutsche Händler (Supermärkte, Bäckereien, Tankstellen, Behörden,
 Streaming) — die sind für jeden Haushalt brauchbar und keine Personendaten. Nach
 `konfig.json` gewandert sind nur Regeln, die eigene Immobilien, Vermieter oder eigene
@@ -154,8 +154,8 @@ Kategorie erzeugen, die als eigene Zeile in der Statistik auftaucht — dieselbe
 
 **Verifiziert (Refactor ist verhaltensneutral):** Pipeline zweimal gelaufen, vorher/nachher
 verglichen — Kategorie-Verteilung, Label-Verteilung, Flow/Preset-Verteilung und Anzahl
-Kontext-Snippets **identisch**. Alle Kennzahlen gleich (2759 Buchungen, 351 verknüpfte
-Belege, 435 Kontexte, 17 Reise-Kandidaten, 16 Reisen, 460 Regeln). Der Weg ohne
+Kontext-Snippets **identisch**. Alle Kennzahlen gleich (rund 2.700 Buchungen, die Zahl verknüpfter Belege,
+Kontexte, Reise-Kandidaten und Regeln). Der Weg ohne
 `konfig.json` wurde durchgespielt: Warnung, Abbruch mit Klartext, Server weiter startbar.
 
 **Bekannte Redundanz (nicht behoben):** `vermoegen/positionen.json` führt eigene Kontonamen
@@ -205,8 +205,8 @@ der abgedeckten Monate — bei den echten Daten liefert das genau die Wohnortgru
 (Wohnort und Nachbarorte) und keinen einzigen Urlaubsort.
 Der Rest der Nachbarorte kommt vom Menschen; das ist die richtige Arbeitsteilung.
 
-**Sammelkonten markiert.** Eine IBAN mit 681 verschiedenen Zahlungsempfängern
-(DKB-Verrechnungskonto für Kartenzahlungen, 1502 Buchungen) sieht in der Kandidatenliste
+**Sammelkonten markiert.** Eine IBAN mit hunderten verschiedener Zahlungsempfänger
+(Verrechnungskonto der Bank für Kartenzahlungen) sieht in der Kandidatenliste
 aus wie das wichtigste Konto überhaupt. Als „eigenes Konto" eingetragen fielen sämtliche
 Kartenzahlungen aus der Statistik. Erkennung über die Zahl verschiedener Namen (≥10) mit
 sichtbarem Hinweis in der Liste.
@@ -244,8 +244,7 @@ Temp-Verzeichnis) — auf der gewachsenen Datenbank fällt beides nie auf:
    liest — die Abhängigkeit geht nur in eine Richtung, anders als bei `branche`, wo die
    Rückkopplung gewollt ist und über die Läufe konvergiert.
 
-**Verifiziert:** Frischer Lauf auf leerer Datenbank läuft komplett durch (9 Schritte, 2759
-Buchungen, 18 Reisen). Auf der bestehenden Datenbank bleiben Kategorie-, Label- und
+**Verifiziert:** Frischer Lauf auf leerer Datenbank läuft komplett durch (9 Schritte, alle Buchungen, Reisen erkannt). Auf der bestehenden Datenbank bleiben Kategorie-, Label- und
 Kontextverteilung nach der Umstellung **identisch** — sie stand schon am Fixpunkt.
 Einrichtung end-to-end durchgespielt: erzeugte `konfig.json` besteht die Prüfung, die
 Pipeline läuft damit.
@@ -307,9 +306,9 @@ unkategorisiert, 8 Verträge, 1 Reise.
 neuen Nutzer, nicht nur die Demo:
 - **Streaming per Lastschrift** wurde nicht erkannt — die Netflix/Spotify-Regeln waren
   `paypal_kw` und greifen nur bei PayPal-Zahlung.
-- **Versicherer außer den eigenen vier** hatten keine Regel.
+- **Versicherer außer den fest eingetragenen** hatten keine Regel.
 Ergänzt als breite `SEED2`-Muster (Streaming, Versicherung, Energieversorger). Auf den
-echten Daten gegengeprüft: **0 von 2759 Buchungen ändern sich** — die Regeln greifen nur
+echten Daten gegengeprüft: **0 von rund 2.700 Buchungen ändern sich** — die Regeln greifen nur
 dort, wo vorher gar nichts griff.
 
 Dabei gelernt: `haendler_kw` matcht über `word_start`, also am **Wortanfang**. „versicherung"

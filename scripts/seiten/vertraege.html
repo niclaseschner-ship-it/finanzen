@@ -54,7 +54,7 @@
 <script>
 let C=[],CATS=[];
 const fmt=x=>x.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
-const esc=s=>{const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML;};
+const esc=s=>{const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML.replace(/"/g,'&quot;').replace(/'/g,'&#39;');};  // textContent maskiert " nicht — in value="..." waere das eine Luecke
 // Pfeil, wenn der letzte Betrag spürbar (>2%) vom 6-Monats-Schnitt abweicht
 function delta(c){ if(!c.betrag) return '';
  const d=(c.letzter-c.betrag)/c.betrag; if(Math.abs(d)<0.02) return '';

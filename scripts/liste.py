@@ -5,6 +5,17 @@
 """
 import json, db, konfig
 
+def json_fuer_script(obj):
+    """JSON so einbetten, dass es ein <script>-Element nicht sprengen kann.
+
+    json.dumps maskiert '<' und '/' nicht. Ein Verwendungszweck wie
+    "</script><img src=x onerror=...>" beendet sonst das Skript-Element und der Rest
+    wird als HTML ausgefuehrt — und Verwendungszwecke bestimmt, wer ueberweist.
+    Die drei Ersetzungen sind in JSON-Strings zulaessig und aendern den Wert nicht."""
+    return (json.dumps(obj, ensure_ascii=False)
+            .replace("<", r"\u003c").replace(">", r"\u003e").replace("&", r"\u0026"))
+
+
 # Kategorien aus konfig.json — EINE Quelle für Editor, Liste und Statistik.
 CATS = konfig.KATEGORIEN
 
@@ -91,8 +102,8 @@ function exp(){
 render();
 </script></body></html>"""
     out_html = tmpl.replace("__CATOPTS__", "".join(f"<option>{c}</option>" for c in CATS)) \
-                   .replace("__DATA__", json.dumps(data, ensure_ascii=False)) \
-                   .replace("__CATS__", json.dumps(CATS, ensure_ascii=False))
+                   .replace("__DATA__", json_fuer_script(data)) \
+                   .replace("__CATS__", json_fuer_script(CATS))
     p = db.os.path.join(db.BASE, "output", "liste.html")
     with open(p, "w", encoding="utf-8") as f:
         f.write(out_html)

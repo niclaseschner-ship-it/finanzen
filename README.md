@@ -37,7 +37,9 @@ Wieder loswerden: `beispieldaten/demo/` löschen. Sie ist jederzeit neu erzeugba
 ## Voraussetzungen
 - **Python 3.10+** — der Kern nutzt nur die **Standardbibliothek** (kein `pip install` nötig).
 - Optional: **PyMuPDF** (`pip install pymupdf`) — nur für Text aus PDF-Mailanhängen.
-- Für die Statistik-Charts lädt die Seite **Chart.js** per CDN (einmal Internet nötig).
+- **Kein Internet nötig.** Chart.js liegt im Projekt (`scripts/seiten/chart.min.js`) und
+  wird neben die erzeugte Seite gelegt — die Seite trägt alle Buchungen in sich, da hat
+  ein Skript von fremdem Server nichts zu suchen.
 
 ## Einrichtung
 Es gibt **nichts zu installieren** außer Python — die Arbeit ist Konfiguration. Der
@@ -144,9 +146,14 @@ Seiten und persönliche Konfiguration sind per `.gitignore` ausgeschlossen — d
 lässt sich weitergeben, ohne Bankdaten mitzuliefern.
 
 ## Daten & Privatsphäre
-Alles bleibt **lokal**. Nach außen geht nur: Chart.js vom CDN (kein Datenversand) und — wenn
-die OSM-Branchen-Erkennung läuft — **Händlername + Ort** an OpenStreetMap/Nominatim (keine
-Beträge/Kontonummern). Die Bankdaten/DB verlassen den Rechner nie.
+Alles bleibt **lokal**. Der Server hört ausschließlich auf `127.0.0.1` und weist Anfragen
+mit fremdem `Host`- oder `Origin`-Header ab — sonst könnte eine beliebige Webseite im
+selben Browser mitlesen oder schreiben.
+
+Nach außen geht genau eine Sache, und nur wenn die OSM-Branchen-Erkennung läuft:
+**Händlername + Ort** an OpenStreetMap/Nominatim (keine Beträge, keine Kontonummern).
+Beachte, dass Händlernamen kleiner Betriebe oft Personennamen sind. Die Bankdaten und
+die Datenbank verlassen den Rechner nie.
 
 ## Mitarbeiten
 Wer die Anwendung mit eigenen Daten benutzt, findet Dinge, die sonst niemand findet: eine
@@ -170,4 +177,19 @@ git push -u origin erfahrung/<kurzer-name>
 
 **Vor dem Push kurz `git diff --cached` ansehen.** Die `.gitignore` deckt Datenbank,
 Exporte, Anhänge und `konfig.json` ab — aber eine Regel mit dem Namen deines Vermieters
-gehört trotzdem nicht in `rules.py`.
+gehört trotzdem nicht in `rules.py`. Der Prüfmaßstab ist nicht „stehen hier IBANs?",
+sondern: **könnte diese Zeile bei einem beliebigen anderen Haushalt genauso stehen?**
+Ein hyperlokaler Laden, ein Kindergarten, der Name einer Haushaltshilfe — das ist keine
+Regel, sondern eine Beobachtung über eine bestimmte Familie an einem bestimmten Ort.
+Solche Muster gehören in die eigene `konfig.json`.
+
+### Was beim Prüfen eines fremden Beitrags besonders zählt
+Vier Stellen richten mit einer einzigen Zeile großen Schaden an — bei Änderungen daran
+bitte genau hinsehen:
+
+| Datei | Warum |
+|---|---|
+| `scripts/app.py` (Bind-Adresse) | `127.0.0.1` → `0.0.0.0` hängt den gesamten Datenbestand samt Schreib-Schnittstelle ins Netz |
+| `.gitignore` | eine entfernte Zeile, und beim nächsten `git commit -am` wandern echte Bankdaten unwiderruflich in die öffentliche History |
+| `scripts/frontend.py` / `liste.py` (Einbettung) | hier wird fremdbestimmter Text in die Seite geschrieben; ohne Maskierung ist das eine Lücke |
+| `.claude/skills/**` | wird von einem Agenten **ausgeführt**, nicht nur gelesen |

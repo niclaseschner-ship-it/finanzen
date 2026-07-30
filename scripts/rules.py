@@ -50,16 +50,11 @@ SEED = [
  ("Wertpapier/Depot",8,"verwendung_kw","wertp.abrechn","Sparen/Invest","invest,wertpapier"),
  # Die eigene Depotnummer als Muster gehoert in konfig.json -> eigene_regeln,
  # nicht in den ausgelieferten Code.
- ("Versicherung",10,"haendler_kw","dkv","Versicherung","vertrag,gesundheit"),
- ("Versicherung",10,"haendler_kw","ergo","Versicherung","vertrag"),
- ("Versicherung",10,"haendler_kw","swiss life","Versicherung","vertrag"),
- ("Versicherung",10,"haendler_kw","lvm","Versicherung","vertrag"),
  ("Telefon/Internet",15,"haendler_kw","telekom","Abo/Digital","vertrag,telekom"),
  ("Telefon/Internet",15,"haendler_kw","drillisch","Abo/Digital","vertrag"),
  ("Telefon/Internet",15,"haendler_kw","blacksim","Abo/Digital","vertrag"),
  ("Rundfunk",15,"haendler_kw","rundfunk","Gebühren","vertrag,rundfunk"),
  ("Bankgebuehr",16,"haendler_kw","dkb ag","Gebühren","bank"),
- ("Kinder-KiGa",12,"haendler_kw","waldkindergarten","Kinder","kind"),
  # Lebensmittel/Drogerie
  ("Supermarkt",20,"haendler_kw","aldi","Lebensmittel/Drogerie","lebensmittel"),
  ("Supermarkt",20,"haendler_kw","lidl","Lebensmittel/Drogerie","lebensmittel"),
@@ -72,8 +67,6 @@ SEED = [
  ("Supermarkt",20,"haendler_kw","bioladen","Lebensmittel/Drogerie","lebensmittel,bio"),
  ("Supermarkt",20,"haendler_kw","rema1000","Lebensmittel/Drogerie","lebensmittel"),
  ("Supermarkt",20,"haendler_kw","coop","Lebensmittel/Drogerie","lebensmittel"),
- ("Supermarkt",20,"haendler_kw","regionalwert","Lebensmittel/Drogerie","lebensmittel,bio"),
- ("Supermarkt",20,"haendler_kw","beckesepp","Lebensmittel/Drogerie","lebensmittel"),
  ("Drogerie",20,"haendler_kw","dm ","Lebensmittel/Drogerie","drogerie,dm"),
  ("Drogerie",20,"haendler_kw","rossmann","Lebensmittel/Drogerie","drogerie"),
  # Restaurant/Cafe
@@ -83,8 +76,6 @@ SEED = [
  ("Restaurant",25,"haendler_kw","gelato","Restaurant/Café","essen-ausser-haus,just-for-fun"),
  ("Restaurant",25,"haendler_kw","cafe","Restaurant/Café","essen-ausser-haus,just-for-fun"),
  ("Restaurant",25,"haendler_kw","americano","Restaurant/Café","essen-ausser-haus,just-for-fun"),
- ("Restaurant",25,"haendler_kw","gleis 3","Restaurant/Café","essen-ausser-haus"),
- ("Restaurant",25,"haendler_kw","stollenbacher","Restaurant/Café","essen-ausser-haus"),
  # Mobilitaet
  ("Tankstelle",30,"haendler_kw","tankst","Mobilität","auto,sprit"),
  ("Tankstelle",30,"haendler_kw","shell","Mobilität","auto,sprit"),
@@ -112,7 +103,6 @@ SEED = [
  ("Spende",14,"haendler_kw","betterplace","Spenden/Geschenke","spende"),
  ("Spende",14,"haendler_kw","herzklopfen","Spenden/Geschenke","spende"),
  ("Spende",14,"haendler_kw","falknerei","Spenden/Geschenke","spende"),
- ("Spende",14,"haendler_kw","werner schmidt","Spenden/Geschenke","spende"),
  # Shopping / Haushalt
  ("Online-Marktplatz",35,"haendler_kw","amazon","Shopping/Haushalt","online,amazon"),
  ("Online-Marktplatz",35,"verwendung_kw","amzn","Shopping/Haushalt","online,amazon"),
@@ -148,12 +138,10 @@ SEED = [
  ("Garten",34,"haendler_kw","dehner","Shopping/Haushalt","garten"),
  ("Baumarkt",34,"haendler_kw","obi","Shopping/Haushalt","heimwerken"),
  ("Buchhandlung",34,"haendler_kw","buecher","Shopping/Haushalt","buch"),
- ("Sportgeschaeft",34,"haendler_kw","sport eckmann","Shopping/Haushalt","sport"),
  ("Kleinanzeigen",34,"haendler_kw","kleinanzeigen","Shopping/Haushalt","gebraucht"),
  ("Parken",30,"haendler_kw","easypark","Mobilität","parken"),
  ("Sportverein",28,"haendler_kw","sportverein","Freizeit/Hobby","sport,vertrag"),
  ("Turnverein",28,"haendler_kw","turnerschaft","Freizeit/Hobby","sport,vertrag"),
- ("Haushaltshilfe",12,"haendler_kw","dunkel","Dienstleistung","haushaltshilfe,35a"),
  # --- Runde 3: allgemeine Muster (breit, auch Urlaubsorte) ---
  ("Restaurant-gen",25,"haendler_kw","gaststaette","Restaurant/Café","essen-ausser-haus"),
  ("Restaurant-gen",25,"haendler_kw","gasthaus","Restaurant/Café","essen-ausser-haus"),
@@ -168,7 +156,6 @@ SEED = [
  ("Hofladen",20,"haendler_kw","hofladen","Lebensmittel/Drogerie","lebensmittel,bio,regional"),
  ("Baumarkt",34,"haendler_kw","bauhaus","Shopping/Haushalt","heimwerken"),
  ("Buchhandlung",34,"haendler_kw","buchhandlung","Shopping/Haushalt","buch"),
- ("Buchhandlung",34,"haendler_kw","rombach","Shopping/Haushalt","buch"),
  ("Post/Versand",36,"haendler_kw","deutsche post","Shopping/Haushalt","porto-versand"),
  ("Post/Versand",36,"haendler_kw","dhl","Shopping/Haushalt","porto-versand"),
  ("Drogerie",20,"haendler_kw","drogerie markt","Lebensmittel/Drogerie","drogerie"),
@@ -180,61 +167,62 @@ SEED2 = []
 def _add(catspec, prio, labels, *kw):
     name, cat = catspec.split("|")
     for k in kw: SEED2.append((name, prio, "haendler_kw", k, cat, labels))
-_add("Digital|Abo/Digital",15,"ki,vertrag","openai","mistral ai","gamma app"," google","google payment","kinguin")
-_add("Dienstleistung|Dienstleistung",12,"","aulbach","klingele","schwettmann","ingenieurbüro","ingenieurbuero")
-_add("Spende|Spenden/Geschenke",14,"spende","rübelzahl","rubelzahl")
-_add("Kultur|Freizeit/Hobby",16,"ausflug","theater","museum"," kino","kino ","zoo","schmetterling",
-     "haus des meeres","seilbahn","bergstation","strandbad","schwimmbad","messe freiburg","kandelhof",
-     "alpenresort","hofgut hopfenburg","tourispo","wanderhuett","luftseilbahn","seilbahnges","geocenter",
-     "magic park","magicpark","park verden","naturpaerlor","soermlands","dreisambad","mainau")
-_add("Behoerde|Gebühren",17,"behoerde","bundeskasse","landesoberkasse","landratsamt","gemeinde","ville de","zollamt","zoll ","finanzamt","buergerservice","barschalter",
-     "eigenbetrieb","muensterfabrik")
-_add("Baeckerei|Lebensmittel/Drogerie",20,"lebensmittel,baeckerei","boulangerie","laboulangerie","back shop",
-     "backshop","backhaus","backstube","brezen","backwaren","heberer","armbrust back","biobackst",
-     "brotbruder","backerei","riegler","dallmayr","frischem strecker","biokaeserei","feinkost","bauerntafel",
-     "panificio","spiga d","pane di alfio","crobag","mekka konditori")
-_add("Supermarkt-Ausland|Lebensmittel/Drogerie",20,"lebensmittel,ausland","carrefour","crf ","conad","esselunga",
-     "intermarche","supermarche","mpreis","billa","leclerc"," mercato","mercat ","sandell livs","dagnys",
-     "albins vera","go asia","mercato cdc","crf market","crf ipe","crf express")
-_add("Drogerie|Lebensmittel/Drogerie",21,"drogerie","budni","biokeller","naturkost","reform martin")
-_add("Gesundheit|Gesundheit",22,"gesundheit","apotek","pharmacie","fielmann","medpex","innonature",
-     "geburtshaus","zahnarzt")
-_add("Restaurant|Restaurant/Café",25,"essen-ausser-haus","one trick pony","kebab","doener","döner","burger","sushi","dumpling",
-     " pho","pita","focacceria","gelateria","konditori","wirtshaus","curry","go asia"," asia ","nordsee",
-     "haferkater","coffee","kaffee","espresso","canteen"," deli","fries","flammkuchen","baretto","il pane",
-     "non solo pane","il banco","mangal","mr nice","tofu standpun","matsch mit sahne","eis bacio","ishuset",
-     "duck it","yi east","yum yum","thats burger","real greek","layaly","siripiri","spicetrails","mai garden",
-     "tokio sushi","rosa eck","lesbar","lammstraa","schwarzwaelder hof","alten abtei","pilgergast","kreuzeck",
-     "das quartier","front food","caffe","u pulaschese","la voglia","la terrazza","casa felice","bonne femme",
-     "bodrum","kebap","mr doener","gunter coffee","elephant beans","kaffee-kiste","brot trifft","baguette",
-     "makan","indian curry","la cigale","croustillant","cerinotti","caffe porto","bica deli","gelatto",
-     "pho1986","carabica","botannica","brodijnen","gmeiner","laederach","sutogo")
-_add("Auto|Mobilität",29,"auto","carglass","auto-böhler","auto boehler","mietpark","kuhner avis","tuev",
-     " tüv","ersatzteile","kh teile","domo ersatz")
-_add("Tankstelle|Mobilität",30,"auto,sprit","station total","total ","avia"," eni","agip","turmoel","tankcenter",
-     " jet ","raststaette","raststätte","star garding","europoint")
-_add("Maut|Mobilität",30,"maut,ausland","aspit","sanef","gavio","tratta","cdt a","direz","monterosso","nuova sidap",
-     "autostrad","forbindelsen","ges karlsbau","via j da")
-_add("OePNV|Mobilität",30,"bahn"," s bahn","s-bahn"," bvg","freiburger verkehrs"," vag ","lagardere","snalltaget",
-     "ingo trosa","bahn berlin")
-_add("Parken|Mobilität",31,"parken","parkhaus","parkraum","contipark","schlossberggarage","automat kepler","pbw ",
-     "p r noord","smile p","keplerpark","vorderkaser")
-_add("Bargeld|Bargeld",33,"bargeld","sparkasse","volksbank","raiffeisenbank","wiesbadener volksbank"," vb ")
-_add("Shopping|Shopping/Haushalt",35,"shopping","h m de"," h m ","hennes","woolworth","tedi","jysk","manufactum",
-     "galeria","media markt","birkenstock","wildling","namuk","new balance","uniqlo","intersport","sport kiefer",
-     "sportwelt","bergfreunde","boardshop","elitebikes","canyon bicycles","hild radwelt","wolle roedel",
-     "creativmarkt","kreativ markt","home24","procave","expert","momox","zoxs","multiecom","dogeo","fab store",
-     "fabrique","kitsch bitch","freispiel","jadeo","ziser","maas natur","mode aus der natur",
-     "fair couture","young and brave","zuendstoff","fraulein smilla","glaskiste","annis bunte","holzpferd",
-     "babajaga","kids-world","kids coolshop","babyone","kinderstube","spielwaren","arbeitsschutz","alphaflor",
-     "blumen","bloemen","plantenkwek","gartencenter","green city","dilling","jungherz","karl siegel",
-     "handelshaus wagner","sostrene","soestrene","fischerbeck","glossmann","uhrenwerkstatt","ter haar",
-     "kinguin","used-elitebikes","fahrradanhaeng","bikable","hermes germany","amisco","clarijs","ramsperger",
-     "hema ","wassmer","fritz berger","naturkosmetik","idee creativ","maxbean")
+_add("Digital|Abo/Digital",15,"ki,vertrag","openai","mistral ai","gamma app"," google",
+     "google payment","kinguin")
+_add("Dienstleistung|Dienstleistung",12,"","ingenieurbüro","ingenieurbuero")
+_add("Kultur|Freizeit/Hobby",16,"ausflug","theater","museum"," kino","kino ","zoo",
+     "schmetterling","seilbahn","bergstation","strandbad","schwimmbad","alpenresort","tourispo",
+     "wanderhuett","luftseilbahn","seilbahnges","geocenter","magicpark","naturpaerlor","mainau")
+_add("Behoerde|Gebühren",17,"behoerde","bundeskasse","landratsamt","gemeinde","ville de",
+     "zollamt","zoll ","finanzamt","buergerservice","barschalter","eigenbetrieb")
+_add("Baeckerei|Lebensmittel/Drogerie",20,"lebensmittel,baeckerei","boulangerie","laboulangerie",
+     "back shop","backshop","backhaus","backstube","brezen","backwaren","heberer",
+     "armbrust back","biobackst","brotbruder","backerei","dallmayr","frischem strecker",
+     "biokaeserei","feinkost","bauerntafel","panificio","crobag")
+_add("Supermarkt-Ausland|Lebensmittel/Drogerie",20,"lebensmittel,ausland","carrefour","crf ",
+     "conad","esselunga","intermarche","supermarche","mpreis","billa","leclerc"," mercato",
+     "mercat ","go asia","mercato cdc","crf market","crf ipe","crf express")
+_add("Drogerie|Lebensmittel/Drogerie",21,"drogerie","budni","biokeller","naturkost",
+     "reform martin")
+_add("Gesundheit|Gesundheit",22,"gesundheit","apotek","pharmacie","fielmann","medpex",
+     "innonature","zahnarzt")
+_add("Restaurant|Restaurant/Café",25,"essen-ausser-haus","one trick pony","kebab","doener",
+     "döner","burger","sushi","dumpling"," pho","pita","focacceria","gelateria","konditori",
+     "wirtshaus","curry","go asia"," asia ","nordsee","haferkater","coffee","kaffee","espresso",
+     "canteen"," deli","fries","flammkuchen","baretto","il pane","non solo pane","il banco",
+     "mangal","mr nice","tofu standpun","matsch mit sahne","eis bacio","duck it","yi east",
+     "yum yum","thats burger","real greek","layaly","siripiri","spicetrails","mai garden",
+     "tokio sushi","rosa eck","lesbar","lammstraa","schwarzwaelder hof","alten abtei",
+     "pilgergast","das quartier","front food","caffe","bonne femme","bodrum","kebap","mr doener",
+     "gunter coffee","elephant beans","kaffee-kiste","brot trifft","baguette","makan",
+     "indian curry","croustillant","cerinotti","caffe porto","gelatto","pho1986","botannica",
+     "brodijnen","laederach","sutogo")
+_add("Auto|Mobilität",29,"auto","carglass","auto-böhler","auto boehler","mietpark","kuhner avis",
+     "tuev"," tüv","ersatzteile","kh teile","domo ersatz")
+_add("Tankstelle|Mobilität",30,"auto,sprit","station total","total ","avia"," eni","agip",
+     "turmoel","tankcenter"," jet ","raststaette","raststätte","star garding","europoint")
+_add("Maut|Mobilität",30,"maut,ausland","aspit","sanef","gavio","tratta","cdt a","direz",
+     "nuova sidap","autostrad","forbindelsen","ges karlsbau","via j da")
+_add("OePNV|Mobilität",30,"bahn"," s bahn","s-bahn"," bvg","lagardere","bahn berlin")
+_add("Parken|Mobilität",31,"parken","parkhaus","parkraum","contipark","p r noord","smile p",
+     "vorderkaser")
+_add("Bargeld|Bargeld",33,"bargeld","sparkasse","volksbank","raiffeisenbank",
+     "wiesbadener volksbank"," vb ")
+_add("Shopping|Shopping/Haushalt",35,"shopping","h m de"," h m ","hennes","woolworth","tedi",
+     "jysk","manufactum","galeria","media markt","birkenstock","wildling","namuk","new balance",
+     "uniqlo","intersport","sportwelt","bergfreunde","boardshop","elitebikes","canyon bicycles",
+     "wolle roedel","creativmarkt","kreativ markt","home24","procave","expert","momox","zoxs",
+     "multiecom","dogeo","fab store","fabrique","kitsch bitch","freispiel","jadeo","maas natur",
+     "mode aus der natur","fair couture","young and brave","zuendstoff","fraulein smilla",
+     "glaskiste","annis bunte","holzpferd","babajaga","kids-world","kids coolshop","babyone",
+     "kinderstube","spielwaren","arbeitsschutz","alphaflor","blumen","bloemen","plantenkwek",
+     "gartencenter","green city","dilling","sostrene","soestrene","fischerbeck","uhrenwerkstatt",
+     "kinguin","used-elitebikes","fahrradanhaeng","bikable","hermes germany","amisco","clarijs",
+     "hema ","fritz berger","naturkosmetik","idee creativ","maxbean")
 _add("Abo|Abo/Digital",15,"vertrag,software","buhl data")
 _add("Camper|Camper",18,"camper","fritz berger")
 _add("Mobilitaet|Mobilität",29,"auto,vertrag,adac","adac")
-_add("Supermarkt-Ausland|Lebensmittel/Drogerie",20,"lebensmittel,ausland","bastia discount","esselunga")
+_add("Supermarkt-Ausland|Lebensmittel/Drogerie",20,"lebensmittel,ausland","esselunga")
 _add("Restaurant|Restaurant/Café",25,"essen-ausser-haus","maxbean")
 # --- Runde 5: aus Nutzer-Feedback gelernt (befördert aus user_overrides) ---
 _add("Amazon-Digital|Abo/Digital",13,"amazon,digital,vertrag","amazon digital")
@@ -246,8 +234,8 @@ _add("Streaming|Abo/Digital",15,"streaming,vertrag","netflix","spotify","disney"
 _add("Versicherung|Versicherung",11,"vertrag","versicherung","assekuranz","allianz","huk",
      "debeka","signal iduna","provinzial","barmenia","gothaer","wuerttembergische")
 # Energie/Grundversorgung: fast jeder Haushalt hat einen davon.
-_add("Energie|Wohnen",12,"strom,fixkosten","stadtwerke","energieversorgung","vattenfall",
-     "enbw","yello strom","lichtblick")
+_add("Energie|Wohnen",12,"strom,fixkosten","stadtwerke","energieversorgung","vattenfall","enbw",
+     "yello strom","lichtblick")
 # Haushaltsspezifische Regeln (Vermieter, eigene Immobilie, …) kommen aus konfig.json.
 # Bewusst zuletzt angehängt, damit sie bei gleicher prio die eingebauten überstimmen.
 SEED2 += konfig.EIGENE_REGELN
@@ -413,7 +401,7 @@ def _ortclean(o):
     return re.sub(r"\s+", " ", o).strip().title()
 
 def trip_detect(con):
-    """Reise = zusammenhängend außerhalb Region Freiburg > 2 Tage (Kandidat -> Nutzer bestätigt).
+    """Reise = zusammenhängend außerhalb der Heimatregion > 2 Tage (Kandidat -> Nutzer bestätigt).
     Robust: Lücken bis TRIP_BRIDGE Tage überbrücken, aber bei Heimat-Einkauf dazwischen trennen.
     Eine Reise = EIN Trip mit mehreren Orten."""
     import datetime

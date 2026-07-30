@@ -42,8 +42,8 @@ bahn · drogerie · sport · buch · kleidung · kind · spende · online · geb
 ```
 
 ## Beispiele
-- `"panificio raso"` → Lebensmittel/Drogerie, labels [baeckerei,urlaub], 0.8, „Panificio = Bäckerei (IT)"
-- `"corsica ferries"` → Mobilität, labels [faehre,urlaub], 0.9, „Fährgesellschaft"
+- `"panificio rossi"` → Lebensmittel/Drogerie, labels [baeckerei,urlaub], 0.8, „Panificio = Bäckerei (IT)"
+- `"adria ferries"` → Mobilität, labels [faehre,urlaub], 0.9, „Fährgesellschaft"
 - `"openai"` → Abo/Digital, labels [ki,vertrag,arbeit], 0.9
 - `"m. schneider"` → Sonstiges, labels [], 0.2, „Personenname, kein Kontext" (status kontext_fehlt)
 

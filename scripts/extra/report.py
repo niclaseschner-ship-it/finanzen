@@ -34,10 +34,14 @@ p("## Größte KONSUM-Ausgaben (ohne Sparen/Kredit/Umbuchung/Einnahme)")
 # Eigene Nicht-Konsum-Kategorien (z.B. "Immobilie X") aus konfig.json.
 EXCL = ("Sparen/Invest","Kredit/Immobilie","Camper","Umbuchung intern",
         "Einnahme") + tuple(konfig.KAT_KEIN_KONSUM)
+# Werte gebunden statt in die Abfrage geschrieben: EXCL enthaelt Kategorien aus
+# konfig.json, und ein Apostroph darin wuerde die Abfrage sonst aufbrechen.
+_PH = ",".join("?" * len(EXCL))
 for d,b,hn,cat in q(f"""select t.datum,t.betrag,e.haendler_norm,c.category
   from transactions t join tx_category c on c.tx_id=t.id
   left join tx_enrich e on e.tx_id=t.id
-  where t.flow='ausgabe' and c.category not in {EXCL} order by t.betrag asc limit 15"""):
+  where t.flow='ausgabe' and c.category not in ({_PH}) order by t.betrag asc limit 15""",
+  EXCL):
     p(f"- {d}  {-b:8.0f} €  [{cat}]  {hn}")
 p("")
 

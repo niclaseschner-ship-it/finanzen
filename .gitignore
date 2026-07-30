@@ -71,3 +71,44 @@ beispieldaten/demo/
 # Einmaliger KI-Seed-Batch mit ~65 ECHTEN Haendlernamen aus den eigenen Buchungen
 # (inkl. Namen Dritter). Bleibt lokal nutzbar, wird aber nicht ausgeliefert.
 scripts/extra/ki_seed.py
+
+# --- Weitere Formate, in denen Kontodaten ankommen koennen -------------------
+# Die Regeln oben schuetzen die Endungen, die HEUTE benutzt werden. Andere Banken
+# liefern XLSX, PDF oder MT940; Postfaecher kommen als mbox. Lieber zu viel
+# ausschliessen — eine vergessene Datei steht dauerhaft in der Git-History.
+*.xlsx
+*.xls
+*.ods
+*.pdf
+*.mbox
+*.eml
+*.msg
+*.ofx
+*.qif
+*.mt940
+camt*.xml
+*.sqlite
+*.sqlite3
+*.sql
+*.log
+*.zip
+*.gz
+*.tgz
+*.7z
+*.rar
+
+# Windows und deutsche Editoren haengen den Zusatz VOR die Endung — 'konfig.json*'
+# faengt 'konfig - Kopie.json' also nicht. Deshalb zusaetzlich mit Praefix-Muster.
+*konfig*.json
+!konfig.beispiel.json
+*positionen*.json
+!vermoegen/positionen.beispiel.json
+
+# Editor-, Werkzeug- und Systemreste
+.env
+*.swp
+*.swo
+.vs/
+*.code-workspace
+.DS_Store
+.claude/settings.local.json

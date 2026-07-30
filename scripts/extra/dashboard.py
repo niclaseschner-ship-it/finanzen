@@ -1,7 +1,26 @@
 """Schlankes Frontend: rendert die DB zu EINER statischen HTML-Datei (output/dashboard.html).
-Kein Server. Charts via Chart.js (CDN). Daten als JSON eingebettet.
+Kein Server. Charts via Chart.js (lokal, wird neben die Seite kopiert). Daten als JSON eingebettet.
 """
 import json, html, db, konfig
+import os
+
+CHART_JS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "seiten", "chart.min.js")
+
+def chart_js_bereitstellen():
+    """Chart.js neben die erzeugte Seite legen (statt vom CDN zu laden).
+
+    Die Seite traegt alle Buchungen als JSON in sich; ein Skript von fremdem Server
+    koennte sie mitlesen. Deshalb liegt die Bibliothek im Projekt — und wird hierher
+    kopiert, damit die Datei auch beim direkten Oeffnen im Browser gefunden wird."""
+    ziel = os.path.join(db.OUTPUT_DIR, "chart.min.js")
+    try:
+        if not os.path.exists(ziel) or os.path.getsize(ziel) != os.path.getsize(CHART_JS):
+            os.makedirs(db.OUTPUT_DIR, exist_ok=True)
+            with open(CHART_JS, "rb") as q, open(ziel, "wb") as z:
+                z.write(q.read())
+    except OSError as e:
+        print(f"  Hinweis: chart.min.js konnte nicht kopiert werden ({e})")
+
 
 # Nicht-Konsum: Vermögensumschichtung, Kredite, Einnahmen. Eigene Kategorien
 # (z.B. "Immobilie X", ein Nebengewerbe) kommen aus konfig.json.
@@ -10,16 +29,19 @@ EXCL = ("Sparen/Invest", "Kredit/Immobilie", "Camper",
 
 def run():
     con = db.connect(); q = con.execute
-    konsum_where = f"t.flow='ausgabe' and c.category not in {EXCL}"
+    # Werte gebunden statt in die Abfrage geschrieben: EXCL enthaelt Kategorien aus
+    # konfig.json, und ein Apostroph darin wuerde die Abfrage sonst aufbrechen.
+    konsum_where = ("t.flow='ausgabe' and c.category not in ("
+                    + ",".join("?" * len(EXCL)) + ")")
 
     # Monatliche Konsumausgaben
     monat = q(f"""select t.monat, round(sum(-t.betrag),0) from transactions t
         join tx_category c on c.tx_id=t.id where {konsum_where} and t.monat is not null
-        group by t.monat order by t.monat""").fetchall()
+        group by t.monat order by t.monat""", EXCL).fetchall()
     # Kategorien (Konsum, gesamt)
     kat = q(f"""select c.category, round(sum(-t.betrag),0) n from transactions t
         join tx_category c on c.tx_id=t.id where {konsum_where}
-        group by c.category order by n desc""").fetchall()
+        group by c.category order by n desc""", EXCL).fetchall()
     # Reisen
     trips = q("""select l.label, count(distinct l.tx_id), round(sum(-t.betrag),0)
         from tx_labels l join transactions t on t.id=l.tx_id
@@ -28,7 +50,7 @@ def run():
     big = q(f"""select t.datum, round(-t.betrag,0), e.haendler_norm, c.category
         from transactions t join tx_category c on c.tx_id=t.id
         left join tx_enrich e on e.tx_id=t.id where {konsum_where}
-        order by t.betrag asc limit 20""").fetchall()
+        order by t.betrag asc limit 20""", EXCL).fetchall()
     # KPIs
     n_monate = len(monat) or 1
     konsum_total = sum(m[1] for m in monat)
@@ -48,7 +70,7 @@ def run():
     H = f"""<!doctype html><html lang=de><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
 <title>Finanz-Dashboard</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="chart.min.js"></script>
 <style>
  body{{font-family:system-ui,Arial,sans-serif;margin:0;background:#0f1117;color:#e6e6e6}}
  .wrap{{max-width:1100px;margin:0 auto;padding:24px}}
@@ -96,6 +118,7 @@ new Chart(kc,{{type:'bar',data:{{labels:D.kat.map(x=>x[0]),
  options:{{indexAxis:'y',plugins:{{legend:{{display:false}}}},scales:{{x:{{ticks:{{color:'#9aa4b2'}}}},y:{{ticks:{{color:'#9aa4b2'}}}}}}}}}});
 </script>
 </div></body></html>"""
+    chart_js_bereitstellen()
     out = db.os.path.join(db.BASE, "output", "dashboard.html")
     open(out, "w", encoding="utf-8").write(H)
     print("geschrieben:", out)

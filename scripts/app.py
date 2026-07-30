@@ -508,7 +508,37 @@ class H(http.server.BaseHTTPRequestHandler):
         self.send_header("Cache-Control", "no-store, no-cache, must-revalidate")  # immer frisch
         self.send_header("Content-Length", str(len(b))); self.end_headers(); self.wfile.write(b)
     def log_message(self, *a): pass
+
+    # --- Absicherung gegen fremde Webseiten -------------------------------
+    # Der Server hört nur auf 127.0.0.1. Das schützt aber NICHT davor, dass eine
+    # beliebige Seite im selben Browser Anfragen hierher schickt:
+    #  * schreibend (CSRF): ein POST mit Content-Type text/plain löst keinen
+    #    Preflight aus — ohne Prüfung könnte eine fremde Seite Buchungen ändern
+    #    oder die Pipeline anstoßen.
+    #  * lesend (DNS-Rebinding): zeigt eine Angreiferdomain kurzzeitig auf
+    #    127.0.0.1, hält der Browser sie für denselben Ursprung und darf alle
+    #    Antworten lesen. Dagegen hilft nur, den Host-Header zu prüfen.
+    ERLAUBTE_HOSTS = {f"127.0.0.1:{PORT}", f"localhost:{PORT}",
+                      f"[::1]:{PORT}", "127.0.0.1", "localhost"}
+
+    def _host_ok(self):
+        return (self.headers.get("Host") or "").lower() in self.ERLAUBTE_HOSTS
+
+    def _origin_ok(self):
+        """Schreibende Anfragen nur ohne Origin (eigenes fetch same-origin schickt
+        keinen) oder mit einem Origin, der auf diesen Server zeigt."""
+        o = self.headers.get("Origin") or self.headers.get("Referer") or ""
+        if not o:
+            return True
+        return any(o.startswith(f"http://{h}") for h in ("127.0.0.1", "localhost", "[::1]"))
+
+    def _abweisen(self, grund):
+        self._send(403, json.dumps({"fehler": grund}, ensure_ascii=False))
+
     def do_GET(self):
+        if not self._host_ok():
+            return self._abweisen("Unerwarteter Host-Header — Zugriff nur über "
+                                  "127.0.0.1 oder localhost.")
         if self.path == "/": return self._send(200, APP_HTML, "text/html; charset=utf-8")
         if self.path == "/shared.js": return self._send(200, SHARED_JS, "application/javascript; charset=utf-8")
         if self.path == "/vertraege": return self._send(200, VTG_HTML, "text/html; charset=utf-8")
@@ -551,6 +581,11 @@ class H(http.server.BaseHTTPRequestHandler):
             r = get_rows(con, trip=qs.get("trip", [None])[0], contract=qs.get("contract", [None])[0])
             con.close()
             return self._send(200, json.dumps(r, ensure_ascii=False))
+        if self.path == "/chart.min.js":
+            # Liegt im Projekt statt beim CDN: die Statistikseite traegt alle Buchungen
+            # als JSON in sich, ein fremdes Skript darin koennte sie mitlesen.
+            with open(os.path.join(SEITEN_DIR, "chart.min.js"), "rb") as f:
+                return self._send(200, f.read(), "application/javascript; charset=utf-8")
         if self.path == "/statistik.html":        # immer frisch aus DB bauen -> kein alter Schnappschuss
             try:
                 import frontend; frontend.run()
@@ -562,8 +597,18 @@ class H(http.server.BaseHTTPRequestHandler):
                 with open(fp, "rb") as f:
                     return self._send(200, f.read(), "text/html; charset=utf-8")
         self._send(404, "nicht gefunden", "text/plain")
+    MAX_BODY = 64 * 1024 * 1024      # großzügig für Kontoexporte, aber nicht unbegrenzt
+
     def do_POST(self):
+        if not self._host_ok():
+            return self._abweisen("Unerwarteter Host-Header.")
+        if not self._origin_ok():
+            return self._abweisen("Schreibende Anfrage von einer fremden Seite abgewiesen.")
         n = int(self.headers.get("Content-Length", 0))
+        if n > self.MAX_BODY:
+            # Ohne Deckel liest der Server einen beliebig großen Rumpf komplett in den
+            # Speicher — eine fremde Seite könnte damit RAM und Platte volllaufen lassen.
+            return self._abweisen(f"Anfrage zu groß ({n} Bytes, erlaubt {self.MAX_BODY}).")
         body = self.rfile.read(n).decode("utf-8") if n else "{}"
         if self.path == "/api/edit":
             return self._send(200, json.dumps(save_edit(json.loads(body)), ensure_ascii=False))
