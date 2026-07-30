@@ -1,38 +1,48 @@
-# Finanzen — lokale, mechanische Ausgaben-Auswertung
+# Finanzen
 
-Eine kleine, **lokal laufende** Anwendung, die Kontoauszüge (+ optional E-Mails als Belege)
-in eine durchsuchbare, kategorisierte Ausgaben-Statistik verwandelt. Eine SQLite-Datei ist
-die einzige Wahrheit; alle Auswertungen werden daraus **reproduzierbar** neu berechnet.
+**Deine Kontoauszüge werden zu einer Statistik, die dir sagt, wohin das Geld geht —
+auf deinem Rechner, ohne Konto bei irgendwem, und jede Zuordnung ist begründet.**
 
-Prinzip: **mechanisch & nachvollziehbar statt Blackbox.** Buchungen kommen 1:1 aus den
-Bankdaten (nie erfunden), Kategorien/Labels sind eine ableitbare, jederzeit neu rechenbare
-Schicht, nichts wird still gelöscht (Status statt Löschen).
+- 🔒 **Lokal.** Keine Cloud, kein Bankzugang, kein Konto. Die Daten verlassen den Rechner nicht.
+- 🔍 **Nachvollziehbar.** Zu jeder Buchung steht da, *warum* sie in dieser Kategorie liegt. Was unklar ist, bleibt sichtbar unklar statt geraten zu werden.
+- ⚡ **Keine Installation.** Python 3.10 genügt — kein `pip install`, kein Build, kein Docker.
 
-## Erst ansehen, dann entscheiden
-Ein kompletter, erfundener Beispielhaushalt — 18 Monate, echtes Bankformat. Kein eigener
-Kontoauszug nötig, eigene Datenbank, die echten Daten bleiben unberührt:
+[![Statistik](docs/bilder/statistik.png)](docs/bilder/statistik.png)
+
+## In 30 Sekunden ausprobieren — ohne eigene Daten
+
+Ein kompletter, erfundener Beispielhaushalt über 18 Monate im echten Bankformat:
 
 ```bash
-python beispieldaten/erzeugen.py     # erzeugt Daten + Konfiguration und fährt die Pipeline
+git clone https://github.com/niclaseschner-ship-it/finanzen.git
+cd finanzen
+python beispieldaten/erzeugen.py     # Daten + Konfiguration anlegen, Pipeline laufen lassen
 ```
 
-| Statistik | Editor |
-|---|---|
-| [![Statistik](docs/bilder/statistik.png)](docs/bilder/statistik.png) | [![Editor](docs/bilder/editor.png)](docs/bilder/editor.png) |
-| Einnahmen/Ausgaben je Monat, Kategorie-Stack, Ranking, Reisen | jede Buchung mit Kategorie, Labels — und der Begründung, warum sie dort liegt |
+Das Skript sagt dir am Ende, wie du den Server startest. Die Demo hat ihre **eigene
+Datenbank** in `beispieldaten/demo/` — sie fasst nichts an, und `beispieldaten/demo/`
+löschen macht sie spurlos wieder weg.
 
-| Verträge | Reisen |
-|---|---|
-| [![Verträge](docs/bilder/vertraege.png)](docs/bilder/vertraege.png) | [![Reisen](docs/bilder/reisen.png)](docs/bilder/reisen.png) |
-| Fixkosten, allein aus der Wiederholung erkannt | Urlaube, allein aus den Einkaufsorten erkannt |
+| ✏️ Editor | 📑 Verträge | 🏖️ Reisen |
+|---|---|---|
+| [![Editor](docs/bilder/editor.png)](docs/bilder/editor.png) | [![Verträge](docs/bilder/vertraege.png)](docs/bilder/vertraege.png) | [![Reisen](docs/bilder/reisen.png)](docs/bilder/reisen.png) |
+| Kategorie, Labels — und die Begründung | Fixkosten, allein aus der Wiederholung erkannt | Urlaube, allein aus den Einkaufsorten erkannt |
 
-Die Demo zeigt bewusst auch, was **nicht** aufgeht: ein paar Händler bleiben sichtbar
-`unkategorisiert`, statt geraten zu werden. Ohne echte Daten leer bleiben nur der
+Die Demo zeigt absichtlich auch, was **nicht** aufgeht: ein paar Händler bleiben
+`unkategorisiert`, statt geraten zu werden. Leer bleiben ohne echte Daten nur der
 Beleg-Kontext aus E-Mails (braucht ein Postfach) und die **Vermögens**-Ansicht (braucht
-gepflegte Zahlen in `positionen.json`); die Vorsorge-Rechnung lässt sich dagegen sofort
-durchspielen.
+gepflegte Zahlen); die Vorsorge-Rechnung lässt sich sofort durchspielen.
 
-Wieder loswerden: `beispieldaten/demo/` löschen. Sie ist jederzeit neu erzeugbar.
+## Wie es funktioniert
+
+Eine SQLite-Datei ist die einzige Wahrheit; alle Auswertungen werden daraus
+**reproduzierbar** neu berechnet. Buchungen kommen 1:1 aus den Bankdaten und werden nie
+erfunden; Kategorien und Labels sind eine ableitbare Schicht, die jederzeit neu rechenbar
+ist. Nichts wird still gelöscht — Status statt Löschen.
+
+Unterstützt werden die CSV-Exporte von **DKB** und **GLS**. Andere Banken brauchen ein
+paar Zeilen in [`scripts/parse_konten.py`](scripts/parse_konten.py) — Beiträge willkommen,
+siehe [Mitarbeiten](#mitarbeiten).
 
 ## Voraussetzungen
 - **Python 3.10+** — der Kern nutzt nur die **Standardbibliothek** (kein `pip install` nötig).
