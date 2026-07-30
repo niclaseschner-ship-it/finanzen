@@ -326,8 +326,8 @@ const TRIPDEF=[
   places:['Camping Bella Italia','Ristorante Al Porto','Supermercato Famila','Autostrada Maut','Gelateria Lago','Lidl Italia','Esso Verona'],amts:[[180,420],[22,65],[20,80],[8,40],[6,18],[15,55],[55,80]]},
  {id:'TRIP-2025-03',name:'Berlin Städtetrip',start:'2025-03-14',ende:'2025-03-17',orte:'Berlin',status:'confirmed',
   places:['Hotel Mitte','Curry 36','DB Vertrieb','Museum Pass','Café Einstein','BVG Ticket'],amts:[[260,320],[9,22],[40,120],[18,30],[12,38],[9,20]]},
- {id:'TRIP-2024-10',name:'',start:'2024-10-19',ende:'2024-10-20',orte:'Freiburg, Titisee',status:'candidate',
-  places:['Tankstelle Aral','Gasthof Bären','Parkhaus Titisee'],amts:[[45,70],[35,80],[3,9]]}
+ {id:'TRIP-2024-10',name:'',start:'2024-10-19',ende:'2024-10-20',orte:'Musterstadt, Musterberg',status:'candidate',
+  places:['Tankstelle Aral','Gasthof Muster','Parkhaus Musterberg'],amts:[[45,70],[35,80],[3,9]]}
 ];
 TRIPDEF.forEach((t,ti)=>{
  const s=new Date(t.start),e=new Date(t.ende),days=Math.round((e-s)/864e5)+1;

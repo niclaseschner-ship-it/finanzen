@@ -7,7 +7,7 @@
 import re, db, konfig
 
 def word_start(pat, hay):
-    # Treffer nur am Wortanfang: 'baeck'->'baeckerei' ja, 'burger'->'Freiburger' nein
+    # Treffer nur am Wortanfang: 'baeck'->'baeckerei' ja, 'burg'->'Hamburger' nein
     return re.search(r"\b" + re.escape(pat.strip()), hay) is not None
 
 SCHEMA = """

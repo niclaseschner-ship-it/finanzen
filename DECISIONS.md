@@ -137,7 +137,7 @@ Regeln für gängige deutsche Händler (Supermärkte, Bäckereien, Tankstellen, 
 Streaming) — die sind für jeden Haushalt brauchbar und keine Personendaten. Nach
 `konfig.json` gewandert sind nur Regeln, die eigene Immobilien, Vermieter oder eigene
 Kategorien betreffen (4 Regeln). Ebenso parameterisiert: die beiden Kategorielisten
-„immer Fixkosten" und „nie Reise", die vorher `Immobilie A` bzw. `der Nutzer xBuddy`
+„immer Fixkosten" und „nie Reise", die vorher `Immobilie A` bzw. `ein eigenes Nebenprojekt`
 hart enthielten. Eigene Regeln werden **zuletzt** an `SEED2` angehängt, gewinnen also bei
 gleicher Priorität.
 
@@ -313,7 +313,7 @@ dort, wo vorher gar nichts griff.
 
 Dabei gelernt: `haendler_kw` matcht über `word_start`, also am **Wortanfang**. „versicherung"
 trifft „Muster Versicherung AG", aber nicht „Musterversicherung AG". Das ist richtig so
-(sonst träfe „burger" auch „Freiburger"), muss man beim Schreiben von Regeln aber wissen.
+(sonst träfe „burg" auch „Hamburger"), muss man beim Schreiben von Regeln aber wissen.
 
 ### Screenshots
 `docs/bilder/` — vier echte Aufnahmen aus der laufenden Demo (Statistik, Editor, Verträge,

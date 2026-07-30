@@ -57,7 +57,7 @@ class TestNichtOrte(unittest.TestCase):
             self.assertTrue(einrichten._kein_ort(s), s)
 
     def test_echter_ort_bleibt(self):
-        for s in ("musterstadt", "freiburg im b", "sankt georgen"):
+        for s in ("musterstadt", "musterstadt im b", "sankt georgen"):
             self.assertFalse(einrichten._kein_ort(s), s)
 
 
