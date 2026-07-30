@@ -5,6 +5,8 @@ auf deinem Rechner, ohne Konto bei irgendwem, und jede Zuordnung ist begründet.
 
 - 🔒 **Lokal.** Keine Cloud, kein Bankzugang, kein Konto. Die Daten verlassen den Rechner nicht.
 - 🔍 **Nachvollziehbar.** Zu jeder Buchung steht da, *warum* sie in dieser Kategorie liegt. Was unklar ist, bleibt sichtbar unklar statt geraten zu werden.
+- 🧾 **Belege statt Rätselraten.** Zu einer Buchung „AMAZON −57,50 €" steht da, *was* drin war —
+  automatisch aus deinen eigenen Bestellmails verknüpft, über die Bestellnummer.
 - ⚡ **Keine Installation.** Python 3.10 genügt — kein `pip install`, kein Build, kein Docker.
 
 [![Statistik](docs/bilder/statistik.png)](docs/bilder/statistik.png)
@@ -28,10 +30,11 @@ löschen macht sie spurlos wieder weg.
 | [![Editor](docs/bilder/editor.png)](docs/bilder/editor.png) | [![Verträge](docs/bilder/vertraege.png)](docs/bilder/vertraege.png) | [![Reisen](docs/bilder/reisen.png)](docs/bilder/reisen.png) |
 | Kategorie, Labels — und die Begründung | Fixkosten, allein aus der Wiederholung erkannt | Urlaube, allein aus den Einkaufsorten erkannt |
 
-Die Demo zeigt absichtlich auch, was **nicht** aufgeht: ein paar Händler bleiben
-`unkategorisiert`, statt geraten zu werden. Leer bleiben ohne echte Daten nur der
-Beleg-Kontext aus E-Mails (braucht ein Postfach) und die **Vermögens**-Ansicht (braucht
-gepflegte Zahlen); die Vorsorge-Rechnung lässt sich sofort durchspielen.
+Die Demo bringt auch **Beleg-Mails** mit (als echtes mbox, genau wie Thunderbird es
+anlegt) — die Belegverknüpfung lässt sich also sofort sehen. Sie zeigt absichtlich auch,
+was **nicht** aufgeht: ein paar Händler bleiben `unkategorisiert`, statt geraten zu werden.
+Ohne eigene Daten leer bleibt nur die **Vermögens**-Ansicht (die braucht gepflegte Zahlen);
+die Vorsorge-Rechnung lässt sich sofort durchspielen.
 
 ## Wie es funktioniert
 
@@ -43,6 +46,46 @@ ist. Nichts wird still gelöscht — Status statt Löschen.
 Unterstützt werden die CSV-Exporte von **DKB** und **GLS**. Andere Banken brauchen ein
 paar Zeilen in [`scripts/parse_konten.py`](scripts/parse_konten.py) — Beiträge willkommen,
 siehe [Mitarbeiten](#mitarbeiten).
+
+## 🧾 Belege aus E-Mails — was war eigentlich in dem Paket?
+
+Der Kontoauszug sagt „AMAZON PAYMENTS EUROPE S.C.A, −57,50 €". Das ist die Stelle, an der
+jedes Haushaltsbuch aufhört und man selbst im Postfach sucht. Diese App macht den Schritt
+mit: sie verknüpft Buchungen mit deinen **eigenen Bestell- und Zahlungsmails** und zeigt
+die Produktzeile direkt an der Buchung.
+
+[![Belegverknüpfung](docs/bilder/belege.png)](docs/bilder/belege.png)
+
+**Mechanisch, nicht geraten** — und jede Verknüpfung sagt, wie sicher sie ist:
+
+| Weg | Sicherheit |
+|---|---|
+| Bestellnummer aus dem Verwendungszweck steht in der Mail | **sicher** |
+| PayPal-Transaktions-ID | **sicher** |
+| PayPal-Händler + Betrag im Zeitfenster | gut |
+| Händler + Betrag + Datum (±5 Tage) | Schätzung, im Editor als solche markiert |
+
+Bei mehrdeutigen Fällen wird **nicht** verknüpft — eine falsche Zuordnung wäre schlimmer
+als gar keine. PDF-Anhänge werden gespeichert und ihr Text mitdurchsucht (dafür das
+optionale `pymupdf`), sodass auch Rechnungen im Anhang gefunden werden.
+
+**Woher die Mails kommen:** aus **Thunderbird**. Der Import liest mbox-Dateien, und
+Thunderbird legt genau die an. Deshalb der Umweg statt eines eigenen Postfachzugriffs:
+**diese App bekommt nie dein Mail-Passwort**, die Nachrichten liegen lokal, und du
+entscheidest pro Ordner, was importiert wird.
+
+```bash
+python scripts/einrichten.py --mail    # findet die Profile, listet die Ordner mit Größe
+```
+
+Wichtig ist ein Schritt, den man leicht übersieht: In Thunderbird unter
+*Konten-Einstellungen → Synchronisation & Speicherplatz* muss „Mails auf diesem Computer
+speichern" aktiv sein — sonst sind die mbox-Dateien leer. Der Import ist idempotent,
+abbrechen und später fortsetzen ist gefahrlos.
+
+E-Mails sind dabei **ausschließlich Kontext, nie eine Buchungsquelle**: Beträge und
+Buchungen kommen immer 1:1 aus der Bank. Ohne Mails funktioniert alles, die Detailspalte
+bleibt nur leerer.
 
 ## Voraussetzungen
 - **Python 3.10+** — der Kern nutzt nur die **Standardbibliothek** (kein `pip install` nötig).

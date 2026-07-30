@@ -99,6 +99,19 @@ def buchungen():
                                                      "Zahlung 4711"]),
                       f"ReNr {R.randint(1000, 9999)}", betrag(25, 300), "", "Ausgang"))
 
+        # --- Onlinebestellungen MIT Bestellnummer im Verwendungszweck. Genau daran
+        # haengt die Belegverknuepfung: die Nummer steht auch in der Bestellmail, und
+        # darueber weiss die Anwendung hinterher, WAS gekauft wurde. Ohne solche
+        # Buchungen liefe der Mail-Teil der Demo ins Leere.
+        for _ in range(R.randint(1, 2)):
+            tag = R.randint(2, 26)
+            nr = f"{R.randint(100,999)}-{R.randint(1000000,9999999)}-{R.randint(1000000,9999999)}"
+            produkt = R.choice(PRODUKTE)
+            wert = -round(R.uniform(12, 140), 2)
+            b.append((d(tag), "AMAZON PAYMENTS EUROPE S.C.A",
+                      f"{nr} AMZN Mktp DE", wert, "", "Ausgang"))
+            BESTELLUNGEN.append((d(tag), nr, produkt, wert))
+
         # --- Die Reise: acht Tage am Stück außerhalb der Heimatregion.
         if (jahr, monat) == urlaub_monat:
             for tag in range(6, 14):
@@ -107,6 +120,56 @@ def buchungen():
                                              "Conad Market", "Autostrade per l Italia"]), ort)
                 b.append((d(tag), emp, zweck, betrag(15, 120), "", "Ausgang"))
     return b
+
+
+# Bestellungen, zu denen es eine Mail gibt — waehrend buchungen() gefuellt.
+BESTELLUNGEN = []
+
+PRODUKTE = [
+    "Wanderschuhe Trekking Mid GTX, Gr. 43",
+    "Kaffeemuehle mit Kegelmahlwerk, edelstahl",
+    "Regentonne 210 l inkl. Wasserhahn",
+    "Fahrradanhaenger-Kupplung, universal",
+    "Buch: Der lange Weg nach Hause (Taschenbuch)",
+    "LED-Lichterkette 20 m, warmweiss, aussen",
+    "Ersatzfilter fuer Wasserfilterkanne, 6er-Pack",
+    "Thermoskanne 1,0 l, doppelwandig",
+]
+
+
+def mbox_schreiben(pfad):
+    """Beleg-Mails im echten mbox-Format — dasselbe, was Thunderbird anlegt.
+
+    Der Import liest mbox, deshalb wird hier eines geschrieben statt eines eigenen
+    Formats: der Demo-Weg ist damit exakt der spaetere Ernstfall.
+    """
+    import email.utils
+    teile = []
+    for datum, nr, produkt, wert in BESTELLUNGEN:
+        betrag_de = f"{abs(wert):.2f}".replace(".", ",")
+        gesendet = email.utils.format_datetime(
+            datetime.datetime.combine(datum, datetime.time(9, 14)))
+        rumpf = (
+            f"Guten Tag,\r\n\r\n"
+            f"vielen Dank fuer Ihre Bestellung.\r\n\r\n"
+            f"Bestellnummer: {nr}\r\n"
+            f"Artikel: {produkt}\r\n"
+            f"Gesamtbetrag: {betrag_de} EUR\r\n"
+            f"Voraussichtliche Lieferung: in 2 Werktagen\r\n\r\n"
+            f"Ihre Bestelluebersicht finden Sie in Ihrem Konto.\r\n")
+        teile.append(
+            f"From bestellung@beispiel-shop.test {datum.strftime('%a %b %d 09:14:00 %Y')}\r\n"
+            f"From: Beispiel Shop <bestellung@beispiel-shop.test>\r\n"
+            f"To: familie.muster@beispiel.test\r\n"
+            f"Subject: Ordered: {produkt}\r\n"
+            f"Date: {gesendet}\r\n"
+            f"Message-ID: <{nr}@beispiel-shop.test>\r\n"
+            f"Content-Type: text/plain; charset=utf-8\r\n"
+            f"Content-Transfer-Encoding: 8bit\r\n\r\n"
+            f"{rumpf}\r\n")
+    with open(pfad, "w", encoding="utf-8", newline="") as f:
+        f.write("".join(teile))
+    return len(teile)
 
 
 def dkb_datei(pfad, iban, zeilen):
@@ -184,12 +247,21 @@ def main():
     gls_datei(os.path.join(KONTEN, "Umsaetze_Zweitkonto_Beispiel.csv"), ZWEIT, zweit)
     with open(os.path.join(DEMO, "konfig.json"), "w", encoding="utf-8") as f:
         json.dump(KONFIG, f, ensure_ascii=False, indent=2)
+    mbox = os.path.join(DEMO, "beleg-mails.mbox")
+    n_mails = mbox_schreiben(mbox)
     print(f"{len(alle)} Buchungen erzeugt -> {KONTEN}")
+    print(f"{n_mails} Beleg-Mails erzeugt -> {os.path.basename(mbox)}")
     print(f"Konfiguration -> {os.path.join(DEMO, 'konfig.json')}")
 
     # Pipeline im Demo-Ordner laufen lassen: eigene Datenbank, eigene Konfiguration.
     umgebung = dict(os.environ, FINANZEN_BASE=DEMO, FINANZEN_BANK=KONTEN)
     umgebung.pop("FINANZEN_BANK_CSV", None)
+
+    # Mails VOR der Pipeline importieren — der Matcher (Schritt 4) braucht sie schon.
+    print("\nBeleg-Mails importieren ...")
+    subprocess.run([sys.executable, "ingest_mail.py", mbox, "demo-postfach"],
+                   cwd=os.path.join(WURZEL, "scripts"), env=umgebung)
+
     print("\nPipeline läuft ...\n")
     e = subprocess.run([sys.executable, "run_all.py"],
                        cwd=os.path.join(WURZEL, "scripts"), env=umgebung)
