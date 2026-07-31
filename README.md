@@ -1,5 +1,7 @@
 # Finanzen
 
+*[English version](README.en.md) · die Anwendung selbst ist deutschsprachig.*
+
 **Deine Kontoauszüge werden zu einer Statistik, die dir sagt, wohin das Geld geht —
 auf deinem Rechner, ohne Konto bei irgendwem, und jede Zuordnung ist begründet.**
 
@@ -86,6 +88,32 @@ abbrechen und später fortsetzen ist gefahrlos.
 E-Mails sind dabei **ausschließlich Kontext, nie eine Buchungsquelle**: Beträge und
 Buchungen kommen immer 1:1 aus der Bank. Ohne Mails funktioniert alles, die Detailspalte
 bleibt nur leerer.
+
+## Wann dieses Projekt — und wann ein anderes
+
+Es gibt ausgereifte Alternativen, und für viele Leute sind sie die bessere Wahl. Diese
+hier ist absichtlich klein und deckt einen schmalen Fall ab:
+
+| Nimm … | wenn du … |
+|---|---|
+| **[Firefly III](https://github.com/firefly-iii/firefly-iii)** | doppelte Buchführung, Budgets, mehrere Nutzer, Handy-App und Anbindung an Banking-APIs willst. Der Platzhirsch — deutlich mehr Funktionen, dafür Server, Datenbank und Einarbeitung. |
+| **[Actual Budget](https://github.com/actualbudget/actual)** | nach der Umschlagmethode budgetieren willst (YNAB-Stil), also **vorausplanen** statt rückblickend auswerten. |
+| **[beancount](https://beancount.github.io/) / hledger** | Klartext-Buchhaltung magst und deine Auswertungen selbst schreibst. |
+| **dieses Projekt** | wissen willst, **wo dein Geld hingegangen ist**, ohne dafür ein System aufzusetzen — und ohne dass eine Software je dein Bank- oder Mail-Passwort sieht. |
+
+Was es hier gibt und dort nicht:
+
+- **Belegverknüpfung aus dem eigenen Postfach.** Zu „AMAZON −57,50 €" steht die Produktzeile
+  aus deiner Bestellmail. Belegabgleich existiert sonst vor allem als kommerzielles SaaS für
+  Spesenabrechnung, oder bei [Midday](https://github.com/midday-ai/midday) für Selbstständige.
+- **Begründungspflicht.** Jede Kategorie trägt ihre Quelle. Was unklar ist, bleibt sichtbar
+  unklar — es wird nichts geraten, damit die Statistik hübsch aussieht.
+- **Kein Setup.** Kein Server, kein Docker, keine Datenbank-Installation, kein `pip install`.
+- **Reise- und Vertragserkennung** allein aus den Buchungsmustern, ohne dass du etwas anlegst.
+
+Was es hier **nicht** gibt: Budgets und Sollwerte, Mehrbenutzerbetrieb, Handy-App,
+automatischen Bankabruf (bewusst — das hieße Zugangsdaten), Fremdwährungskonten,
+doppelte Buchführung. Und die CSV-Formate sind bisher **DKB und GLS**.
 
 ## Voraussetzungen
 - **Python 3.10+** — der Kern nutzt nur die **Standardbibliothek** (kein `pip install` nötig).
