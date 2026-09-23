@@ -139,6 +139,63 @@ def eigene_iban(txt):
                 return parts[1].strip()
     return ""
 
+def _norm_partner(s):
+    return re.sub(r"[^a-z0-9]", "", (s or "").lower())
+
+def _selber_partner(a, b):
+    """Meinen zwei Empfaengertexte denselben Haendler? Entweder steckt der eine im
+    anderen ('EDEKA' in 'M14.EDEKA.BAUR/LITZELSTETTEN') oder beide teilen einen langen
+    gemeinsamen Anfang ('anthropicclaudesub...')."""
+    na, nb = _norm_partner(a), _norm_partner(b)
+    if not na or not nb:
+        return False
+    if na in nb or nb in na:
+        return True
+    i = 0
+    while i < min(len(na), len(nb)) and na[i] == nb[i]:
+        i += 1
+    return i >= 6
+
+def kartentext_vereinheitlichen(rows):
+    """Sorgt fuer EINEN Anzeigenamen je Buchung, wenn die Bank ihn zwischendurch
+    umgeschrieben hat: aus 'EDEKA.AKTIV.MARKT/KIRCHZARTEN' wird spaeter 'EDEKA Aktiv
+    Markt'. Der lesbarere Text gewinnt.
+
+    Fuer die Wiedererkennung ist das NICHT mehr noetig — der Schluessel in key() und in
+    ingest_transactions.tx_key() kommt ohne den Empfaengertext aus. Ohne diesen Schritt
+    haenge es aber vom Zufall ab, welcher der beiden Texte in der Anzeige landet.
+
+    Die Anzahl aendert sich hier nicht: zwei echte gleiche Zahlungen bleiben zwei Zeilen,
+    darueber entscheidet die Max-pro-Datei-Regel in run()."""
+    from collections import defaultdict
+    grp = defaultdict(list)
+    for r in rows:
+        if (r.get("iban_gegen") or "").strip():
+            grp[(r["konto"], r["datum"], r["betrag"], r["iban_gegen"])].append(r)
+    angeglichen = 0
+    for mitglieder in grp.values():
+        if len(mitglieder) < 2:
+            continue
+        if len({r["quelle"] for r in mitglieder}) < 2:
+            continue                       # nur aus EINER Datei -> echte Doppelzahlung
+        texte = {_norm_partner(r["gegenpartei"]) for r in mitglieder}
+        if len(texte) < 2:
+            continue                       # schon einheitlich
+        basis = mitglieder[0]["gegenpartei"]
+        if not all(_selber_partner(basis, r["gegenpartei"]) for r in mitglieder[1:]):
+            continue                       # verschiedene Haendler -> nicht anfassen
+        # Der lesbarste Text gewinnt: am wenigsten Punkte und Schraegstriche.
+        wahl = min(mitglieder,
+                   key=lambda r: (len(re.findall(r"[./]", r["gegenpartei"] or "")),
+                                  -len(r["gegenpartei"] or "")))["gegenpartei"]
+        for r in mitglieder:
+            if r["gegenpartei"] != wahl:
+                r["gegenpartei"] = wahl
+                angeglichen += 1
+    if angeglichen:
+        print(f"Kartentext vereinheitlicht: {angeglichen} Zeilen "
+              f"(sonst zaehlten sie als neue Buchung)")
+
 def lese_alle():
     """Alle Exporte aus KONTEN als (dateiname, format, eigene_iban, zeilen).
     Getrennt von run(), damit die Einrichtung die Rohdaten ansehen kann, ohne
@@ -199,13 +256,16 @@ def run():
         for r in unlesbar[:3]:
             print(f"         {r.get('datum')} {r.get('gegenpartei','')[:40]} ({r.get('quelle')})")
     all_rows = [r for r in all_rows if r["betrag"] is not None]
+    from collections import defaultdict, Counter
+    kartentext_vereinheitlichen(all_rows)
     # Robuste Dedup bei ueberlappenden Exporten desselben Kontos:
     # behalte pro Transaktion die MAX-Anzahl aus EINER Datei.
     # -> echte Doppelbuchungen (in jedem Export 2x) bleiben; Overlap-Dubletten fallen weg.
-    from collections import defaultdict, Counter
     def key(r):
-        return (r["konto"], r["datum"], r["betrag"], r["gegenpartei"],
-                r["verwendungszweck"], r["buchungstext"], r["iban_gegen"])
+        # Dieselbe Identitaet wie ingest_transactions.tx_key: nur Felder, die die Bank
+        # nicht nachtraeglich umschreibt. Der Empfaengertext gehoert ausdruecklich NICHT
+        # dazu — genau daran scheiterte die Dedup bisher.
+        return (r["konto"], r["datum"], r["betrag"], (r["iban_gegen"] or "").strip())
     per_file = defaultdict(Counter)
     rep = {}
     for r in all_rows:

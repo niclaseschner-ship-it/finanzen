@@ -42,9 +42,24 @@
  .mk .rs{color:#cbd5e1;font-weight:600}
  .disc{color:#6b7280;font-size:12px;line-height:1.6;margin-top:12px}
  .err{background:#2a1620;border:1px solid #6b2c3a;border-radius:12px;padding:14px 16px;color:#ff8a8a}
+
+ /* Handy: breite Tabellen scrollen in sich selbst, statt die ganze Seite
+    seitlich zu schieben. Alle Spalten bleiben erreichbar. */
+ @media(max-width:760px){
+  .wrap{padding:12px}
+  table{display:block;overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch}
+ }
+ .zur{display:none;color:#4f8cff}
+@media(max-width:900px){
+  /* Am Telefon ersetzt der Weg zurueck zur Uebersicht die siebenteilige
+     Navigationsleiste. Die Filter der Seite bleiben stehen. */
+  .bar>a:not(.zur),.bar>b{display:none}
+  .zur{display:inline-block!important;font-size:15px}
+ }
 </style></head><body>
 <div class=bar>
- <a href="/">✏️ Editor</a><a href="/statistik.html">📊 Statistik</a><a href="/vertraege">📑 Verträge</a><a href="/reisen">🏖️ Reisen</a><a href="/import">📥 Import</a>
+  <a href="/menu" class=zur>← Übersicht</a>
+<a href="/">✏️ Editor</a><a href="/statistik.html">📊 Statistik</a><a href="/vertraege">📑 Verträge</a><a href="/reisen">🏖️ Reisen</a><a href="/import">📥 Import</a>
  <b style="color:#4f8cff">💰 Vermögen</b> <a href="/vorsorge">🎯 Vorsorge</a>
  <span id=stand style="margin-left:auto;color:#9aa4b2;font-size:13px">–</span>
 </div>

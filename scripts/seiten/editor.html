@@ -8,12 +8,64 @@
  table{width:100%;border-collapse:collapse} td,th{padding:6px 8px;border-bottom:1px solid #1e232e;vertical-align:top}
  th{position:sticky;top:50px;background:#11141c;color:#9aa4b2;text-align:left}
  .r{text-align:right;white-space:nowrap}.neg{color:#ff8a8a}.pos{color:#7ee0a0}
- .ctx{color:#c2c9d6;font-size:12px;max-width:340px}.why{color:#6b7280;font-size:11px}
+ .ctx{color:#c2c9d6;font-size:12px;max-width:290px}.why{color:#6b7280;font-size:11px}
  .mail{color:#7f9cc7;font-size:11px;margin-top:2px}
  .vtg{background:#3a2f4d;color:#c9b6ec;border-radius:5px;padding:0 5px;font-size:10px;vertical-align:middle}
  tr.ign{opacity:.45} tr.saved>td{background:#16301d}
  tr.unsaved>td{background:#3a1620;outline:1px solid #ff8a8a}
  .lbl{width:140px} .stat{margin-left:auto;color:#9aa4b2}
+ /* Pruef-Knoepfe und Kommentar: gleiche Optik wie die kanonische Tabelle in shared.js */
+ .pf{white-space:nowrap}
+ .pf .b{background:#222a38;border:1px solid #2c323f;color:#9aa4b2;border-radius:6px;padding:3px 8px;cursor:pointer;font-weight:700}
+ .pf .okb.on{background:#16301d;border-color:#2c6b3f;color:#7ee0a0}
+ .pf .nob.on{background:#301717;border-color:#6b2c2c;color:#ff8a8a}
+ /* 124 statt 150: mit den beiden neuen Spalten war die Tabelle sonst 19px breiter
+    als ein 1440er Laptop und die ganze Seite liess sich seitlich schieben. */
+ .komm{width:124px}
+ .c-mon input{width:118px}
+ .c-dat{white-space:nowrap}
+ /* Kein display:block auf der Tabelle, auch nicht fuer breite Fenster: der
+    mitlaufende Tabellenkopf (position:sticky auf th) haengt daran und legt sich
+    sonst ueber die erste Zeile. Die Tabelle passt auf 1440px, seit die
+    Kontextspalte schmaler ist. */
+
+ /* ---- Handy und schmale Fenster -------------------------------------------
+    Zehn Spalten passen auf kein Telefon und auf kein Tablet. Unterhalb von 900px wird deshalb aus
+    jeder Tabellenzeile eine Karte: Kopf weg, Zellen als Bloecke, jede mit
+    eigener Beschriftung aus data-t. Funktion geht dabei keine verloren —
+    alle Felder bleiben da, nur untereinander statt nebeneinander. */
+ @media (max-width:900px){
+  /* Am Telefon ersetzt der Weg zurueck zur Uebersicht die siebenteilige
+     Navigationsleiste. Die Filter der Seite bleiben stehen. */
+  .bar>a:not(.zur),.bar>b{display:none}
+  .zur{display:inline-block!important;font-size:15px}
+
+  .bar{padding:8px;gap:6px}
+  .bar a,.bar b{font-size:13px}
+  .lbl,#fsearch{width:100%!important;box-sizing:border-box}
+  .stat{margin-left:0;width:100%}
+  table,tbody,tr,td{display:block;width:auto}
+  thead{display:none}
+  tr{position:relative;background:#141823;border:1px solid #262b36;border-radius:10px;
+     margin:0 0 10px;padding:9px 11px}
+  tr.saved{border-color:#2c6b3f} tr.unsaved{border-color:#ff8a8a;outline:0}
+  tr.saved>td,tr.unsaved>td{background:none}
+  td{border:0;padding:3px 0}
+  td[data-t]::before{content:attr(data-t);display:block;color:#6b7280;font-size:11px;margin-bottom:2px}
+  /* Pruefen-Knoepfe oben rechts in die Ecke der Karte */
+  .pf{position:absolute;top:9px;right:11px;padding:0}
+  .c-dat{color:#9aa4b2;font-size:12px}
+  .c-bet{text-align:left;font-size:20px;font-weight:700;padding:0 0 2px}
+  .c-hdl{font-size:15px;font-weight:600;padding-right:96px;padding-bottom:4px}
+  .c-kat select,.c-kom input,.komm{width:100%;box-sizing:border-box}
+  /* Monat und Geltung nebeneinander. float statt inline-block, weil letzteres den
+     Zeilenumbruch zwischen den <td> als Leerzeichen mitrechnet und dann umbricht. */
+  .c-mon,.c-gel{float:left;width:48%;box-sizing:border-box}
+  .c-mon{margin-right:4%}
+  .c-mon input,.c-gel select{width:100%;box-sizing:border-box}
+  .ctx{clear:both;max-width:none;border-top:1px solid #1e232e;margin-top:7px;padding-top:6px}
+  #lp{width:calc(100vw - 24px);left:12px!important}
+ }
  .lc{cursor:pointer;min-width:130px} .chip{background:#26324a;border-radius:6px;padding:1px 6px;margin:1px;display:inline-block;font-size:12px}
  .lbe{background:#2a3343;border:0;color:#9aa4b2;border-radius:6px;cursor:pointer;padding:1px 7px}
  #lp{position:fixed;z-index:50;background:#11141c;border:1px solid #3a4252;border-radius:10px;width:270px;box-shadow:0 8px 30px #000a;display:none}
@@ -26,19 +78,38 @@
  #lp .lpfoot{padding:8px 12px;border-top:1px solid #2c323f;background:#11141c;border-radius:0 0 10px 10px}
  #lp button{background:#4f8cff;border:0;color:#fff;border-radius:7px;padding:6px 10px;cursor:pointer}
  #lp .sec{background:#2a3343;color:#cbd5e1}
+ .zur{display:none;color:#4f8cff}
+ /* Filter am Telefon zugeklappt: sonst stehen vier Zeilen Bedienelemente vor
+    der ersten Buchung. Am Schreibtisch bleibt alles offen und ohne Aufklapper. */
+ .fltm{display:contents}
+ .fltm>summary{display:none}
+ @media (max-width:900px){
+  .fltm{display:block;width:100%}
+  .fltm>summary{display:block;cursor:pointer;background:#171a23;border:1px solid #262b36;
+    border-radius:9px;padding:8px 11px;font-weight:600;color:#cbd5e1;list-style:none}
+  .fltm>summary::-webkit-details-marker{display:none}
+  .fltm>summary::before{content:"▸ ";color:#6b7280}
+  .fltm[open]>summary::before{content:"▾ "}
+  .fltm>*:not(summary){margin-top:7px}
+ }
 </style></head><body>
 <div id=lp></div>
 <div class=bar>
- <b style="color:#4f8cff">✏️ Editor</b> <a href="/statistik.html">📊 Statistik</a> <a href="/vertraege">📑 Verträge</a> <a href="/reisen">🏖️ Reisen</a> <a href="/import">📥 Import</a> <a href="/vermoegen">💰 Vermögen</a> <a href="/vorsorge">🎯 Vorsorge</a>
+  <a href="/menu" class=zur>← Übersicht</a>
+<b style="color:#4f8cff">✏️ Editor</b> <a href="/statistik.html">📊 Statistik</a> <a href="/vertraege">📑 Verträge</a> <a href="/reisen">🏖️ Reisen</a> <a href="/import">📥 Import</a> <a href="/vermoegen">💰 Vermögen</a> <a href="/vorsorge">🎯 Vorsorge</a>
+<details class=fltm><summary>🔎 Filter</summary>
  <select id=fcat onchange=draw()><option value="">— Kategorie —</option></select>
  <input id=flabel placeholder="Label…" oninput=draw() class=lbl>
  <input id=fsearch placeholder="Suche Händler/Kontext…" oninput=draw() style="width:220px">
  <label><input type=checkbox id=fonly onchange=draw()> nur „Sonstiges"</label>
  <button onclick=rebuild()>📊 Statistik neu</button>
+</details>
  <span class=stat id=stat></span>
 </div>
-<table><thead><tr><th>Datum</th><th class=r>Betrag</th><th>Händler</th><th>Kategorie</th>
-<th>Labels</th><th>Ign.</th><th>Monat→</th><th>Geltung</th><th>Kontext</th></tr></thead>
+<!-- Spaltenfolge bis „Kommentar" identisch mit der kanonischen Detailtabelle in shared.js
+     (renderBookings). Danach folgen die Spalten, die es nur im Editor gibt. -->
+<table><thead><tr><th>Prüfen</th><th>Datum</th><th class=r>Betrag</th><th>Händler</th><th>Kategorie</th>
+<th>Labels</th><th>Kommentar</th><th>Monat→</th><th>Geltung</th><th>Kontext</th></tr></thead>
 <tbody id=tb></tbody></table>
 <datalist id=labelcat></datalist>
 <script>
@@ -57,20 +128,33 @@ const catOptions=c=>META.cats.map(x=>`<option${x===c?' selected':''}>${esc(x)}</
 function rowHTML(r){
  const opts=catOptions(r.cat);
  const ctx=(r.vz||'').replace(/\s·\s*$/,'');
- return `<td>${r.d}${r.effm&&r.effm!==r.d.slice(0,7)?'<div class=why>→'+r.effm+'</div>':''}</td>
-   <td class="r ${r.b<0?'neg':'pos'}">${fmt(r.b)}</td>
-   <td>${esc(r.h).slice(0,34)}${r.vtg?' <span class=vtg>Vertrag</span>':''}</td>
-   <td><select data-f=cat>${opts}</select></td>
-   <td class=lc>${chips(r.labels)}<button type=button class=lbe>＋ Label</button></td>
-   <td style="text-align:center"><input type=checkbox data-f=ignore ${r.ignore?'checked':''}></td>
-   <td><input type=month data-f=dov value="${r.dov?r.dov.slice(0,7):''}" style="width:118px"></td>
-   <td><select data-f=scope><option value=tx>nur diese</option><option value=merchant>ganzer Vertrag</option></select></td>
+ // Die data-t-Beschriftungen sind fuer die Handy-Ansicht: dort faellt der
+ // Tabellenkopf weg und jede Zelle traegt ihre eigene Ueberschrift (siehe @media).
+ return `<td class=pf><button class="b okb${r.reviewed?' on':''}" data-a=rev title="geprüft/ok">✓</button> <button class="b nob${r.ignore?' on':''}" data-a=ign title="ignorieren (raus aus Statistik)">✗</button></td>
+   <td class=c-dat>${r.d}${r.effm&&r.effm!==r.d.slice(0,7)?'<div class=why>→'+r.effm+'</div>':''}</td>
+   <td class="r c-bet ${r.b<0?'neg':'pos'}">${fmt(r.b)}</td>
+   <td class=c-hdl>${esc(r.h).slice(0,34)}${r.vtg?' <span class=vtg>Vertrag</span>':''}</td>
+   <td class=c-kat data-t="Kategorie"><select data-f=cat>${opts}</select></td>
+   <td class="lc c-lab" data-t="Labels">${chips(r.labels)}<button type=button class=lbe>＋ Label</button></td>
+   <td class=c-kom data-t="Kommentar"><input data-f=note class=komm value="${esc(r.note||'')}" placeholder="was war das?"></td>
+   <td class=c-mon data-t="Monat→"><input type=month data-f=dov value="${r.dov?r.dov.slice(0,7):''}"></td>
+   <td class=c-gel data-t="Geltung"><select data-f=scope><option value=tx>nur diese</option><option value=merchant>ganzer Vertrag</option></select></td>
    <td class=ctx>${esc(ctx).slice(0,170)}${r.ctx?'<div class=mail>✉ '+esc(r.ctx).slice(0,130)+'</div>':''}<div class=why>${esc(r.src||'')} · ${esc(r.status)}</div></td>`;
 }
 const chips=s=>(s||'').split(',').map(x=>x.trim()).filter(Boolean).map(l=>`<span class=chip>${esc(l)}</span>`).join('');
 function bind(tr,r){
  tr.querySelectorAll('[data-f]').forEach(el=>el.addEventListener('change',()=>save(r,tr)));
  tr.querySelector('.lc').addEventListener('click',e=>openLabels(r,tr,e));
+ // Pruef-Knoepfe wie in der kanonischen Tabelle: erst den Zustand in r drehen, dann speichern.
+ tr.querySelector('[data-a=rev]').addEventListener('click',()=>{r.reviewed=r.reviewed?0:1;save(r,tr);});
+ tr.querySelector('[data-a=ign]').addEventListener('click',()=>{r.ignore=r.ignore?0:1;save(r,tr);});
+}
+// Knopfzustaende nach dem Speichern an die Serverantwort angleichen
+function markState(tr,r){
+ const rv=tr.querySelector('[data-a=rev]'), ig=tr.querySelector('[data-a=ign]');
+ if(rv)rv.classList.toggle('on',!!r.reviewed);
+ if(ig)ig.classList.toggle('on',!!r.ignore);
+ tr.classList.toggle('ign',!!r.ignore);
 }
 function _lev(a,b){const m=a.length,n=b.length;if(!m)return n;if(!n)return m;let p=[];for(let j=0;j<=n;j++)p[j]=j;
  for(let i=1;i<=m;i++){let c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c;}return p[n];}
@@ -149,7 +233,9 @@ async function save(r,tr){
  }
  const body={tx_id:r.id,cred:r.cred,hkey:r.hkey,scope:g('scope').value,
    category:g('cat').value,labels:r.labels||'',
-   ignore:g('ignore').checked,datum_override:g('dov').value?g('dov').value+'-01':''};
+   note:g('note')?g('note').value:'',            // Kommentar — gleiche Spalte wie in shared.js
+   ignore:!!r.ignore,reviewed:!!r.reviewed,      // kommen jetzt aus den Pruef-Knoepfen, nicht aus einer Checkbox
+   datum_override:g('dov').value?g('dov').value+'-01':''};
  try{
    const resp=await fetch('/api/edit',{method:'POST',headers:{'Content-Type':'application/json'},
      body:JSON.stringify(body)});
@@ -157,7 +243,7 @@ async function save(r,tr){
    const res=await resp.json();
    if(res.full){ROWS=await (await fetch('/api/rows')).json();draw();return;}
    if(!res.row) throw new Error('keine Server-Bestätigung');
-   Object.assign(r,res.row);tr.classList.remove('unsaved');tr.classList.add('saved');tr.classList.toggle('ign',!!r.ignore);
+   Object.assign(r,res.row);tr.classList.remove('unsaved');tr.classList.add('saved');markState(tr,r);
  }catch(e){
    tr.classList.remove('saved');tr.classList.add('unsaved');
    alert('⚠ NICHT gespeichert: '+e.message+'\nLäuft der Server (python app.py)? Bitte erneut.');
@@ -168,5 +254,7 @@ async function rebuild(){stat.textContent='baue Statistik…';await fetch('/api/
 document.addEventListener('mousedown',e=>{const lp=document.getElementById('lp');
  if(lp.style.display==='block'&&!lp.contains(e.target)&&!e.target.closest('.lc'))lp.style.display='none';});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')document.getElementById('lp').style.display='none';});
+// Am Telefon startet der Filterblock zugeklappt.
+if(window.innerWidth<900){const f=document.querySelector('.fltm'); if(f)f.open=false;}
 load();
 </script></body></html>

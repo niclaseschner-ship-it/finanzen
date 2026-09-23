@@ -8,6 +8,8 @@
  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:8px 0 18px}
  .kpi{background:#171a23;border:1px solid #262b36;border-radius:12px;padding:14px}
  .kpi .v{font-size:22px;font-weight:700}.kpi .l{color:#9aa4b2;font-size:12px;margin-top:3px}
+ .jl{display:block;font-size:12px;color:#9aa4b2;font-weight:400;margin-top:1px}
+ td.jahr{color:#cbd5e1;font-weight:600}
  table{width:100%;border-collapse:collapse}td,th{padding:6px 8px;border-bottom:1px solid #1e232e;vertical-align:middle}
  th{position:sticky;top:48px;background:#11141c;color:#9aa4b2;text-align:left;cursor:default}
  .r{text-align:right;white-space:nowrap}
@@ -21,8 +23,11 @@
  .zw{color:#7f9cc7;font-size:11px;margin-top:3px}
  .akt{background:#16301d;color:#7ee0a0}.exp{background:#3a2a17;color:#f0b46b}
  tr.expired{opacity:.6}
- .tgl{background:#222a38;border:1px solid #2c323f;color:#9aa4b2;border-radius:6px;cursor:pointer;padding:0 6px;font-size:12px}
- .man{color:#f0b46b;font-size:11px}.man .rs{color:#7f9cc7;cursor:pointer;text-decoration:underline}
+ .tgl{background:#222a38;border:1px solid #2c323f;color:#cbd5e1;border-radius:6px;cursor:pointer;padding:2px 8px;font-size:11px;white-space:nowrap}
+ .tgl:hover{border-color:#4f8cff;color:#fff}
+ .man{color:#f0b46b;font-size:11px;margin-top:2px}.man .rs{color:#7f9cc7;cursor:pointer;text-decoration:underline}
+ /* gerade von Hand geaendert: bleibt trotz Filter stehen und ist als solche erkennbar */
+ tr.eben{opacity:1!important;box-shadow:inset 3px 0 0 #4f8cff}
  .cnt{background:#222a38;border:1px solid #2c323f;color:#cbd5e1;border-radius:6px;padding:2px 8px;cursor:pointer;font-size:13px}
  .up{color:#ff8a8a;font-size:11px}.dn{color:#7ee0a0;font-size:11px}
  #ov{position:fixed;inset:0;background:#000a;display:none;z-index:60;align-items:center;justify-content:center}
@@ -31,13 +36,70 @@
  #mod table{font-size:13px}#mod td,#mod th{padding:5px 8px}
  tr.rej{opacity:.45} .hint{color:#6b7280;font-size:12px}
  #msg{margin-left:auto;color:#9aa4b2}
+
+ /* ---- Handy und schmale Fenster -------------------------------------------
+    Zehn Spalten passen auf kein Telefon und auf kein Tablet. Unterhalb von 900px wird aus jeder
+    Zeile eine Karte, die Kennzahlen stehen zu zweit nebeneinander, und die
+    Navigationsleiste darf umbrechen statt rechts hinauszulaufen. */
+ @media (max-width:900px){
+  /* Am Telefon ersetzt der Weg zurueck zur Uebersicht die siebenteilige
+     Navigationsleiste. Die Filter der Seite bleiben stehen. */
+  .bar>a:not(.zur),.bar>b{display:none}
+  .zur{display:inline-block!important;font-size:15px}
+
+  .bar{flex-wrap:wrap;padding:8px;gap:7px}
+  .bar a,.bar b{font-size:13px}
+  #msg{margin-left:0;width:100%}
+  .wrap{padding:12px}
+  .kpis{grid-template-columns:1fr 1fr;gap:8px}
+  .kpi{padding:10px}.kpi .v{font-size:17px}
+  table,tbody,tr,td{display:block;width:auto}
+  thead{display:none}
+  tr{position:relative;background:#141823;border:1px solid #262b36;border-radius:10px;
+     margin:0 0 10px;padding:9px 11px}
+  tr.rej,tr.expired{opacity:.6}
+  td{border:0;padding:3px 0}
+  td[data-t]::before{content:attr(data-t);display:block;color:#6b7280;font-size:11px;margin-bottom:2px}
+  /* Status-Knoepfe oben rechts, der Name traegt die Karte */
+  /* Feste Breite ist noetig: ohne sie wird der absolut gesetzte Block so breit wie
+     seine Knoepfe plus Statuszeichen und schiebt sich ueber das Namensfeld. */
+  .c-st{position:absolute;top:9px;right:11px;padding:0;width:92px;text-align:right}
+  .c-st .pill{display:block;margin-top:5px}
+  .c-nam{padding-right:100px} .c-nam .nm{width:100%;box-sizing:border-box;font-size:15px;font-weight:600}
+  .c-kat select{width:100%;box-sizing:border-box}
+  /* die drei Geldspalten zu dritt in eine Zeile, links ausgerichtet */
+  .c-let,.c-mon,.c-jah{float:left;width:33.3%;text-align:left!important;box-sizing:border-box;padding-top:7px}
+  .c-jah{font-size:15px}
+  .c-rhy{clear:both;padding-top:7px}
+  .c-anz{clear:both;text-align:left!important;padding-top:7px}
+  .c-art,.c-akt{clear:both}
+  .c-akt{border-top:1px solid #1e232e;margin-top:7px;padding-top:6px}
+  .tgl{white-space:normal}
+ }
+ .zur{display:none;color:#4f8cff}
+ /* Filter am Telefon zugeklappt: sonst stehen vier Zeilen Bedienelemente vor
+    der ersten Buchung. Am Schreibtisch bleibt alles offen und ohne Aufklapper. */
+ .fltm{display:contents}
+ .fltm>summary{display:none}
+ @media (max-width:900px){
+  .fltm{display:block;width:100%}
+  .fltm>summary{display:block;cursor:pointer;background:#171a23;border:1px solid #262b36;
+    border-radius:9px;padding:8px 11px;font-weight:600;color:#cbd5e1;list-style:none}
+  .fltm>summary::-webkit-details-marker{display:none}
+  .fltm>summary::before{content:"▸ ";color:#6b7280}
+  .fltm[open]>summary::before{content:"▾ "}
+  .fltm>*:not(summary){margin-top:7px}
+ }
 </style></head><body>
 <div class=bar>
- <a href="/">✏️ Editor</a><a href="/statistik.html">📊 Statistik</a>
+  <a href="/menu" class=zur>← Übersicht</a>
+<a href="/">✏️ Editor</a><a href="/statistik.html">📊 Statistik</a>
  <b style="color:#4f8cff">📑 Verträge</b> <a href="/reisen">🏖️ Reisen</a> <a href="/import">📥 Import</a> <a href="/vermoegen">💰 Vermögen</a> <a href="/vorsorge">🎯 Vorsorge</a>
+<details class=fltm><summary>🔎 Filter</summary>
  <span>Jahr: <select id=yr onchange=draw()></select></span>
  <label class=hint><input type=checkbox id=hiderej onchange=draw()> abgelehnte ausblenden</label>
  <label class=hint><input type=checkbox id=hideexp onchange=draw()> ausgelaufene ausblenden</label>
+</details>
  <span id=msg></span>
 </div>
 <div class=wrap>
@@ -45,7 +107,8 @@
 <p class=hint>Mechanisch erkannt (dominanter Betrag + Rhythmus). „SEPA-Lastschrift" = echtes Mandat (meist echter Vertrag);
 „Überweisung/Karte" oft nur ein Stammladen → ggf. ablehnen. Kategorie-Änderung gilt sofort für <b>alle</b> Buchungen des Vertrags.</p>
 <table><thead><tr><th>Status</th><th>Name</th><th>Kategorie</th><th>Rhythmus</th>
-<th class=r>Ø Betrag (6 Mon)</th><th class=r>letzter Betrag</th><th class=r>≈ /Monat</th>
+<th class=r>letzter Betrag</th><th class=r title="Jahresbelastung geteilt durch zwölf — macht Monatsabo und Jahresprämie vergleichbar">Schnitt / Monat</th>
+<th class=r title="was der Vertrag über ein volles Jahr kostet">Gesamt / Jahr</th>
 <th class=r>Anzahl</th><th>Art</th><th>Aktiv / letzte Zahlung</th></tr></thead>
 <tbody id=tb></tbody></table>
 <h3 id=dh style="margin-top:22px"></h3><div id=detail></div>
@@ -53,14 +116,19 @@
 <script src="/shared.js"></script>
 <script>
 let C=[],CATS=[];
+// IDs der Vertraege, die in DIESER Sitzung von Hand geaendert wurden. Schuetzt sie vor den
+// Ausblend-Filtern, damit eine eigene Aenderung nie wie ein Datenverlust aussieht.
+const KEEP=new Set();
 const fmt=x=>x.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
 const esc=s=>{const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML.replace(/"/g,'&quot;').replace(/'/g,'&#39;');};  // textContent maskiert " nicht — in value="..." waere das eine Luecke
-// Pfeil, wenn der letzte Betrag spürbar (>2%) vom 6-Monats-Schnitt abweicht
+// Pfeil, wenn die letzte Zahlung spürbar (>2%) vom typischen Betrag dieses Vertrags
+// abweicht — zeigt Preiserhöhungen, ohne dass der typische Betrag eine eigene Spalte braucht.
 function delta(c){ if(!c.betrag) return '';
  const d=(c.letzter-c.betrag)/c.betrag; if(Math.abs(d)<0.02) return '';
  return d>0?` <span class=up>▲${Math.round(d*100)}%</span>`:` <span class=dn>▼${Math.round(-d*100)}%</span>`;}
 function showTx(c){    // Buchungen des Vertrags INLINE darunter (gleiche Detailtabelle wie überall)
- document.getElementById('dh').textContent='📑 '+(c.name||'')+(c.zweck?' · '+c.zweck:'')+'  (Ø6M '+fmt(c.betrag)+' €)';
+ document.getElementById('dh').textContent='📑 '+(c.name||'')+(c.zweck?' · '+c.zweck:'')
+   +'  ('+esc(c.rhythmus)+' · '+fmt(c.jaehrlich)+' € im Jahr)';
  BK.loadInto('detail','/api/rows?contract='+encodeURIComponent(c.id));
  document.getElementById('dh').scrollIntoView({behavior:'smooth',block:'start'});
 }
@@ -79,6 +147,10 @@ async function load(){
    if(s.hideexp!=null)document.getElementById('hideexp').checked=s.hideexp; }
  draw();
 }
+// Geldkennzahl immer in BEIDEN Bezugsgroessen: pro Monat gross, pro Jahr klein darunter.
+// Sonst rechnet man beim Lesen staendig selbst um, je nachdem ob der Vertrag monatlich
+// oder jaehrlich zahlt.
+const geld=m=>fmt(m)+' €<span class=jl>'+fmt(m*12)+' € / Jahr</span>';
 function kpis(){
  // laufende Fixbelastung = NUR aktive, nicht abgelehnte Verträge (ausgelaufene zählen nicht), im Jahr
  const act=C.filter(c=>c.status!=='rejected'&&c.aktiv&&inYear(c));
@@ -87,8 +159,8 @@ function kpis(){
  const nC=C.filter(c=>c.status==='candidate'&&inYear(c)).length;
  const nExp=C.filter(c=>c.status!=='rejected'&&!c.aktiv&&inYear(c)).length;
  document.getElementById('kpis').innerHTML=[
-  ['Fixe Ausgaben ≈/Mon',fmt(aus)+' €'],['Fixe Einnahmen ≈/Mon',fmt(ein)+' €'],
-  ['Netto fix ≈/Mon',fmt(ein-aus)+' €'],['aktive Verträge',act.length],
+  ['Fixe Ausgaben',geld(aus)],['Fixe Einnahmen',geld(ein)],
+  ['Netto fix',geld(ein-aus)],['aktive Verträge',act.length],
   ['offen (zu prüfen)',nC],['ausgelaufen',nExp]
  ].map(([l,v])=>`<div class=kpi><div class=v>${v}</div><div class=l>${esc(l)}</div></div>`).join('');
 }
@@ -98,28 +170,34 @@ function draw(){
  const hexp=document.getElementById('hideexp').checked;
  if(FS)FS.save({yr:yr.value,hiderej:hide,hideexp:hexp});
  for(const c of C){
-  if(hide&&c.status==='rejected')continue;
-  if(hexp&&!c.aktiv)continue;
+  // Eine Zeile, die der Nutzer GERADE selbst geaendert hat, wird nie sofort ausgeblendet.
+  // Sonst sieht ein einziger Klick aus wie Loeschen — und der Rueckgaengig-Knopf sitzt auf
+  // genau der Zeile, die dabei verschwindet. Erst beim naechsten Laden greift der Filter.
+  const eben=KEEP.has(c.id);
+  if(hide&&c.status==='rejected'&&!eben)continue;
+  if(hexp&&!c.aktiv&&!eben)continue;
   if(!inYear(c))continue;
   const tr=document.createElement('tr');
   if(c.status==='rejected')tr.className='rej'; else if(!c.aktiv)tr.className='expired';
+  if(eben)tr.classList.add('eben');
   const opts=CATS.map(x=>`<option${x===c.kategorie?' selected':''}>${esc(x)}</option>`).join('');
   const sepa=c.typ.startsWith('SEPA');
   const life=(c.aktiv?'<span class="pill akt">aktiv</span>':'<span class="pill exp">ausgelaufen</span>')
-     +` <button class=tgl title="Status umschalten">↔</button>`
-     +(c.aktiv_manual?` <span class=man title="manuell gesetzt – Klick = zurück auf Automatik">✋<a class=rs> auto</a></span>`:'');
-  tr.innerHTML=`<td><button class="b ok" data-a=confirmed title="bestätigen">✓</button>
+     +` <button class=tgl>${c.aktiv?'auf ausgelaufen setzen':'auf aktiv setzen'}</button>`
+     +(c.aktiv_manual?` <div class=man>von Hand gesetzt · <a class=rs>zurück auf Automatik</a></div>`:'');
+  // data-t traegt die Spaltenueberschrift fuer die Kartenansicht am Handy (@media).
+  tr.innerHTML=`<td class=c-st><button class="b ok" data-a=confirmed title="bestätigen">✓</button>
      <button class="b no" data-a=rejected title="ablehnen">✗</button>
      <div class="pill s-${c.status}">${c.status}</div></td>
-   <td><input class=nm value="${esc(c.name)}">${c.zweck?'<div class=zw>↳ '+esc(c.zweck)+'</div>':''}</td>
-   <td><select class=cat>${opts}</select></td>
-   <td>${esc(c.rhythmus)}</td>
-   <td class="r ${c.richtung==='Einnahme'?'ein':'aus'}">${fmt(c.betrag)} €</td>
-   <td class="r">${fmt(c.letzter)} €${delta(c)}</td>
-   <td class=r>${fmt(c.monatlich)} €</td>
-   <td class=r><button class=cnt title="Buchungen anzeigen">${c.anzahl} ▸</button></td>
-   <td><span class="${sepa?'sepa':'karte'}">${esc(c.typ)}</span></td>
-   <td class=hint>${life}<div>letzte: ${c.letzte} (vor ${c.seit} T.)</div></td>`;
+   <td class=c-nam><input class=nm value="${esc(c.name)}">${c.zweck?'<div class=zw>↳ '+esc(c.zweck)+'</div>':''}</td>
+   <td class=c-kat data-t="Kategorie"><select class=cat>${opts}</select></td>
+   <td class=c-rhy data-t="Rhythmus">${esc(c.rhythmus)}</td>
+   <td class="r c-let ${c.richtung==='Einnahme'?'ein':'aus'}" data-t="letzter Betrag">${fmt(c.letzter)} €${delta(c)}</td>
+   <td class="r c-mon" data-t="Schnitt / Monat">${fmt(c.monatlich)} €</td>
+   <td class="r jahr c-jah" data-t="Gesamt / Jahr">${fmt(c.jaehrlich)} €</td>
+   <td class="r c-anz"><button class=cnt title="Buchungen anzeigen">${c.anzahl} ▸</button></td>
+   <td class=c-art><span class="${sepa?'sepa':'karte'}">${esc(c.typ)}</span></td>
+   <td class="hint c-akt">${life}<div>letzte: ${c.letzte} (vor ${c.seit} T.)</div></td>`;
   tr.querySelector('.cat').onchange=e=>save(c,{category:e.target.value});
   tr.querySelector('.nm').onchange=e=>save(c,{name:e.target.value});
   tr.querySelector('.cnt').onclick=()=>showTx(c);
@@ -131,11 +209,15 @@ function draw(){
 }
 async function save(c,patch){
  document.getElementById('msg').textContent='speichere… (rechnet neu)';
+ // Merken, was der Nutzer selbst angefasst hat: diese Zeile bleibt sichtbar (siehe draw()).
+ if('aktiv' in patch||'status' in patch)KEEP.add(c.id);
  const res=await (await fetch('/api/contract_edit',{method:'POST',
    headers:{'Content-Type':'application/json'},body:JSON.stringify({id:c.id,...patch})})).json();
  if(res.contracts)C=res.contracts;
  document.getElementById('msg').textContent='gespeichert ✓ – Statistik aktualisiert';
  draw();
 }
+// Am Telefon startet der Filterblock zugeklappt.
+if(window.innerWidth<900){const f=document.querySelector('.fltm'); if(f)f.open=false;}
 load();
 </script></body></html>

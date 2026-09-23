@@ -32,8 +32,7 @@ p("")
 
 p("## Größte KONSUM-Ausgaben (ohne Sparen/Kredit/Umbuchung/Einnahme)")
 # Eigene Nicht-Konsum-Kategorien (z.B. "Immobilie X") aus konfig.json.
-EXCL = ("Sparen/Invest","Kredit/Immobilie","Camper","Umbuchung intern",
-        "Einnahme") + tuple(konfig.KAT_KEIN_KONSUM)
+EXCL = konfig.KAT_NICHT_KONSUM
 # Werte gebunden statt in die Abfrage geschrieben: EXCL enthaelt Kategorien aus
 # konfig.json, und ein Apostroph darin wuerde die Abfrage sonst aufbrechen.
 _PH = ",".join("?" * len(EXCL))

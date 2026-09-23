@@ -108,6 +108,85 @@ class TestDedup(unittest.TestCase):
             self.assertEqual(len(list(csv.DictReader(f, delimiter=";"))), 2)
 
 
+class TestUmbenannterHaendler(unittest.TestCase):
+    """Der Fall, der 09/2026 real 37 Doppelbuchungen und 1426 € zu viel erzeugt hat.
+
+    Die DKB schreibt denselben Kartenumsatz in einem späteren Export anders: aus
+    'EDEKA.AKTIV.MARKT/KIRCHZARTEN' wird 'EDEKA Aktiv Markt'. Solange der
+    Empfängertext Teil der Buchungs-Kennung war, galt die Zahlung danach als neu."""
+
+    def setUp(self):
+        helfer.exporte_leeren()
+
+    def _mit_namen(self, name):
+        return ("05.01.26", "Testhaushalt", name, "VISA Debitkartenumsatz vom 05.01.2026",
+                "Ausgang", helfer.FREMD, "-42,50", "")
+
+    def _zeilen(self):
+        import csv
+        with open(parse_konten.OUT, encoding="utf-8-sig") as f:
+            return list(csv.DictReader(f, delimiter=";"))
+
+    def test_umbenannter_haendler_ist_keine_neue_buchung(self):
+        helfer.export_ablegen("alt.csv", helfer.dkb_csv(
+            helfer.GIRO_A, [self._mit_namen("EDEKA.AKTIV.MARKT/KIRCHZARTEN")]))
+        helfer.export_ablegen("neu.csv", helfer.dkb_csv(
+            helfer.GIRO_A, [self._mit_namen("EDEKA Aktiv Markt")]))
+        parse_konten.run()
+        self.assertEqual(len(self._zeilen()), 1,
+                         "derselbe Umsatz, nur anders geschrieben -> EINE Buchung")
+
+    def test_lesbarer_name_gewinnt(self):
+        helfer.export_ablegen("alt.csv", helfer.dkb_csv(
+            helfer.GIRO_A, [self._mit_namen("EDEKA.AKTIV.MARKT/KIRCHZARTEN")]))
+        helfer.export_ablegen("neu.csv", helfer.dkb_csv(
+            helfer.GIRO_A, [self._mit_namen("EDEKA Aktiv Markt")]))
+        parse_konten.run()
+        self.assertEqual(self._zeilen()[0]["gegenpartei"], "EDEKA Aktiv Markt",
+                         "der Text ohne Punkte/Schrägstriche ist der lesbarere")
+
+    def test_zwei_echte_zahlungen_bleiben_zwei(self):
+        """Der gefährliche Fall: zweimal derselbe Betrag am selben Tag, und die Bank
+        benennt zwischendurch um. Erwartet: zwei Buchungen, nicht eine."""
+        helfer.export_ablegen("alt.csv", helfer.dkb_csv(
+            helfer.GIRO_A, [self._mit_namen("MAINAU.GMBH/INSEL.MAINAU")] * 2))
+        helfer.export_ablegen("neu.csv", helfer.dkb_csv(
+            helfer.GIRO_A, [self._mit_namen("Insel Mainau")] * 2))
+        parse_konten.run()
+        self.assertEqual(len(self._zeilen()), 2)
+
+    def test_verschiedene_haendler_werden_nicht_verschmolzen(self):
+        """Gleicher Tag, gleicher Betrag, aber echte verschiedene Gegenseiten:
+        unterschiedliche IBAN -> zwei Buchungen."""
+        a = ("05.01.26", "Testhaushalt", "Bäckerei Müller", "Brot", "Ausgang",
+             helfer.FREMD, "-42,50", "")
+        b = ("05.01.26", "Testhaushalt", "Buchladen Schmidt", "Buch", "Ausgang",
+             "DE00000000000000000008", "-42,50", "")
+        helfer.export_ablegen("export.csv", helfer.dkb_csv(helfer.GIRO_A, [a, b]))
+        parse_konten.run()
+        self.assertEqual(len(self._zeilen()), 2)
+
+
+class TestStabileKennung(unittest.TestCase):
+    """tx_key darf nur aus Feldern bestehen, die die Bank nicht umschreibt."""
+
+    def test_kennung_haengt_nicht_am_empfaengertext(self):
+        import ingest_transactions
+        basis = {"konto": "DKB-Haushalt", "datum": "2026-01-05", "betrag": "-42.50",
+                 "iban_gegen": helfer.FREMD, "verwendungszweck": "VISA", "buchungstext": "Ausgang"}
+        a = dict(basis, gegenpartei="EDEKA.AKTIV.MARKT/KIRCHZARTEN")
+        b = dict(basis, gegenpartei="EDEKA Aktiv Markt")
+        self.assertEqual(ingest_transactions.tx_key(a), ingest_transactions.tx_key(b))
+
+    def test_andere_gegenseite_ist_andere_buchung(self):
+        import ingest_transactions
+        basis = {"konto": "DKB-Haushalt", "datum": "2026-01-05", "betrag": "-42.50",
+                 "gegenpartei": "Laden"}
+        a = dict(basis, iban_gegen=helfer.FREMD)
+        b = dict(basis, iban_gegen="DE00000000000000000008")
+        self.assertNotEqual(ingest_transactions.tx_key(a), ingest_transactions.tx_key(b))
+
+
 class TestLeererEingang(unittest.TestCase):
     def test_ohne_exporte_und_ohne_csv_klarer_fehler(self):
         import os

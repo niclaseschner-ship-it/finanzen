@@ -77,9 +77,76 @@ def related_mails(con, tid, exclude_id, days=5):
     rows = con.execute(f"""select id,msg_date,from_addr,subject,body_text from mails
         where msg_date between ? and ? and ({cond})
         and lower(from_addr) not like '%paypal%' and id<>?
-        order by msg_date desc limit 8""", [lo, hi] + params + [exclude_id or ""]).fetchall()
-    return [{"date": r[1][:16], "from": (r[2] or "")[:30], "subject": r[3] or "",
-             "snippet": clean_email(r[4])[:280]} for r in rows]
+        order by msg_date desc limit 20""", [lo, hi] + params + [exclude_id or ""]).fetchall()
+    # Nach Nutzen sortieren statt nur nach Datum. Der Zweck dieser Liste ist, das PRODUKT
+    # zu zeigen, das im Zahlungsbeleg fehlt — das steht in der Bestell- oder Versandmail.
+    # Werbemails desselben Absenders trafen den Namensfilter genauso und standen, weil sie
+    # taeglich kommen, immer ganz oben und verdeckten die eine nuetzliche Mail.
+    KAUF = re.compile(r"(?i)bestell|rechnung|beleg|auftrag|versand|liefer|zahlung|storno|"
+                      r"retoure|r[uü]cksend|zustell|quittung|order|invoice")
+    # Bewusst NUR Werbe-Merkmale. "no-reply" oder "info@" gehoeren NICHT dazu: darueber
+    # verschickt fast jeder Haendler auch seine Bestellbestaetigungen.
+    WERB = re.compile(r"(?i)newsletter|marketing|angebot|rabatt|%\s*(on top|rabatt)|sale\b|"
+                      r"gutschein|deal|nur heute|letzte chance")
+    def istwerbung(r):
+        betreff, absender = (r[3] or ""), (r[2] or "")
+        if KAUF.search(betreff): return False        # ein Kaufbeleg ist nie Werbung
+        return bool(WERB.search(betreff) or WERB.search(absender))
+    def rang(r):
+        if KAUF.search(r[3] or ""): return -2        # Kaufbeleg zuerst
+        return 2 if istwerbung(r) else 0             # Werbung ans Ende
+    # Zwei Durchgaenge, weil Pythons sort stabil ist: erst neueste zuerst, dann nach
+    # Nutzen umsortieren. In einem Schluessel ginge das nicht, Datum ist ein String
+    # und liesse sich nicht zugleich absteigend sortieren.
+    rows = sorted(rows, key=lambda r: r[1] or "", reverse=True)
+    rows = sorted(rows, key=rang)[:8]
+    # Anhaenge der Begleitmails MIT ausliefern. Der Zahlungsbeleg selbst traegt fast nie
+    # eine Rechnung — die PDF haengt an der Bestell- oder Rechnungsmail daneben. Ohne das
+    # hier war sie ueber die Oberflaeche ueberhaupt nicht erreichbar.
+    aus = []
+    for r in rows:
+        att = [{"id": a[0], "name": a[1] or "(ohne Namen)", "typ": a[2], "size": a[3],
+                "zeigbar": a[2] in INLINE_TYPEN, "da": bool(a[4]) and os.path.exists(a[4])}
+               for a in con.execute("""select id, filename, coalesce(content_type,''),
+                   coalesce(size,0), coalesce(saved_path,'') from attachments
+                   where mail_id=? order by id""", (r[0],))]
+        aus.append({"date": r[1][:16], "from": (r[2] or "")[:30], "subject": r[3] or "",
+                    "werbung": istwerbung(r), "kauf": bool(KAUF.search(r[3] or "")),
+                    "anhaenge": att, "snippet": clean_email(r[4])[:280]})
+    return aus
+
+# Typen, die der Browser gefahrlos direkt anzeigen darf. Alles andere geht als Download
+# raus. Wichtig: NIE text/html o.ae. inline ausliefern — das liefe im selben Ursprung wie
+# der Editor und duerfte dann alle Buchungen mitlesen.
+INLINE_TYPEN = {"application/pdf", "image/png", "image/jpeg", "image/jpg",
+                "image/gif", "image/webp", "image/bmp"}
+MAX_ANHANG = 40 * 1024 * 1024
+
+def attachment_datei(aid):
+    """Rohdaten eines Anhangs. Liefert (bytes, content_type, dateiname, inline) oder
+    (None, Fehlertext, '', False). Der Pfad kommt aus der DB, wird aber trotzdem gegen
+    den Anhang-Ordner geprueft: eine manipulierte Zeile soll nicht das Dateisystem oeffnen."""
+    con = db.connect()
+    row = con.execute("""select filename, coalesce(content_type,''), coalesce(saved_path,'')
+        from attachments where id=?""", (aid,)).fetchone()
+    con.close()
+    if not row:
+        return None, "unbekannter Anhang", "", False
+    fn, ct, pfad = row
+    if not pfad:
+        return None, "keine Datei gespeichert", "", False
+    basis = os.path.realpath(os.path.join(db.BASE, "attachments"))
+    echt = os.path.realpath(pfad)
+    if echt != basis and not echt.startswith(basis + os.sep):
+        return None, "Pfad ausserhalb des Anhang-Ordners", "", False
+    if not os.path.exists(echt):
+        return None, "Datei fehlt auf der Platte", "", False
+    if os.path.getsize(echt) > MAX_ANHANG:
+        return None, "Datei zu gross fuer die Anzeige", "", False
+    with open(echt, "rb") as f:
+        roh = f.read()
+    inline = ct in INLINE_TYPEN
+    return roh, (ct if inline else "application/octet-stream"), (fn or "anhang"), inline
 
 def mail_for_tx(tid):
     """Verknüpfte Mail + zusätzlich nahe Händler-eigene Mails (zeigt Produkt bei PayPal/eBay)."""
@@ -96,9 +163,17 @@ def mail_for_tx(tid):
     art = {"amazon-order": "Bestellnummer (sicher)", "paypal-txn": "PayPal-TxnID (sicher)",
            "paypal-merchant-amount": "Händler+Betrag", "paypal-amount-date": "nur Betrag+Datum (Schätzung!)",
            "amount-merchant-date": "Händler+Betrag+Datum (Schätzung)"}.get(m[6], m[6] or "")
-    att = [{"name": r[0], "text": clean_email(r[1])[:2500]}
-           for r in con.execute("""select filename, extracted_text from attachments
-               where mail_id=? and extracted_text is not null and extracted_text<>''""", (m[0],))]
+    # ALLE Anhaenge, nicht nur die mit ausgelesenem Text. Vorher fielen Bilder und
+    # Office-Dateien komplett aus der Anzeige — betroffen war knapp die Haelfte.
+    att = []
+    for r in con.execute("""select id, filename, coalesce(content_type,''), coalesce(size,0),
+            coalesce(extracted_text,''), coalesce(saved_path,'') from attachments
+            where mail_id=? order by id""", (m[0],)):
+        aid, fn, ct, size, txt, pfad = r
+        att.append({"id": aid, "name": fn or "(ohne Namen)", "typ": ct, "size": size,
+                    "text": clean_email(txt)[:2500] if txt else "",
+                    "da": bool(pfad) and os.path.exists(pfad),
+                    "zeigbar": ct in INLINE_TYPEN})
     con.close()
     return {"found": True, "subject": m[1], "from": (m[2] or "") + " <" + (m[3] or "") + ">",
             "date": m[4], "body": clean_email(m[5])[:6000], "attachments": att, "related": rel,
@@ -109,6 +184,12 @@ def mail_for_tx(tid):
 import konfig, liste
 CATS = liste.CATS
 PORT = int(os.environ.get("FINANZEN_PORT", "8765"))   # zweite Instanz (z.B. Demo) parallel
+# Der Server hoert normalerweise NUR auf 127.0.0.1. Wer die Seiten von einem anderen
+# Geraet ansehen will (Handy), setzt FINANZEN_HOST auf die Adresse, unter der dieser
+# Rechner dort erreichbar ist — sinnvoll ist die Tailscale-IP, dann kommt nur das
+# eigene Tailnet dran und nicht jedes Geraet im WLAN. ACHTUNG: die App hat KEINE
+# Anmeldung. Wer die Adresse erreicht, sieht und aendert alle Buchungen.
+EXTRA_HOST = (os.environ.get("FINANZEN_HOST") or "").strip()
 KEYS = ["id","d","effm","b","h","art","cat","status","src","labels","ctx","cred","hkey","ignore",
         "dov","vz","vtg","prod","note","reviewed","why"]
 
@@ -270,7 +351,7 @@ MFAK = {"wöchentlich":4.33,"14-tägig":2.17,"monatlich":1.0,"2-monatlich":0.5,
         "quartalsweise":1/3,"halbjährlich":1/6,"jährlich":1/12,"unregelmäßig":0.0}
 CKEYS = ["id","name","kategorie","rhythmus","betrag","bmin","bmax","letzter","anzahl",
          "richtung","typ","status","erste","letzte","naechste","monatlich","zweck",
-         "aktiv","aktiv_auto","aktiv_manual","seit"]
+         "aktiv","aktiv_auto","aktiv_manual","seit","jaehrlich"]
 
 def contracts_rows():
     con = db.connect()
@@ -280,11 +361,15 @@ def contracts_rows():
         coalesce(zweck,''),coalesce(aktiv,1),coalesce(tage_seit_letzter,0),aktiv_user from contracts"""):
         (cid,name,kat,rh,bt,bmin,bmax,bletzt,anz,ri,kt,st,erste,letzte,nxt,zweck,aktiv,seit,au) = r
         typ = "SEPA-Lastschrift" if kt == "creditor" else "Überweisung/Karte"
+        # Auf EINE vergleichbare Groesse normieren: der typische Betrag mal Takt-Faktor
+        # ergibt die Monatsbelastung, mal zwoelf die Jahresbelastung. Nur so stehen ein
+        # monatliches Abo und eine Jahrespraemie in derselben Spalte nebeneinander.
         meq = round(abs(bt or 0) * MFAK.get(rh, 0.0), 2)
+        jahr = round(meq * 12, 2)
         eff = aktiv if au is None else au          # manueller Override gewinnt über Mechanik
         out.append(dict(zip(CKEYS, [cid,name,kat,rh,round(bt or 0,2),round(bmin or 0,2),
             round(bmax or 0,2),round(bletzt or 0,2),anz,ri,typ,st,erste,letzte,nxt,meq,zweck,
-            eff,aktiv,(au is not None),seit])))
+            eff,aktiv,(au is not None),seit,jahr])))
     con.close()
     # bestätigte + aktive zuerst, dann nach Höhe; ausgelaufene/abgelehnte nach unten
     order = {"confirmed":0,"candidate":1,"rejected":2}
@@ -432,8 +517,13 @@ def sources_rows():
             "current": {"von": von, "bis": bis}}
 
 def period_set(p):
+    bis = (p.get("bis") or "").strip()
     db.set_setting("period_von", (p.get("von") or "").strip())
-    db.set_setting("period_bis", (p.get("bis") or "").strip())
+    db.set_setting("period_bis", bis)
+    # Ein von Hand gesetztes 'bis' schaltet die Automatik ab, sonst wuerde der naechste
+    # Import es wieder ueberschreiben. Feld leer lassen = Automatik wieder an (dann setzt
+    # run_all den letzten voll gedeckten Monat).
+    db.set_setting("period_bis_auto", "0" if bis else "1")
     import frontend; frontend.run()                       # Statistik direkt neu bauen
     von, bis = db.period_bounds()
     return {"ok": True, "von": von, "bis": bis}
@@ -497,15 +587,99 @@ def vorsorge_save(p):
     db.set_setting("vorsorge_plan", json.dumps(plan, ensure_ascii=False))
     return {"ok": True}
 
+def ist_werte():
+    """Ist-Werte fuer die Vorsorge-Vorbelegung, die NICHT aus der Vermoegensseite kommen
+    koennen, weil sie aus den Buchungen stammen: monatlicher Bedarf, Sparrate und der
+    Netto-Ueberschuss der Immobilien.
+
+    vermoegen.py liest bewusst nur Salden und nie Umsaetze — deshalb ein eigener
+    Endpunkt statt einer Erweiterung von /api/vermoegen.
+
+    Fenster: die letzten 12 VOLLEN Monate. Der juengste Monat faellt raus, weil er fast
+    immer angebrochen ist und den Schnitt sonst nach unten zieht."""
+    con = db.connect()
+    neuester = con.execute("select max(monat) from transactions where monat is not null").fetchone()[0]
+    if not neuester:
+        con.close(); return {"fehler": "keine Buchungen"}
+    j, m = int(neuester[:4]), int(neuester[5:7])
+    bis_i = j * 12 + (m - 1) - 1                      # letzter VOLLER Monat
+    von_i = bis_i - 11                                # 12 Monate insgesamt
+    fmt = lambda i: "%04d-%02d" % (i // 12, i % 12 + 1)
+    von, bis = fmt(von_i), fmt(bis_i)
+    zeit = "t.monat between ? and ?"
+
+    # Konsum: identische Abgrenzung wie die Auswertungen in extra/ (eine Definition,
+    # siehe konfig.KAT_NICHT_KONSUM). Zusaetzlich fliegen ignorierte Buchungen raus —
+    # was der Nutzer aus der Statistik genommen hat, ist auch kein Lebenshaltungsbedarf.
+    excl = konfig.KAT_NICHT_KONSUM
+    ph = ",".join("?" * len(excl))
+    bedarf_sum, bedarf_n = con.execute(f"""select coalesce(sum(-t.betrag),0), count(*)
+        from transactions t join tx_category c on c.tx_id=t.id
+        where t.flow='ausgabe' and c.category not in ({ph})
+          and coalesce(c.status,'') <> 'ignoriert' and {zeit}""",
+        tuple(excl) + (von, bis)).fetchone()
+
+    # Sparrate: was tatsaechlich vom Giro in Richtung Sparen/Depot abgeflossen ist.
+    spar_sum, spar_n = con.execute(f"""select coalesce(sum(-t.betrag),0), count(*)
+        from transactions t join tx_category c on c.tx_id=t.id
+        where c.category='Sparen/Invest' and t.flow='ausgabe'
+          and coalesce(c.status,'') <> 'ignoriert' and {zeit}""", (von, bis)).fetchone()
+
+    # Immobilien: Mieteinnahmen MINUS Objektkosten ueber die eigenen Immobilien-Kategorien.
+    # Vorzeichen kommt aus betrag selbst (Einnahme positiv).
+    #
+    # ACHTUNG Doppelzaehlung: die Darlehensrate wird als Ausgabe in genau diesen Kategorien
+    # gebucht, steht im Vorsorge-Modell aber schon separat als immo_tilgung und wird dort
+    # vom Depot abgezogen. Bliebe sie hier drin, zoege der Kredit die Rendite ein zweites
+    # Mal nach unten. Die Darlehenskonten stehen in vermoegen/positionen.json.
+    dar_konten = []
+    try:
+        with open(os.path.join(db.BASE, "vermoegen", "positionen.json"), encoding="utf-8") as f:
+            dar_konten = [d["konto"] for d in json.load(f).get("darlehen", []) if d.get("konto")]
+    except Exception:
+        pass                                          # ohne Datei: dann eben ohne Bereinigung
+    immo_netto, immo_n, schuldendienst = 0.0, 0, 0.0
+    if konfig.KAT_KEIN_KONSUM:
+        iph = ",".join("?" * len(konfig.KAT_KEIN_KONSUM))
+        basis = (f"""from transactions t join tx_category c on c.tx_id=t.id
+            where c.category in ({iph}) and coalesce(c.status,'') <> 'ignoriert' and {zeit}""")
+        immo_netto, immo_n = con.execute(
+            f"select coalesce(sum(t.betrag),0), count(*) {basis}",
+            tuple(konfig.KAT_KEIN_KONSUM) + (von, bis)).fetchone()
+        if dar_konten:
+            kph = ",".join("?" * len(dar_konten))
+            schuldendienst = con.execute(
+                f"select coalesce(sum(-t.betrag),0) {basis} and t.iban_gegen in ({kph})",
+                tuple(konfig.KAT_KEIN_KONSUM) + (von, bis) + tuple(dar_konten)).fetchone()[0]
+    con.close()
+    immo_ohne_kredit = immo_netto + schuldendienst     # Schuldendienst wieder hinzurechnen
+    return {"von": von, "bis": bis, "monate": 12,
+            "bedarf": round(bedarf_sum / 12.0),
+            "bedarf_n": bedarf_n,
+            "sparrate": round(spar_sum / 12.0),
+            "sparrate_n": spar_n,
+            # Fuer die Mietrendite: OHNE Schuldendienst, sonst zaehlt der Kredit doppelt.
+            # Frontend teilt durch immo_wert.
+            "immo_netto_jahr": round(immo_ohne_kredit),
+            "immo_netto_roh": round(immo_netto),      # mit Schuldendienst, nur zur Anzeige
+            "immo_schuldendienst": round(schuldendienst),
+            "immo_n": immo_n,
+            "immo_kategorien": list(konfig.KAT_KEIN_KONSUM)}
+
 VORSORGE_HTML = _seite("vorsorge.html")
+
+# Startseite fuer das Handy: grosse Ziele statt siebenteiliger Navigationsleiste.
+MENU_HTML = _seite("menu.html")
 
 VERMOEGEN_HTML = _seite("vermoegen.html")
 
 class H(http.server.BaseHTTPRequestHandler):
-    def _send(self, code, body, ctype="application/json"):
+    def _send(self, code, body, ctype="application/json", extra=None):
         b = body.encode("utf-8") if isinstance(body, str) else body
         self.send_response(code); self.send_header("Content-Type", ctype)
         self.send_header("Cache-Control", "no-store, no-cache, must-revalidate")  # immer frisch
+        for k, v in (extra or {}).items():
+            self.send_header(k, v)
         self.send_header("Content-Length", str(len(b))); self.end_headers(); self.wfile.write(b)
     def log_message(self, *a): pass
 
@@ -518,8 +692,14 @@ class H(http.server.BaseHTTPRequestHandler):
     #  * lesend (DNS-Rebinding): zeigt eine Angreiferdomain kurzzeitig auf
     #    127.0.0.1, hält der Browser sie für denselben Ursprung und darf alle
     #    Antworten lesen. Dagegen hilft nur, den Host-Header zu prüfen.
+    # Zusaetzliche Adresse, unter der der Server erreichbar sein soll — z.B. die
+    # eigene Tailscale-IP, um die Seiten am Handy anzusehen. Ohne die Variable
+    # bleibt alles wie bisher: nur der eigene Rechner. Siehe HOST unten.
     ERLAUBTE_HOSTS = {f"127.0.0.1:{PORT}", f"localhost:{PORT}",
                       f"[::1]:{PORT}", "127.0.0.1", "localhost"}
+    if EXTRA_HOST:
+        ERLAUBTE_HOSTS |= {EXTRA_HOST.lower(), f"{EXTRA_HOST.lower()}:{PORT}"}
+    ORIGIN_HOSTS = ("127.0.0.1", "localhost", "[::1]") + ((EXTRA_HOST,) if EXTRA_HOST else ())
 
     def _host_ok(self):
         return (self.headers.get("Host") or "").lower() in self.ERLAUBTE_HOSTS
@@ -530,7 +710,7 @@ class H(http.server.BaseHTTPRequestHandler):
         o = self.headers.get("Origin") or self.headers.get("Referer") or ""
         if not o:
             return True
-        return any(o.startswith(f"http://{h}") for h in ("127.0.0.1", "localhost", "[::1]"))
+        return any(o.startswith(f"http://{h}") for h in self.ORIGIN_HOSTS)
 
     def _abweisen(self, grund):
         self._send(403, json.dumps({"fehler": grund}, ensure_ascii=False))
@@ -541,6 +721,7 @@ class H(http.server.BaseHTTPRequestHandler):
                                   "127.0.0.1 oder localhost.")
         if self.path == "/": return self._send(200, APP_HTML, "text/html; charset=utf-8")
         if self.path == "/shared.js": return self._send(200, SHARED_JS, "application/javascript; charset=utf-8")
+        if self.path == "/menu": return self._send(200, MENU_HTML, "text/html; charset=utf-8")
         if self.path == "/vertraege": return self._send(200, VTG_HTML, "text/html; charset=utf-8")
         if self.path == "/reisen": return self._send(200, REISEN_HTML, "text/html; charset=utf-8")
         if self.path == "/import":
@@ -553,6 +734,8 @@ class H(http.server.BaseHTTPRequestHandler):
             return self._send(200, json.dumps(vermoegen_daten(), ensure_ascii=False))
         if self.path == "/api/vorsorge":
             return self._send(200, json.dumps(vorsorge_load(), ensure_ascii=False))
+        if self.path == "/api/ist_werte":
+            return self._send(200, json.dumps(ist_werte(), ensure_ascii=False))
         if self.path == "/api/sources":
             return self._send(200, json.dumps(sources_rows(), ensure_ascii=False))
         if self.path == "/api/reprocess_status":
@@ -569,6 +752,21 @@ class H(http.server.BaseHTTPRequestHandler):
             from urllib.parse import urlparse, parse_qs
             cid = parse_qs(urlparse(self.path).query).get("id", [""])[0]
             return self._send(200, json.dumps(contract_tx(cid), ensure_ascii=False))
+        if self.path.startswith("/api/anhang"):
+            from urllib.parse import urlparse, parse_qs, quote
+            aid = parse_qs(urlparse(self.path).query).get("id", [""])[0]
+            try:
+                roh, ctype, fn, inline = attachment_datei(int(aid))
+            except (TypeError, ValueError):
+                roh, ctype = None, "ungueltige Kennung"
+            if roh is None:
+                return self._send(404, ctype, "text/plain; charset=utf-8")
+            # nosniff: der Browser soll den Typ nicht selbst raten und z.B. eine als Bild
+            # deklarierte Datei doch noch als HTML ausfuehren.
+            return self._send(200, roh, ctype, {
+                "X-Content-Type-Options": "nosniff",
+                "Content-Disposition": "%s; filename*=UTF-8''%s" % (
+                    "inline" if inline else "attachment", quote(fn))})
         if self.path.startswith("/api/mail"):
             from urllib.parse import urlparse, parse_qs
             tid = parse_qs(urlparse(self.path).query).get("tx_id", [""])[0]
@@ -636,5 +834,16 @@ if __name__ == "__main__":
     seed_labels()
     print(f"Finanz-Editor:  http://127.0.0.1:{PORT}   (NICHT 'localhost' -> langsam; Strg+C beendet)")
     socketserver.ThreadingTCPServer.allow_reuse_address = True
+    # Ohne FINANZEN_HOST wie bisher: nur der eigene Rechner. Mit gesetzter Variable
+    # kommt GENAU EINE weitere Adresse dazu, in einem zweiten Socket. Bewusst nicht
+    # 0.0.0.0 — sonst haengt der Dienst am ganzen WLAN und der Host-Header waere die
+    # einzige Bremse, und den kann jeder faelschen.
+    if EXTRA_HOST:
+        import threading
+        zweit = socketserver.ThreadingTCPServer((EXTRA_HOST, PORT), H)
+        threading.Thread(target=zweit.serve_forever, daemon=True).start()
+        print(f"Auch erreichbar: http://{EXTRA_HOST}:{PORT}")
+        print("ACHTUNG: die App hat KEINE Anmeldung. Wer diese Adresse erreicht, sieht")
+        print("und aendert alle Buchungen. Danach wieder ohne FINANZEN_HOST starten.")
     with socketserver.ThreadingTCPServer(("127.0.0.1", PORT), H) as srv:
         srv.serve_forever()

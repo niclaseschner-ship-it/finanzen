@@ -15,9 +15,19 @@ INTERNAL_EXTRA = konfig.WEITERE_INTERN
 ACCOUNT_MAP    = konfig.ZUORDNUNG
 
 def tx_key(r):
+    """Identitaet einer Buchung — bewusst NUR aus Feldern, die die Bank nicht umschreibt.
+
+    Frueher steckten hier auch gegenpartei, verwendungszweck und buchungstext drin. Die
+    DKB ersetzt den rohen Kartentext aber spaeter durch einen sauberen Namen: aus
+    'EDEKA.AKTIV.MARKT/KIRCHZARTEN' wird 'EDEKA Aktiv Markt'. Damit aenderte sich die
+    Kennung, der Import hielt die Buchung fuer neu und legte sie ein zweites Mal an
+    (gemessen: 37 Faelle, 1426 EUR). Kontonummer, Datum, Betrag und die IBAN der
+    Gegenseite aendern sich dagegen nicht.
+
+    Dass sich Buchungen denselben Schluessel teilen, ist erlaubt und normal (zweimal am
+    selben Tag derselbe Betrag beim selben Haendler). Dafuer gibt es occ in tx_id()."""
     return "|".join([r.get("konto",""), r.get("datum",""), r.get("betrag",""),
-                     r.get("gegenpartei",""), r.get("verwendungszweck",""),
-                     r.get("buchungstext","")])
+                     (r.get("iban_gegen") or "").strip()])
 
 def tx_id(key, occ):
     # occ = wievielte identische Buchung -> echte Doppelbuchungen bleiben erhalten

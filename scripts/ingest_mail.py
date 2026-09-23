@@ -67,7 +67,9 @@ def run(mbox_path, label, min_year=None):
         "SELECT id FROM mails WHERE mailbox=?", (label,)))
     outdir = os.path.join(db.ATTACH_DIR, label)
     os.makedirs(outdir, exist_ok=True)
-    mb = mailbox.mbox(mbox_path)
+    # create=False: sonst oeffnet mailbox die Datei schreibend und legt bei einem
+    # falschen Pfad sogar eine neue mbox an - in einem laufenden Thunderbird-Profil.
+    mb = mailbox.mbox(mbox_path, create=False)
     n = att = skipped = 0
     for k in mb.keys():
         try:

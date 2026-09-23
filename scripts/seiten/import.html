@@ -2,7 +2,7 @@
 <meta name=viewport content="width=device-width,initial-scale=1"><title>Finanzen · Import</title>
 <style>
  body{font-family:system-ui,Arial,sans-serif;margin:0;background:#0f1117;color:#e6e6e6;font-size:14px}
- .bar{position:sticky;top:0;background:#11141c;padding:10px;border-bottom:1px solid #262b36;display:flex;gap:10px;align-items:center;z-index:5}
+ .bar{position:sticky;top:0;background:#11141c;padding:10px;border-bottom:1px solid #262b36;display:flex;gap:10px;align-items:center;z-index:5;flex-wrap:wrap}
  a{color:#9aa4b2;text-decoration:none;font-weight:600} a:hover{color:#cbd5e1}
  .wrap{padding:16px 28px;max-width:1500px;margin:0 auto}
  h2{font-size:16px;margin:26px 0 10px;border-bottom:1px solid #262b36;padding-bottom:6px}
@@ -27,9 +27,24 @@
  #band{position:absolute;top:0;bottom:22px;background:rgba(79,140,255,.12);border-left:2px solid #4f8cff;border-right:2px solid #4f8cff}
  .axis{position:relative;height:20px;margin-left:170px;margin-right:10px}
  code{background:#1b1f2a;padding:2px 6px;border-radius:5px;color:#9ec1ff}
+
+ /* Handy: breite Tabellen scrollen in sich selbst, statt die ganze Seite
+    seitlich zu schieben. Alle Spalten bleiben erreichbar. */
+ @media(max-width:760px){
+  .wrap{padding:12px}
+  table{display:block;overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch}
+ }
+ .zur{display:none;color:#4f8cff}
+@media(max-width:900px){
+  /* Am Telefon ersetzt der Weg zurueck zur Uebersicht die siebenteilige
+     Navigationsleiste. Die Filter der Seite bleiben stehen. */
+  .bar>a:not(.zur),.bar>b{display:none}
+  .zur{display:inline-block!important;font-size:15px}
+ }
 </style></head><body>
 <div class=bar>
- <a href="/">✏️ Editor</a><a href="/statistik.html">📊 Statistik</a><a href="/vertraege">📑 Verträge</a><a href="/reisen">🏖️ Reisen</a>
+  <a href="/menu" class=zur>← Übersicht</a>
+<a href="/">✏️ Editor</a><a href="/statistik.html">📊 Statistik</a><a href="/vertraege">📑 Verträge</a><a href="/reisen">🏖️ Reisen</a>
  <b style="color:#4f8cff">📥 Import</b> <a href="/vermoegen">💰 Vermögen</a> <a href="/vorsorge">🎯 Vorsorge</a>
  <span id=msg style="margin-left:auto;color:#9aa4b2"></span>
 </div>

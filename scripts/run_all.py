@@ -47,6 +47,10 @@ def main():
     # Lauf brach es ab, weil die Tabelle noch gar nicht existierte. rules selbst nutzt
     # tx_context nicht, die Abhängigkeit geht also nur in diese Richtung.
     step("7 Mail-Kontext je Buchung (build_context)", build_context.run)
+    # Auswertungszeitraum nachziehen, BEVOR die Statistik gebaut wird: sonst steht der
+    # beim letzten Import gesetzte Deckel noch drin und der frische Monat fehlt still.
+    bis = db.period_autoset()
+    if bis: print(f"Auswertung bis: {bis} (letzter von allen Konten voll gedeckter Monat)")
     step("8 Statistik-Seite (frontend)", frontend.run)
     step("9 Editor-/Listendaten (liste)", liste.run)
     print("FERTIG. Editor: python app.py  ->  http://localhost:8765")

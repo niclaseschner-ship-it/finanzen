@@ -2,7 +2,7 @@
 <meta name=viewport content="width=device-width,initial-scale=1"><title>Finanzen · Reisen</title>
 <style>
  body{font-family:system-ui,Arial,sans-serif;margin:0;background:#0f1117;color:#e6e6e6;font-size:14px}
- .bar{position:sticky;top:0;background:#11141c;padding:10px;border-bottom:1px solid #262b36;display:flex;gap:10px;align-items:center;z-index:5}
+ .bar{position:sticky;top:0;background:#11141c;padding:10px;border-bottom:1px solid #262b36;display:flex;gap:10px;align-items:center;z-index:5;flex-wrap:wrap}
  a{color:#9aa4b2;text-decoration:none;font-weight:600}
  .wrap{padding:16px 28px;max-width:1500px;margin:0 auto}
  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:8px 0 18px}
@@ -22,10 +22,25 @@
  #mod{background:#11141c;border:1px solid #3a4252;border-radius:12px;max-width:780px;width:92%;max-height:82vh;overflow:auto;padding:16px}
  .prodc{color:#7ee0a0}
  #detail{margin-top:8px}
+
+ /* Handy: breite Tabellen scrollen in sich selbst, statt die ganze Seite
+    seitlich zu schieben. Alle Spalten bleiben erreichbar. */
+ @media(max-width:760px){
+  .wrap{padding:12px}
+  table{display:block;overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch}
+ }
+ .zur{display:none;color:#4f8cff}
+@media(max-width:900px){
+  /* Am Telefon ersetzt der Weg zurueck zur Uebersicht die siebenteilige
+     Navigationsleiste. Die Filter der Seite bleiben stehen. */
+  .bar>a:not(.zur),.bar>b{display:none}
+  .zur{display:inline-block!important;font-size:15px}
+ }
 </style></head><body>
 <script src="/shared.js"></script>
 <div class=bar>
- <a href="/">✏️ Editor</a><a href="/statistik.html">📊 Statistik</a><a href="/vertraege">📑 Verträge</a>
+  <a href="/menu" class=zur>← Übersicht</a>
+<a href="/">✏️ Editor</a><a href="/statistik.html">📊 Statistik</a><a href="/vertraege">📑 Verträge</a>
  <b style="color:#4f8cff">🏖️ Reisen</b> <a href="/import">📥 Import</a> <a href="/vermoegen">💰 Vermögen</a> <a href="/vorsorge">🎯 Vorsorge</a>
  <span>Jahr: <select id=yr onchange=draw()></select></span>
  <label class=hint><input type=checkbox id=hiderej onchange=draw()> abgelehnte ausblenden</label>

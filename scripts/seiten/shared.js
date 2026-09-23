@@ -33,9 +33,33 @@ window.BK=(function(){
     #bklp .lpfoot{padding:8px 12px;border-top:1px solid #2c323f}
     #bklp button{background:#4f8cff;border:0;color:#fff;border-radius:7px;padding:6px 10px;cursor:pointer}#bklp .sec{background:#2a3343;color:#cbd5e1}
     #bkov{position:fixed;inset:0;background:#000a;display:none;z-index:70;align-items:center;justify-content:center}
-    #bkmod{background:#11141c;border:1px solid #3a4252;border-radius:12px;max-width:820px;width:92%;max-height:82vh;overflow:auto;padding:16px}
-    #bkmod .x{float:right;background:#2a3343;border:0;color:#cbd5e1;border-radius:7px;padding:5px 10px;cursor:pointer}
-    .bk-mailbody{white-space:pre-wrap;font-size:13px;line-height:1.45;color:#dfe5ee;background:#141823;border:1px solid #232834;border-radius:8px;padding:10px;margin:6px 0;overflow-wrap:anywhere}`;
+    #bkmod{background:#11141c;border:1px solid #3a4252;border-radius:12px;max-width:820px;width:92%;max-height:82vh;overflow:auto;padding:0}
+    /* Kopf bleibt beim Scrollen stehen; kein float mehr, sonst umfliesst der Betreff den Knopf */
+    .bk-kopf{position:sticky;top:0;z-index:2;display:flex;gap:12px;align-items:flex-start;
+      background:#11141c;border-bottom:1px solid #232834;padding:14px 16px;border-radius:12px 12px 0 0}
+    .bk-kopf-t{font-size:17px;font-weight:700;line-height:1.3;overflow-wrap:anywhere;flex:1}
+    #bkmod .x{flex:none;background:#2a3343;border:0;color:#cbd5e1;border-radius:7px;padding:5px 10px;cursor:pointer}
+    .bk-inhalt{padding:12px 16px 16px}
+    #bkmod h4{overflow-wrap:anywhere;margin:14px 0 6px}
+    .bk-rel{border-top:1px solid #232834;padding-top:6px;margin-top:6px}
+    /* overflow:auto ist Pflicht, sobald eine Hoehe gedeckelt wird. Ohne das lief der Text
+       sichtbar aus dem Kasten heraus und legte sich ueber die naechste Betreffzeile. */
+    .bk-mailbody{white-space:pre-wrap;font-size:13px;line-height:1.45;color:#dfe5ee;background:#141823;border:1px solid #232834;border-radius:8px;padding:10px;margin:6px 0;overflow-wrap:anywhere;overflow:auto}
+    .bk-snip{max-height:150px}
+    .bk-werb{background:#3a2f17;color:#e0b46b;border-radius:5px;padding:0 5px;font-size:10px;margin-left:6px;vertical-align:middle}
+    #bkmod details>summary{cursor:pointer;color:#7f9cc7;font-size:13px;padding:8px 0}
+    /* Anhaenge als Karten: Kopfzeile mit Name/Typ/Groesse, darunter die Vorschau */
+    .bk-att{border:1px solid #232834;border-radius:8px;margin:8px 0;overflow:hidden;background:#141823}
+    .bk-att-kopf{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 10px;border-bottom:1px solid #232834}
+    .bk-att-name{font-weight:600;font-size:13px;overflow-wrap:anywhere;min-width:0}
+    .bk-att-meta{color:#6b7280;font-size:11px;white-space:nowrap}
+    .bk-att .dl{margin-left:auto;background:#2a3343;color:#cbd5e1;border-radius:6px;padding:3px 9px;font-size:12px;text-decoration:none;white-space:nowrap}
+    .bk-att img{display:block;max-width:100%;height:auto;background:#fff}
+    .bk-att iframe{display:block;width:100%;height:70vh;border:0;background:#fff}
+    .bk-att-pdf{padding:10px}
+    .bk-pdfbtn{background:#2a3343;border:1px solid #3a4252;color:#cbd5e1;border-radius:7px;padding:5px 10px;cursor:pointer;font-size:12px}
+    .bk-att details{padding:0 10px 8px}.bk-att summary{cursor:pointer;color:#7f9cc7;font-size:12px;padding:6px 0}
+    .bk-att-hint{padding:8px 10px;color:#6b7280;font-size:12px}`;
    document.head.appendChild(st);
    const lp=document.createElement('div'); lp.id='bklp'; document.body.appendChild(lp);
    const ov=document.createElement('div'); ov.id='bkov'; ov.innerHTML='<div id=bkmod></div>'; document.body.appendChild(ov);
@@ -114,18 +138,79 @@ window.BK=(function(){
  }
  async function showMail(txid){
    const ov=document.getElementById('bkov'),mod=document.getElementById('bkmod');
-   mod.innerHTML='<button class=x onclick="document.getElementById(\'bkov\').style.display=\'none\'">schließen ✕</button><div class=bk-why>lädt…</div>';
+   mod.innerHTML='<div class=bk-kopf><div class=bk-kopf-t>Beleg-Mail</div>'
+     +'<button class=x onclick="document.getElementById(\'bkov\').style.display=\'none\'">schließen ✕</button></div>'
+     +'<div class=bk-inhalt><div class=bk-why>lädt…</div></div>';
    ov.style.display='flex';
    const m=await (await fetch('/api/mail?tx_id='+encodeURIComponent(txid))).json();
-   let h='<button class=x onclick="document.getElementById(\'bkov\').style.display=\'none\'">schließen ✕</button>';
+   // Kopfzeile als eigene, klebende Leiste: der Schliessen-Knopf lag vorher als
+   // float:right VOR der Ueberschrift, dadurch lief ein langer Betreff um ihn herum
+   // und bei langen Mails scrollte er aus dem Bild.
+   let h=`<div class=bk-kopf><div class=bk-kopf-t>${esc(m.found?(m.subject||'(kein Betreff)'):'Beleg-Mail')}</div>`
+        +`<button class=x>schließen ✕</button></div><div class=bk-inhalt>`;
    if(!m.found){h+='<p class=bk-why>Keine direkt verknüpfte Beleg-Mail.</p>';}
-   else{h+=`<h3>${esc(m.subject||'(kein Betreff)')}</h3><div class=bk-why>${esc(m.from||'')} · ${esc(m.date||'')} · Treffer: <b style="color:${m.sure?'#7ee0a0':'#f0b46b'}">${esc(m.match_art||'')}</b></div>`;
-     h+=`<pre class=bk-mailbody>${esc(m.body||'')}</pre>`;(m.attachments||[]).forEach(a=>{h+=`<h4>📎 ${esc(a.name)}</h4><pre class=bk-mailbody>${esc(a.text)}</pre>`;});}
+   else{
+     h+=`<div class=bk-why>${esc(m.from||'')} · ${esc(m.date||'')} · Treffer: <b style="color:${m.sure?'#7ee0a0':'#f0b46b'}">${esc(m.match_art||'')}</b></div>`;
+     h+=`<pre class=bk-mailbody>${esc(m.body||'')}</pre>`;
+     const att=m.attachments||[];
+     if(att.length){
+       h+=`<h4>📎 ${att.length} ${att.length===1?'Anhang':'Anhänge'}</h4>`;
+       att.forEach(a=>{h+=attHTML(a);});
+     }
+   }
    const rel=m.related||[];
-   if(rel.length){h+=`<h4>📬 Mails dieses Händlers (±Tage) — nur Info, KEINE Buchungen</h4>`;
-     rel.forEach(x=>{h+=`<div style="border-top:1px solid #232834;padding-top:6px;margin-top:6px"><b>${esc(x.subject)}</b><div class=bk-why>${esc(x.from)} · ${esc(x.date)}</div><pre class=bk-mailbody style="max-height:150px">${esc(x.snippet)}</pre></div>`;});}
-   mod.innerHTML=h;
+   // Zugeklappt: das sind Kandidaten, nicht der Beleg. Offen verdraengten sie bei
+   // Haendlern mit taeglichem Newsletter die eigentliche Mail komplett aus dem Sichtfeld.
+   if(rel.length){
+     const nAtt=rel.reduce((s,x)=>s+((x.anhaenge||[]).length),0);
+     // Aufgeklappt, sobald hier ueberhaupt eine Datei haengt: dann ist genau das der
+     // Grund, warum jemand die Beleg-Mail geoeffnet hat.
+     h+=`<details${nAtt?' open':''}><summary>📬 ${rel.length} weitere Mails dieses Händlers`
+       +(nAtt?` · <b style="color:#7ee0a0">${nAtt} Anhang${nAtt===1?'':'/Anhänge'}</b>`:'')
+       +` · nur Info, KEINE Buchungen</summary>`;
+     rel.forEach(x=>{
+       const at=x.anhaenge||[];
+       h+=`<div class=bk-rel><b>${esc(x.subject)}</b>${x.werbung?'<span class=bk-werb>Werbung</span>':''}`
+         +`<div class=bk-why>${esc(x.from)} · ${esc(x.date)}</div>`
+         +`<pre class="bk-mailbody bk-snip">${esc(x.snippet)}</pre>`;
+       at.forEach(a=>{h+=attHTML(a);});
+       h+=`</div>`;});
+     h+=`</details>`;}
+   mod.innerHTML=h+'</div>';
+   mod.querySelector('.x').onclick=()=>{ov.style.display='none';};
+   mod.querySelectorAll('.bk-pdfbtn').forEach(b=>b.onclick=()=>{
+     b.outerHTML=`<iframe src="${b.dataset.url}" title="PDF-Vorschau"></iframe>`;});
+   mod.scrollTop=0;
  }
+ // EINE Darstellung fuer Anhaenge, egal ob an der verknuepften Mail oder an einer
+ // Begleitmail. Vorher gab es sie nur fuer die verknuepfte — und genau dort haengt die
+ // Rechnung fast nie, weil der Zahlungsbeleg eine eigene Mail ist.
+ function attHTML(a){
+   const url='/api/anhang?id='+encodeURIComponent(a.id);
+   const bild=/^image\//.test(a.typ||''), pdf=(a.typ||'')==='application/pdf';
+   let h=`<div class=bk-att><div class=bk-att-kopf>`
+     +`<span class=bk-att-name>${esc(a.name)}</span>`
+     +`<span class=bk-att-meta>${esc(kurztyp(a.typ))}${a.size?' · '+groesse(a.size):''}</span>`
+     +(a.da?`<a class=dl href="${url}" target=_blank rel=noopener>öffnen ↗</a>`
+           :`<span class=bk-att-meta style="margin-left:auto;color:#f0b46b">Datei fehlt</span>`)
+     +`</div>`;
+   if(a.da&&bild)     h+=`<img src="${url}" loading=lazy alt="${esc(a.name)}">`;
+   // PDFs erst auf Klick laden: zehn Belege gleichzeitig als iframe legen die Seite lahm.
+   else if(a.da&&pdf) h+=`<div class=bk-att-pdf><button class=bk-pdfbtn data-url="${url}">Vorschau anzeigen</button></div>`;
+   if(a.text)         h+=`<details><summary>ausgelesener Text</summary><pre class=bk-mailbody>${esc(a.text)}</pre></details>`;
+   else if(!bild&&!pdf&&a.da) h+=`<div class=bk-att-hint>Kein Text ausgelesen — über „öffnen" ansehen.</div>`;
+   return h+`</div>`;
+ }
+ const groesse=n=>n>=1048576?(n/1048576).toFixed(1).replace('.',',')+' MB'
+                :n>=1024?Math.round(n/1024)+' KB':n+' B';
+ // Aus "application/vnd.openxmlformats-officedocument.wordprocessingml.document" wird "DOCX"
+ const KURZ={'application/pdf':'PDF','image/jpeg':'JPEG','image/jpg':'JPEG','image/png':'PNG',
+   'image/gif':'GIF','image/webp':'WEBP','application/octet-stream':'Datei','text/plain':'Text',
+   'application/vnd.openxmlformats-officedocument.wordprocessingml.document':'DOCX',
+   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':'XLSX',
+   'application/vnd.openxmlformats-officedocument.presentationml.presentation':'PPTX',
+   'application/msword':'DOC','application/vnd.ms-excel':'XLS','application/zip':'ZIP'};
+ const kurztyp=t=>KURZ[t]||((t||'').split('/').pop().split('.').pop().slice(0,12).toUpperCase()||'Datei');
  // KANONISCHE Detailtabelle – überall identisch
  function renderBookings(container,rows,opts){
    opts=opts||{}; const onChange=opts.onChange;

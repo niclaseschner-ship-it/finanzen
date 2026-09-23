@@ -115,6 +115,13 @@ KAT_NICHT_REISE   = [s for s in _teil("kategorien_nicht_reise", []) if s]    # a
 # "nie Reise" (eine Immobilie ist kein Reiseziel, taucht aber sehr wohl im Alltag auf).
 KAT_KEIN_KONSUM   = [s for s in _teil("kategorien_kein_konsum", []) if s]
 
+# Vollstaendige Ausschlussliste fuer JEDE Konsum-Auswertung: die fest eingebauten
+# Nicht-Konsum-Kategorien plus die eigenen aus konfig.json. Stand bis 09/2026 wortgleich
+# in extra/dashboard.py und extra/report.py — jetzt einmal hier, damit "Konsum" ueberall
+# dasselbe heisst und eine neue Auswertung nicht versehentlich anders rechnet.
+KAT_NICHT_KONSUM  = ("Sparen/Invest", "Kredit/Immobilie", "Camper",
+                     "Umbuchung intern", "Einnahme") + tuple(KAT_KEIN_KONSUM)
+
 # Eigene Zuordnung OSM-Branche -> Kategorie, ergaenzt/ueberschreibt die Vorgabe in
 # branche.py. Damit bleiben persoenliche Eigenheiten (z.B. eine eigene Kategorie fuer
 # Tierarztkosten) aus dem ausgelieferten Code.

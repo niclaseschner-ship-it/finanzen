@@ -87,6 +87,52 @@ def set_setting(key, val, con=None):
     con.commit()
     if own: con.close()
 
+def last_full_month(date_iso):
+    """Letzter VOLLSTAENDIG abgedeckter Monat zu einem Datum: reicht die Deckung nicht bis
+    Monatsende, zaehlt nur der Vormonat als vollstaendig."""
+    import calendar
+    if not date_iso or len(date_iso) < 10: return ""
+    y, m, d = int(date_iso[:4]), int(date_iso[5:7]), int(date_iso[8:10])
+    if d < calendar.monthrange(y, m)[1]:
+        m -= 1
+        if m < 1: m = 12; y -= 1
+    return f"{y}-{m:02d}"
+
+def period_autoset(con=None):
+    """Setzt period_bis auf den letzten Monat, den ALLE Konten lueckenlos decken.
+
+    Laeuft am Ende jedes Imports, damit ein frisch importierter Monat von selbst in der
+    Statistik steht. Vorher blieb hier der beim letzten Import von Hand gesetzte Wert
+    stehen und deckelte die Auswertung still (August fehlte, obwohl die Daten da waren).
+
+    Nur Konten zaehlen, keine Mail-Quellen. Die Import-Seite schlaegt ihr 'bis' ueber
+    ALLE Quellen vor, inklusive Postfaechern -- ein hinterherhinkendes Postfach wuerde die
+    Statistik sonst um Monate zurueckwerfen, obwohl kein einziger Kontoumsatz fehlt.
+    Mails sind Belegkontext, kein Geld.
+
+    Angefangene Monate bleiben draussen: ein Monat mit drei Tagen sieht in der Monatsreihe
+    aus wie ein Einbruch. Wer den Deckel selbst setzt, schaltet die Automatik damit ab
+    (period_bis_auto=0, gesetzt von der Import-Seite); ein leeres 'bis' schaltet sie
+    wieder ein.
+    Rueckgabe: der gesetzte Monat, oder '' wenn nichts gesetzt wurde.
+    """
+    own = con is None
+    if own: con = connect()
+    try:
+        if (get_setting("period_bis_auto", "1", con) or "1") != "1":
+            return ""
+        enden = [r[0] for r in con.execute(
+            "select max(datum) from transactions where coalesce(konto,'')<>'' group by konto")
+            if r[0]]
+        if not enden: return ""
+        bis = last_full_month(min(enden))      # so weit reichen ALLE Konten
+        if not bis: return ""
+        if bis != (get_setting("period_bis", "", con) or ""):
+            set_setting("period_bis", bis, con)
+        return bis
+    finally:
+        if own: con.close()
+
 def period_bounds():
     """Berücksichtigter Analyse-Zeitraum als ('YYYY-MM','YYYY-MM').
     von = settings.period_von (sonst '' = unbegrenzt nach unten);

@@ -8,7 +8,25 @@
  h1{font-size:22px;margin:8px 0 2px} h2{font-size:15px;margin:0 0 10px;color:#cbd5e1}
  .sub{color:#9aa4b2;max-width:900px;line-height:1.55;margin:2px 0 14px}
  .layout{display:grid;grid-template-columns:minmax(320px,430px) 1fr;gap:22px;align-items:start}
- @media(max-width:920px){.layout{grid-template-columns:1fr}}
+ /* min-width:0 ist hier load-bearing: eine Grid-Spur waechst sonst auf die
+    Mindestbreite ihres breitesten Kindes. Auf dem Handy schob das die
+    Eingabefelder komplett aus dem sichtbaren Bereich. */
+ @media(max-width:920px){.layout{grid-template-columns:1fr}.layout>*{min-width:0}}
+ @media(max-width:760px){
+  .wrap{padding:12px 12px 60px}
+  .grp{padding:12px}
+  /* Beschriftung darf schrumpfen, Eingabe und Einheit behalten ihre Lesbarkeit */
+  .field{gap:6px}
+  .field .fl{min-width:0}
+  .field input{width:auto;flex:0 1 104px;min-width:62px}
+  .field .fu{width:auto;flex:0 0 auto;white-space:nowrap}
+  .kpis{grid-template-columns:1fr 1fr;gap:8px}
+  .actions{flex-wrap:wrap}
+  /* Wie auf den anderen Seiten: die breite Tabelle scrollt in sich selbst.
+     table-layout:fixed reicht hier nicht, weil die letzte Spalte auf
+     white-space:nowrap steht und die Tabelle dadurch breit bleibt. */
+  table.det{display:block;overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch}
+ }
  .grp{background:#171a23;border:1px solid #262b36;border-radius:12px;padding:14px 16px;margin-bottom:14px}
  .grp h2{border-bottom:1px solid #262b36;padding-bottom:7px}
  .field{display:flex;align-items:center;gap:8px;margin:7px 0}
@@ -50,9 +68,17 @@
  table.det td:last-child{text-align:right;white-space:nowrap;color:#e6e6e6}
  table.det td:first-child{color:#9aa4b2}
  .disc{color:#6b7280;font-size:12px;line-height:1.55;margin-top:12px}
+ .zur{display:none;color:#4f8cff}
+@media(max-width:900px){
+  /* Am Telefon ersetzt der Weg zurueck zur Uebersicht die siebenteilige
+     Navigationsleiste. Die Filter der Seite bleiben stehen. */
+  .bar>a:not(.zur),.bar>b{display:none}
+  .zur{display:inline-block!important;font-size:15px}
+ }
 </style></head><body>
 <div class=bar>
- <a href="/">✏️ Editor</a><a href="/statistik.html">📊 Statistik</a><a href="/vertraege">📑 Verträge</a><a href="/reisen">🏖️ Reisen</a><a href="/import">📥 Import</a><a href="/vermoegen">💰 Vermögen</a>
+  <a href="/menu" class=zur>← Übersicht</a>
+<a href="/">✏️ Editor</a><a href="/statistik.html">📊 Statistik</a><a href="/vertraege">📑 Verträge</a><a href="/reisen">🏖️ Reisen</a><a href="/import">📥 Import</a><a href="/vermoegen">💰 Vermögen</a>
  <b style="color:#4f8cff">🎯 Vorsorge</b>
  <span id=savestat style="margin-left:auto;color:#9aa4b2;font-size:13px">–</span>
 </div>
@@ -135,11 +161,13 @@
     <p class=hint>EZB-Ziel 2 %, langfristig-realistisch ~2,5 %. Konservativ = höhere Inflation + niedrigere Renditen.</p>
     <div class=actions>
      <button class=btn id=resetBtn>↺ Zurücksetzen</button>
-     <button class=btn id=istBtn title="Depotwert, Immobilienwert, Restschuld und Tilgung aus der Vermögensseite übernehmen">💰 Ist-Werte übernehmen</button>
+     <button class=btn id=istBtn title="Depot, Immobilienwert, Restschuld, Tilgung, Bedarf, Sparrate und Mietrendite aus den eigenen Daten übernehmen">💰 Ist-Werte übernehmen</button>
     </div>
-    <p class=hint id=istHint>Übernimmt die berechneten Startwerte aus <a href="/vermoegen">💰 Vermögen</a>
-     (Depot aus dem Export, Immobilien aus Kaufpreis/Vergleichsverkäufen, Restschuld aus dem Kreditvertrag)
-     statt sie von Hand zu schätzen. Überschreibt nur diese vier Felder.</p>
+    <p class=hint id=istHint>Holt so viel wie möglich aus den eigenen Daten, statt es zu schätzen.
+     <b>Bestände</b> aus <a href="/vermoegen">💰 Vermögen</a>: Depotwert, Immobilienwert, Restschuld, Tilgung.
+     <b>Flüsse</b> aus den Buchungen der letzten 12 vollen Monate: Bedarf, Sparrate, Mietrendite.
+     Überschreibt nur diese sieben Felder; Alter, Rente, Inflation und Erbe bleiben Handeingabe,
+     weil sie in keinem Export stehen.</p>
    </div>
   </div>
 
@@ -435,17 +463,41 @@ async function load(){
  $('resetBtn').onclick=()=>{setAll(DEF);calc();};
  $('istBtn').onclick=async()=>{
   const h=$('istHint'), old=h.innerHTML;
+  const eur=x=>Math.round(x).toLocaleString('de-DE');
   try{
-   const d=await (await fetch('/api/vermoegen')).json();
+   // Zwei Quellen: Bestaende von der Vermoegensseite, Fluesse aus den Buchungen.
+   const [d,i]=await Promise.all([
+     fetch('/api/vermoegen').then(r=>r.json()),
+     fetch('/api/ist_werte').then(r=>r.json()).catch(()=>({fehler:'nicht erreichbar'}))
+   ]);
    if(d.fehler||!d.vorsorge){h.innerHTML='<b style="color:#ff8a8a">Ist-Werte nicht verfügbar:</b> '+(d.fehler||'keine Daten');return;}
-   const v=d.vorsorge;
+   const v=d.vorsorge, teile=[];
    ['etf_start','immo_wert','immo_schuld','immo_tilgung'].forEach(k=>{if(v[k]!=null)$(k).value=v[k];});
+   teile.push('Depot '+eur(v.etf_start)+' €');
+   teile.push('Immobilien '+eur(v.immo_wert)+' € (Mittelwert der Spanne)');
+   teile.push('Restschuld '+eur(v.immo_schuld)+' €');
+   let fluss='';
+   if(!i.fehler){
+    if(i.bedarf>0){$('bedarf').value=i.bedarf; teile.push('Bedarf '+eur(i.bedarf)+' €/Mon');}
+    if(i.sparrate>0){$('sparrate').value=i.sparrate; teile.push('Sparrate '+eur(i.sparrate)+' €/Mon');}
+    // Mietrendite erst hier, weil sie beide Quellen braucht: Netto-Ueberschuss / Wert.
+    if(i.immo_netto_jahr&&v.immo_wert>0){
+      const rend=Math.round(i.immo_netto_jahr/v.immo_wert*1000)/10;
+      $('immo_rendite').value=rend; teile.push('Mietrendite '+rend.toString().replace('.',',')+' %');
+    }
+    fluss=' Bedarf, Sparrate und Mietrendite sind der Schnitt der 12 vollen Monate '
+      +i.von+' bis '+i.bis+'. <b>Der Bedarf ist dein heutiges Ausgabenniveau</b>, nicht der '
+      +'Bedarf in der Rente — die Faustregel von 70–90 % musst du selbst ansetzen.'
+      +(i.immo_schuldendienst>0?' Die Mietrendite ist <b>ohne Schuldendienst</b> gerechnet ('
+        +eur(i.immo_schuldendienst)+' € im Jahr herausgerechnet), weil die Tilgung oben schon '
+        +'ein eigenes Feld hat — sonst zählte der Kredit doppelt.':'');
+   }
    calc(); save();
    const de=d.stichtag.slice(8)+'.'+d.stichtag.slice(5,7)+'.'+d.stichtag.slice(0,4);
-   h.innerHTML='<b style="color:#7ee0a0">Übernommen</b> (Stand '+de+'): Depot '+
-     v.etf_start.toLocaleString('de-DE')+' €, Immobilien '+v.immo_wert.toLocaleString('de-DE')+
-     ' € (Mittelwert der Spanne), Restschuld '+v.immo_schuld.toLocaleString('de-DE')+' €.';
-   setTimeout(()=>{h.innerHTML=old;},12000);
+   h.innerHTML='<b style="color:#7ee0a0">Übernommen</b> (Bestände Stand '+de+'): '
+     +teile.join(', ')+'.'+fluss
+     +(i.fehler?' <span style="color:#f0b46b">Werte aus den Buchungen nicht geladen: '+i.fehler+'</span>':'');
+   setTimeout(()=>{h.innerHTML=old;},20000);
   }catch(e){h.innerHTML='<b style="color:#ff8a8a">Laden fehlgeschlagen:</b> '+e;}
  };
  document.querySelectorAll('.modebtn').forEach(b=>{b.classList.toggle('on',b.dataset.m===MODE);b.onclick=()=>setMode(b.dataset.m);});

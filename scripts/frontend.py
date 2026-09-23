@@ -126,7 +126,12 @@ def run():
  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:12px;margin:16px 0}
  .kpi{background:#171a23;border:1px solid #262b36;border-radius:12px;padding:14px}
  .kpi .v{font-size:22px;font-weight:700} .kpi .l{color:#9aa4b2;font-size:12px;margin-top:3px}
- canvas{background:#171a23;border-radius:12px;padding:10px;margin-top:10px}
+ /* Diagramme: feste Hoehe ueber den Rahmen, NICHT ueber das Seitenverhaeltnis.
+    Vorher ergab sich die Hoehe aus dem Verhaeltnis der Canvas-Attribute — auf einem
+    Telefon waren die Diagramme dadurch nur gut hundert Pixel hoch und unlesbar. */
+ .cbox{position:relative;height:330px;background:#171a23;border-radius:12px;padding:10px;margin-top:10px}
+ .cbox.hoch{height:520px}
+ .cbox canvas{width:100%!important;height:100%!important}
  select{background:#1b1f2a;color:#e6e6e6;border:1px solid #2c323f;border-radius:8px;padding:7px 9px}
  table{width:100%;border-collapse:collapse;font-size:14px} td,th{padding:6px 8px;border-bottom:1px solid #232834}
  th{color:#9aa4b2;text-align:left} .r{text-align:right}
@@ -163,10 +168,32 @@ def run():
  #ov{position:fixed;inset:0;background:#000a;display:none;z-index:60;align-items:center;justify-content:center}
  #mod{background:#11141c;border:1px solid #3a4252;border-radius:12px;max-width:820px;width:92%;max-height:82vh;overflow:auto;padding:16px;box-shadow:0 12px 40px #000b}
  #mod h3{margin:0 6px 2px 0}#mod h4{margin:14px 0 4px;color:#9ec1ff}#mod .x{float:right;background:#2a3343;border:0;color:#cbd5e1;border-radius:7px;padding:5px 10px;cursor:pointer}
+ /* ---- Handy und Tablet ---------------------------------------------------- */
+ #fltbox>summary{display:none}          /* am Schreibtisch immer offen, kein Aufklapper */
+ @media(max-width:900px){
+  .wrap{padding:12px}
+  nav{display:flex;flex-wrap:wrap;gap:4px 14px;margin-bottom:8px}
+  nav a{margin-right:0;font-size:13px}
+  h1{font-size:21px}
+  h2{margin-top:20px;font-size:17px}
+  .kpis{grid-template-columns:1fr 1fr;gap:8px}
+  .kpi{padding:10px}.kpi .v{font-size:17px}
+  #fltbox>summary{display:block;cursor:pointer;background:#171a23;border:1px solid #262b36;
+    border-radius:10px;padding:9px 12px;font-weight:600;margin-bottom:8px;list-style:none}
+  #fltbox>summary::-webkit-details-marker{display:none}
+  #fltbox>summary::before{content:"▸ ";color:#6b7280}
+  #fltbox[open]>summary::before{content:"▾ "}
+  .toolbar{flex-wrap:wrap;gap:7px}
+  #catfilter{grid-template-columns:1fr 1fr}
+  /* die Diagramme brauchen am Telefon mehr Hoehe, nicht weniger */
+  .cbox{height:300px} .cbox.hoch{height:560px}
+  table{display:block;overflow-x:auto;max-width:100%}
+ }
  .mailbody{white-space:pre-wrap;font-family:inherit;font-size:13px;line-height:1.45;color:#dfe5ee;background:#141823;border:1px solid #232834;border-radius:8px;padding:10px;margin:6px 0;overflow-wrap:anywhere}
 </style></head><body><script src="/shared.js"></script><div class=wrap>
 <nav><a href="/">✏️ Editor</a><a href="statistik.html" class=active>📊 Statistik</a><a href="/vertraege">📑 Verträge</a><a href="/reisen">🏖️ Reisen</a><a href="/import">📥 Import</a><a href="/vermoegen">💰 Vermögen</a><a href="/vorsorge">🎯 Vorsorge</a></nav>
 <h1>📊 Finanz-Statistik <span id=stand class=hint style="font-size:13px;font-weight:400"></span></h1>
+<details id=fltbox open><summary>🔎 Filter und Kategorien</summary>
 <div class=toolbar>
  <span>Jahr: <select id=yr onchange=render()></select></span>
  <button class=fbtn onclick="toggleFilter()">▾ Kategorien ein/aus</button>
@@ -180,10 +207,12 @@ def run():
  <span class=hint>· berücksichtigter Zeitraum __PERIOD__ (<a href="/import">Import</a>) · Filter-Zahlen = Netto über alle Jahre · Balken anklicken → Buchungen</span>
 </div>
 <div id=catfilter></div>
+</details>
 <div class=kpis id=kpis></div>
-<h2>Einnahmen vs. Ausgaben pro Monat</h2><canvas id=c1 height=95></canvas>
-<h2>Ausgaben pro Monat nach Kategorie</h2><canvas id=c2 height=110></canvas>
-<h2>Kategorie-Ranking (Zeitraum)</h2><canvas id=c3 height=110></canvas>
+<h2>Einnahmen vs. Ausgaben pro Monat</h2><div class=cbox><canvas id=c1></canvas></div>
+<h2>Ausgaben pro Monat nach Kategorie</h2><div class=cbox><canvas id=c2></canvas></div>
+<!-- hoch: waagerechte Balken, eine Zeile je Kategorie — braucht echte Hoehe -->
+<h2>Kategorie-Ranking (Zeitraum)</h2><div class="cbox hoch"><canvas id=c3></canvas></div>
 <h3 id=dh class=hint style="margin-top:14px">Klick auf einen Balken/eine Kategorie zeigt hier die Buchungen.</h3>
 <div id=detail></div>
 <h2>🏖️ Reisen</h2><table id=trips><tr><th>Reise (Orte)</th><th>Zeit</th><th class=r>Kosten</th></tr></table>
@@ -266,29 +295,33 @@ function render(){
   ['Netto-Cashflow',sum(A.ein)-sum(A.kon)-sum(A.spar)]
  ].map(([l,v])=>`<div class=kpi><div class=v>${fmt(v)} €</div><div class=l>${esc(l)}</div></div>`).join('');
  charts.forEach(c=>c.destroy()); charts=[];
+ const SCHMAL = window.innerWidth < 900;   // Telefon/Tablet
  charts.push(new Chart(c1,{type:'bar',data:{labels,datasets:[
    {label:'Einnahmen',data:A.ein,backgroundColor:'#34d399'},{label:'Ausgaben',data:A.kon,backgroundColor:'#ef4444'},
    {label:'Sparen',data:A.spar,backgroundColor:'#4f8cff'}]},
-   options:{onClick:(e,el)=>{if(!el.length)return;const m=labels[el[0].index],bt=BT[el[0].datasetIndex];
+   options:{maintainAspectRatio:false,onClick:(e,el)=>{if(!el.length)return;const m=labels[el[0].index],bt=BT[el[0].datasetIndex];
      detailRows(`${bt} · ${m}`, D.tx.filter(t=>t.m===m&&t.bt===bt&&cok(t)&&vok(t)&&lok(t)));},
     plugins:{legend:{labels:{color:'#cbd5e1'}}},scales:{x:{ticks:{color:'#9aa4b2'}},y:{ticks:{color:'#9aa4b2'}}}}}));
  const konCats=Object.keys(A.catm).sort((x,y)=>sum(A.catm[y])-sum(A.catm[x]));
  charts.push(new Chart(c2,{type:'bar',data:{labels,datasets:konCats.map(c=>(
    {label:c,data:A.catm[c],backgroundColor:COL[c]||'#94a3b8'}))},
-   options:{onClick:(e,el)=>{if(!el.length)return;const m=labels[el[0].index],cat=konCats[el[0].datasetIndex];
+   options:{maintainAspectRatio:false,onClick:(e,el)=>{if(!el.length)return;const m=labels[el[0].index],cat=konCats[el[0].datasetIndex];
      detailRows(`${cat} · ${m}`, D.tx.filter(t=>t.m===m&&t.c===cat&&vok(t)&&lok(t)));},
-    plugins:{legend:{labels:{color:'#cbd5e1',boxWidth:12,font:{size:10}}}},
+    plugins:{legend:{display:!SCHMAL,labels:{color:'#cbd5e1',boxWidth:12,font:{size:10}}}},
     scales:{x:{stacked:true,ticks:{color:'#9aa4b2'}},y:{stacked:true,ticks:{color:'#9aa4b2'}}}}}));
  const curCt=konCats.map(c=>[c,sum(A.catm[c])]).filter(x=>x[1]>0);
  charts.push(new Chart(c3,{type:'bar',data:{labels:curCt.map(x=>x[0]),
    datasets:[{data:curCt.map(x=>x[1]),backgroundColor:curCt.map(x=>COL[x[0]]||'#94a3b8')}]},
-   options:{indexAxis:'y',onClick:(e,el)=>{if(!el.length)return;const cat=curCt[el[0].index][0];
+   options:{maintainAspectRatio:false,indexAxis:'y',onClick:(e,el)=>{if(!el.length)return;const cat=curCt[el[0].index][0];
      detailRows(`${cat} · Zeitraum`, D.tx.filter(t=>yok(t.m)&&t.c===cat&&vok(t)&&lok(t)));},
     plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#9aa4b2'}},y:{ticks:{color:'#9aa4b2'}}}}}));
  document.getElementById('trips').innerHTML='<tr><th>Reise (Orte)</th><th>Zeit</th><th class=r>Kosten</th></tr>'+
    D.trips.filter(t=>yr.value==='Alle'||t.ym.startsWith(yr.value)).map(t=>
      `<tr><td>${esc(t.orte)}</td><td>${t.ym}</td><td class=r>${fmt(t.kosten)} €</td></tr>`).join('');
 }
+// Auf Telefon/Tablet startet der Filterblock zugeklappt — sonst muss man an
+// zwanzig Kategorie-Kaestchen vorbeiscrollen, bevor das erste Diagramm kommt.
+if(window.innerWidth<900)document.getElementById('fltbox').open=false;
 const YEARS=[...new Set(D.months.map(m=>m.slice(0,4)))].sort();
 ['Alle',...YEARS].forEach(y=>{const o=document.createElement('option');o.textContent=y;yr.appendChild(o);});
 yr.value=YEARS[YEARS.length-1]||'Alle';   // Fokus aufs aktuelle Jahr

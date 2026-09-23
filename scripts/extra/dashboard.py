@@ -24,8 +24,7 @@ def chart_js_bereitstellen():
 
 # Nicht-Konsum: Vermögensumschichtung, Kredite, Einnahmen. Eigene Kategorien
 # (z.B. "Immobilie X", ein Nebengewerbe) kommen aus konfig.json.
-EXCL = ("Sparen/Invest", "Kredit/Immobilie", "Camper",
-        "Umbuchung intern", "Einnahme") + tuple(konfig.KAT_KEIN_KONSUM)
+EXCL = konfig.KAT_NICHT_KONSUM
 
 def run():
     con = db.connect(); q = con.execute
