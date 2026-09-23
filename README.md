@@ -1,276 +1,272 @@
 # Finanzen
 
-*[English version](README.en.md) · die Anwendung selbst ist deutschsprachig.*
+*[Deutsche Fassung](README.de.md) · the application itself is in German.*
 
-**Deine Kontoauszüge werden zu einer Statistik, die dir sagt, wohin das Geld geht —
-auf deinem Rechner, ohne Konto bei irgendwem, und jede Zuordnung ist begründet.**
+**Your bank statements become a report that tells you where the money went —
+on your own machine, without an account anywhere, and every categorisation is justified.**
 
-- 🔒 **Lokal.** Keine Cloud, kein Bankzugang, kein Konto. Die Daten verlassen den Rechner nicht.
-- 🔍 **Nachvollziehbar.** Zu jeder Buchung steht da, *warum* sie in dieser Kategorie liegt. Was unklar ist, bleibt sichtbar unklar statt geraten zu werden.
-- 🧾 **Belege statt Rätselraten.** Zu einer Buchung „AMAZON −57,50 €" steht da, *was* drin war —
-  automatisch aus deinen eigenen Bestellmails verknüpft, über die Bestellnummer.
-- ⚡ **Keine Installation.** Python 3.10 genügt — kein `pip install`, kein Build, kein Docker.
+- 🔒 **Local.** No cloud, no bank access, no account. The data never leaves your machine.
+- 🔍 **Traceable.** Every transaction shows *why* it landed in its category. What is unclear stays visibly unclear instead of being guessed.
+- 🧾 **Receipts instead of guesswork.** For a transaction like "AMAZON −57.50 €" you see *what* was in it —
+  linked automatically from your own order emails, via the order number.
+- ⚡ **No installation.** Python 3.10 is enough — no `pip install`, no build, no Docker.
 
-[![Statistik](docs/bilder/statistik.png)](docs/bilder/statistik.png)
+[![Statistics](docs/bilder/statistik.png)](docs/bilder/statistik.png)
 
-## In 30 Sekunden ausprobieren — ohne eigene Daten
+## Try it in 30 seconds — without your own data
 
-Ein kompletter, erfundener Beispielhaushalt über 18 Monate im echten Bankformat:
+A complete, invented example household covering 18 months in the real bank format:
 
 ```bash
 git clone https://github.com/niclaseschner-ship-it/finanzen.git
 cd finanzen
-python beispieldaten/erzeugen.py     # Daten + Konfiguration anlegen, Pipeline laufen lassen
+python beispieldaten/erzeugen.py     # creates data + configuration, runs the pipeline
 ```
 
-Das Skript sagt dir am Ende, wie du den Server startest. Die Demo hat ihre **eigene
-Datenbank** in `beispieldaten/demo/` — sie fasst nichts an, und `beispieldaten/demo/`
-löschen macht sie spurlos wieder weg.
+The script tells you at the end how to start the server. The demo has its **own
+database** in `beispieldaten/demo/` — it touches nothing else, and deleting
+`beispieldaten/demo/` removes it without a trace.
 
-| ✏️ Editor | 📑 Verträge | 🏖️ Reisen |
+| ✏️ Editor | 📑 Contracts | 🏖️ Trips |
 |---|---|---|
-| [![Editor](docs/bilder/editor.png)](docs/bilder/editor.png) | [![Verträge](docs/bilder/vertraege.png)](docs/bilder/vertraege.png) | [![Reisen](docs/bilder/reisen.png)](docs/bilder/reisen.png) |
-| Kategorie, Labels — und die Begründung | Fixkosten, allein aus der Wiederholung erkannt | Urlaube, allein aus den Einkaufsorten erkannt |
+| [![Editor](docs/bilder/editor.png)](docs/bilder/editor.png) | [![Contracts](docs/bilder/vertraege.png)](docs/bilder/vertraege.png) | [![Trips](docs/bilder/reisen.png)](docs/bilder/reisen.png) |
+| Category, labels — and the justification | Fixed costs, detected purely from recurrence | Vacations, detected purely from purchase locations |
 
-Die Demo bringt auch **Beleg-Mails** mit (als echtes mbox, genau wie Thunderbird es
-anlegt) — die Belegverknüpfung lässt sich also sofort sehen. Sie zeigt absichtlich auch,
-was **nicht** aufgeht: ein paar Händler bleiben `unkategorisiert`, statt geraten zu werden.
-Ohne eigene Daten leer bleibt nur die **Vermögens**-Ansicht (die braucht gepflegte Zahlen);
-die Vorsorge-Rechnung lässt sich sofort durchspielen.
+The demo also ships **receipt emails** (as a real mbox, exactly as Thunderbird creates it) —
+so the receipt linking is visible immediately. It deliberately also shows what does **not**
+resolve: a few merchants stay `unkategorisiert` (uncategorised) instead of being guessed.
+Only the **assets** view stays empty without your own data (it needs maintained numbers);
+the retirement projection can be explored right away.
 
-## Wie es funktioniert
+## How it works
 
-Eine SQLite-Datei ist die einzige Wahrheit; alle Auswertungen werden daraus
-**reproduzierbar** neu berechnet. Buchungen kommen 1:1 aus den Bankdaten und werden nie
-erfunden; Kategorien und Labels sind eine ableitbare Schicht, die jederzeit neu rechenbar
-ist. Nichts wird still gelöscht — Status statt Löschen.
+One SQLite file is the single source of truth; every report is **reproducibly** recomputed
+from it. Transactions come 1:1 from the bank data and are never invented; categories and
+labels are a derived layer that can be recalculated at any time. Nothing is silently
+deleted — status instead of deletion.
 
-Unterstützt werden die CSV-Exporte von **DKB** und **GLS**. Andere Banken brauchen ein
-paar Zeilen in [`scripts/parse_konten.py`](scripts/parse_konten.py) — Beiträge willkommen,
-siehe [Mitarbeiten](#mitarbeiten).
+Supported are the CSV exports of **DKB** and **GLS**. Other banks need a few lines in
+[`scripts/parse_konten.py`](scripts/parse_konten.py) — contributions welcome, see
+[Contributing](#contributing).
 
-## 🧾 Belege aus E-Mails — was war eigentlich in dem Paket?
+## 🧾 Receipts from emails — what was actually in that package?
 
-Der Kontoauszug sagt „AMAZON PAYMENTS EUROPE S.C.A, −57,50 €". Das ist die Stelle, an der
-jedes Haushaltsbuch aufhört und man selbst im Postfach sucht. Diese App macht den Schritt
-mit: sie verknüpft Buchungen mit deinen **eigenen Bestell- und Zahlungsmails** und zeigt
-die Produktzeile direkt an der Buchung.
+The bank statement says "AMAZON PAYMENTS EUROPE S.C.A, −57.50 €". That is the point where
+every budgeting tool stops and you go searching your mailbox yourself. This app takes that
+step with you: it links transactions to your **own order and payment emails** and shows
+the product line right next to the transaction.
 
-[![Belegverknüpfung](docs/bilder/belege.png)](docs/bilder/belege.png)
+[![Receipt linking](docs/bilder/belege.png)](docs/bilder/belege.png)
 
-**Mechanisch, nicht geraten** — und jede Verknüpfung sagt, wie sicher sie ist:
+**Mechanical, not guessed** — and every link states how certain it is:
 
-| Weg | Sicherheit |
+| Path | Certainty |
 |---|---|
-| Bestellnummer aus dem Verwendungszweck steht in der Mail | **sicher** |
-| PayPal-Transaktions-ID | **sicher** |
-| PayPal-Händler + Betrag im Zeitfenster | gut |
-| Händler + Betrag + Datum (±5 Tage) | Schätzung, im Editor als solche markiert |
+| Order number from the payment reference appears in the email | **certain** |
+| PayPal transaction ID | **certain** |
+| PayPal merchant + amount within a time window | good |
+| Merchant + amount + date (±5 days) | estimate, marked as such in the editor |
 
-Bei mehrdeutigen Fällen wird **nicht** verknüpft — eine falsche Zuordnung wäre schlimmer
-als gar keine. PDF-Anhänge werden gespeichert und ihr Text mitdurchsucht (dafür das
-optionale `pymupdf`), sodass auch Rechnungen im Anhang gefunden werden.
+Ambiguous cases are **not** linked — a wrong match would be worse than none. PDF
+attachments are stored and their text is searched too (that is what the optional
+`pymupdf` is for), so invoices inside attachments are found as well.
 
-**Woher die Mails kommen:** aus **Thunderbird**. Der Import liest mbox-Dateien, und
-Thunderbird legt genau die an. Deshalb der Umweg statt eines eigenen Postfachzugriffs:
-**diese App bekommt nie dein Mail-Passwort**, die Nachrichten liegen lokal, und du
-entscheidest pro Ordner, was importiert wird.
+**Where the emails come from:** **Thunderbird**. The import reads mbox files, and
+Thunderbird creates exactly those. Hence the detour instead of direct mailbox access:
+**this app never gets your email password**, the messages stay local, and you decide
+per folder what gets imported.
 
 ```bash
-python scripts/einrichten.py --mail    # findet die Profile, listet die Ordner mit Größe
+python scripts/einrichten.py --mail    # finds the profiles, lists the folders with sizes
 ```
 
-Wichtig ist ein Schritt, den man leicht übersieht: In Thunderbird unter
-*Konten-Einstellungen → Synchronisation & Speicherplatz* muss „Mails auf diesem Computer
-speichern" aktiv sein — sonst sind die mbox-Dateien leer. Der Import ist idempotent,
-abbrechen und später fortsetzen ist gefahrlos.
+One step is easy to miss: in Thunderbird under *Account Settings → Synchronization &
+Storage*, "Keep messages on this computer" must be enabled — otherwise the mbox files are
+empty. The import is idempotent; interrupting and resuming later is safe.
 
-E-Mails sind dabei **ausschließlich Kontext, nie eine Buchungsquelle**: Beträge und
-Buchungen kommen immer 1:1 aus der Bank. Ohne Mails funktioniert alles, die Detailspalte
-bleibt nur leerer.
+Emails are **context only, never a transaction source**: amounts and transactions always
+come 1:1 from the bank. Everything works without emails — the detail column just stays
+emptier.
 
-## Wann dieses Projekt — und wann ein anderes
+## When to use this project — and when another
 
-Es gibt ausgereifte Alternativen, und für viele Leute sind sie die bessere Wahl. Diese
-hier ist absichtlich klein und deckt einen schmalen Fall ab:
+There are mature alternatives, and for many people they are the better choice. This one is
+deliberately small and covers a narrow case:
 
-| Nimm … | wenn du … |
+| Use … | if you … |
 |---|---|
-| **[Firefly III](https://github.com/firefly-iii/firefly-iii)** | doppelte Buchführung, Budgets, mehrere Nutzer, Handy-App und Anbindung an Banking-APIs willst. Der Platzhirsch — deutlich mehr Funktionen, dafür Server, Datenbank und Einarbeitung. |
-| **[Actual Budget](https://github.com/actualbudget/actual)** | nach der Umschlagmethode budgetieren willst (YNAB-Stil), also **vorausplanen** statt rückblickend auswerten. |
-| **[beancount](https://beancount.github.io/) / hledger** | Klartext-Buchhaltung magst und deine Auswertungen selbst schreibst. |
-| **dieses Projekt** | wissen willst, **wo dein Geld hingegangen ist**, ohne dafür ein System aufzusetzen — und ohne dass eine Software je dein Bank- oder Mail-Passwort sieht. |
+| **[Firefly III](https://github.com/firefly-iii/firefly-iii)** | want double-entry bookkeeping, budgets, multiple users, a mobile app and banking-API connections. The incumbent — far more features, at the cost of a server, a database and a learning curve. |
+| **[Actual Budget](https://github.com/actualbudget/actual)** | want envelope budgeting (YNAB style), i.e. **plan ahead** instead of analysing in hindsight. |
+| **[beancount](https://beancount.github.io/) / hledger** | like plain-text accounting and write your own reports. |
+| **this project** | want to know **where your money went** without setting up a system — and without any software ever seeing your bank or email password. |
 
-Was es hier gibt und dort nicht:
+What exists here and not there:
 
-- **Belegverknüpfung aus dem eigenen Postfach.** Zu „AMAZON −57,50 €" steht die Produktzeile
-  aus deiner Bestellmail. Belegabgleich existiert sonst vor allem als kommerzielles SaaS für
-  Spesenabrechnung, oder bei [Midday](https://github.com/midday-ai/midday) für Selbstständige.
-- **Begründungspflicht.** Jede Kategorie trägt ihre Quelle. Was unklar ist, bleibt sichtbar
-  unklar — es wird nichts geraten, damit die Statistik hübsch aussieht.
-- **Kein Setup.** Kein Server, kein Docker, keine Datenbank-Installation, kein `pip install`.
-- **Reise- und Vertragserkennung** allein aus den Buchungsmustern, ohne dass du etwas anlegst.
+- **Receipt linking from your own mailbox.** Next to "AMAZON −57.50 €" you see the product
+  line from your order email. Receipt matching otherwise exists mainly as commercial SaaS
+  for expense reports, or in [Midday](https://github.com/midday-ai/midday) for freelancers.
+- **Justification requirement.** Every category carries its source. What is unclear stays
+  visibly unclear — nothing is guessed to make the statistics look tidy.
+- **No setup.** No server, no Docker, no database installation, no `pip install`.
+- **Trip and contract detection** purely from transaction patterns, without you creating anything.
 
-Was es hier **nicht** gibt: Budgets und Sollwerte, Mehrbenutzerbetrieb, Handy-App,
-automatischen Bankabruf (bewusst — das hieße Zugangsdaten), Fremdwährungskonten,
-doppelte Buchführung. Und die CSV-Formate sind bisher **DKB und GLS**.
+What does **not** exist here: budgets and targets, multi-user operation, a mobile app,
+automatic bank fetching (deliberately — that would mean credentials), foreign-currency
+accounts, double-entry bookkeeping. And the CSV formats so far are **DKB and GLS**.
 
-## Voraussetzungen
-- **Python 3.10+** — der Kern nutzt nur die **Standardbibliothek** (kein `pip install` nötig).
-- Optional: **PyMuPDF** (`pip install pymupdf`) — nur für Text aus PDF-Mailanhängen.
-- **Kein Internet nötig.** Chart.js liegt im Projekt (`scripts/seiten/chart.min.js`) und
-  wird neben die erzeugte Seite gelegt — die Seite trägt alle Buchungen in sich, da hat
-  ein Skript von fremdem Server nichts zu suchen.
+## Requirements
+- **Python 3.10+** — the core uses only the **standard library** (no `pip install` needed).
+- Optional: **PyMuPDF** (`pip install pymupdf`) — only for text from PDF email attachments.
+- **No internet needed.** Chart.js ships inside the project (`scripts/seiten/chart.min.js`)
+  and is placed next to the generated page — the page carries all transactions in itself,
+  so a script from a foreign server has no business there.
 
-## Einrichtung
-Es gibt **nichts zu installieren** außer Python — die Arbeit ist Konfiguration. Der
-geführte Weg liest die Kontoexporte und fragt nur, was in keiner CSV steht:
+## Setup
+There is **nothing to install** beyond Python — the work is configuration. The guided path
+reads the account exports and only asks what no CSV contains:
 
 ```bash
 cd scripts
-python einrichten.py --pruefen   # rein lesend: was steckt in den Exporten?
-python einrichten.py             # erzeugt konfig.json
-python einrichten.py --mail      # optional: Belege aus Thunderbird
+python einrichten.py --pruefen   # read-only: what is inside the exports?
+python einrichten.py             # creates konfig.json
+python einrichten.py --mail      # optional: receipts from Thunderbird
 ```
 
-Wer Claude Code nutzt, kann stattdessen den mitgelieferten Skill
-`finanz-einrichtung` ([`.claude/skills/`](.claude/skills/)) starten — der geht
-zusätzlich das Ergebnis durch und sucht nach typischen Einrichtungsfehlern.
+If you use Claude Code, you can start the bundled skill `finanz-einrichtung`
+([`.claude/skills/`](.claude/skills/)) instead — it additionally reviews the result and
+looks for typical setup mistakes.
 
-## Konfiguration — `konfig.json`
-Alles, was von Haushalt zu Haushalt anders ist, steht in **einer** Datei im Projektordner.
-**Kein Quellcode-Editieren nötig.** Von Hand geht es auch:
+## Configuration — `konfig.json`
+Everything that differs from household to household lives in **one** file in the project
+folder. **No source-code editing required.** Doing it by hand works too:
 
 ```bash
-copy konfig.beispiel.json konfig.json     # Vorlage kopieren, dann ausfüllen
-cd scripts && python konfig.py            # prüft die Datei und zeigt, was gelesen wurde
+copy konfig.beispiel.json konfig.json     # copy the template, then fill it in
+cd scripts && python konfig.py            # validates the file and shows what was read
 ```
 
-| Abschnitt | Was drin steht | Warum es wichtig ist |
+| Section | What it holds | Why it matters |
 |---|---|---|
-| `konten.eigene_giro` | eigene Girokonten (IBAN → Name) | **Systemgrenze.** Überweisungen zwischen diesen Konten sind keine Ausgaben. Fehlt hier ein Konto, ist die Statistik zu hoch. |
-| `konten.zuordnung` | Depot, Darlehen, Gehalt, Kindergeld | zählen mit, bekommen aber eine feste Vorgabe-Kategorie, die keine Händlerregel überschreibt |
-| `kategorien` | die feste Kategorienliste | genau eine pro Buchung; eigene ergänzen (z.B. „Immobilie X") |
-| `haushalt.heimat_orte` | Wohnort + Nachbarorte | Reise-Erkennung. Ohne das ist der Alltag eine Dauerreise. |
-| `haushalt.eigene_namen` | Familien-/Vermieternamen | verhindert, dass Privatmails als Beleg-Kontext an Buchungen landen |
-| `eigene_regeln` | Hausverwaltung, Vermieter, Stammlokal | die breiten Regeln für gängige Händler sind in [`scripts/rules.py`](scripts/rules.py) eingebaut |
+| `konten.eigene_giro` | your own checking accounts (IBAN → name) | **System boundary.** Transfers between these accounts are not expenses. If an account is missing here, the statistics are too high. |
+| `konten.zuordnung` | brokerage, loans, salary, child benefit | counted, but with a fixed default category that no merchant rule overrides |
+| `kategorien` | the fixed category list | exactly one per transaction; add your own (e.g. "Immobilie X") |
+| `haushalt.heimat_orte` | home town + neighbouring towns | trip detection. Without it, everyday life is one endless trip. |
+| `haushalt.eigene_namen` | family/landlord names | prevents private emails from landing as receipt context on transactions |
+| `eigene_regeln` | property manager, landlord, favourite restaurant | the broad rules for common merchants are built into [`scripts/rules.py`](scripts/rules.py) |
 
-`konfig.json` ist **nicht** im Git (siehe [`.gitignore`](.gitignore)) — versioniert ist nur
-die Vorlage. Solange keine `konfig.json` existiert, läuft die Beispielkonfiguration: Server
-und Seiten starten, aber `run_all.py` **verweigert** den Lauf. Mit fremder Kontenkarte wären
-die Auswertungen still falsch, und das ist schlimmer als ein Abbruch.
+`konfig.json` is **not** in git (see [`.gitignore`](.gitignore)) — only the template is
+versioned. As long as no `konfig.json` exists, the example configuration runs: server and
+pages start, but `run_all.py` **refuses** to run. With a foreign account map the reports
+would be silently wrong, and that is worse than an abort.
 
-Die Vermögensansicht hat ihre eigene gepflegte Datei — Vorlage:
+The assets view has its own maintained file — template:
 [`vermoegen/positionen.beispiel.json`](vermoegen/positionen.beispiel.json).
 
-## Konfiguration (Pfade)
-Alle Pfade stehen an **einer** Stelle in [`scripts/db.py`](scripts/db.py) und sind per
-Umgebungsvariable überschreibbar:
+## Configuration (paths)
+All paths live in **one** place in [`scripts/db.py`](scripts/db.py) and can be overridden
+via environment variables:
 
-| Env-Variable | Default | Bedeutung |
+| Env variable | Default | Meaning |
 |---|---|---|
-| `FINANZEN_BASE` | der Ordner dieses Repos | Projektordner: DB, `output/`, `attachments/` |
-| `FINANZEN_BANK` | `<BASE>\konten` | Eingang für Bank-CSV-Exporte (= Upload-Ziel) |
-| `FINANZEN_BANK_CSV` | `<BASE>\output\transaktionen.csv` | zusammengeführte Konto-CSV |
-| `FINANZEN_PORT` | `8765` | Port des Servers — eigener Port, wenn eine zweite Instanz (z.B. die Demo) parallel laufen soll |
+| `FINANZEN_BASE` | this repo's folder | project folder: DB, `output/`, `attachments/` |
+| `FINANZEN_BANK` | `<BASE>\konten` | inbox for bank CSV exports (= upload target) |
+| `FINANZEN_BANK_CSV` | `<BASE>\output\transaktionen.csv` | merged account CSV |
+| `FINANZEN_PORT` | `8765` | server port — use a different one if a second instance (e.g. the demo) runs in parallel |
 
-Die Defaults sind **relativ zum Repo** — ein frischer Clone läuft ohne gesetzte
-Umgebungsvariablen. Setzen muss man sie nur, wenn Daten woanders liegen sollen:
+The defaults are **relative to the repo** — a fresh clone runs without any environment
+variables set. You only set them if the data should live elsewhere:
 
 ```bash
-# Beispiel: Kontoexporte liegen auf einem anderen Laufwerk
+# example: account exports live on another drive
 set FINANZEN_BANK=D:\bank-exporte
 ```
 
-## Schnellstart
-1. **Bank-Exporte ablegen:** DKB-/GLS-CSV nach `konten/` kopieren
-   (oder später über die Import-Seite hochladen). Format wird automatisch erkannt.
-   Sinnvoll sind mindestens 12 Monate — Vertrags- und Reise-Erkennung brauchen
-   Wiederholungen.
-2. **Konfiguration anlegen:** `python scripts/einrichten.py` (oder die Vorlage
-   `konfig.beispiel.json` von Hand ausfüllen). Prüfen: `python scripts/konfig.py`.
-3. **Pipeline laufen lassen** (idempotent, beliebig oft wiederholbar):
+## Quickstart
+1. **Drop bank exports:** copy DKB/GLS CSVs into `konten/`
+   (or upload later via the import page). The format is detected automatically.
+   At least 12 months make sense — contract and trip detection need recurrences.
+2. **Create the configuration:** `python scripts/einrichten.py` (or fill in the template
+   `konfig.beispiel.json` by hand). Validate: `python scripts/konfig.py`.
+3. **Run the pipeline** (idempotent, repeatable at will):
    ```bash
    cd scripts
    python run_all.py
    ```
-4. **Editor/Statistik starten:**
+4. **Start editor/statistics:**
    ```bash
    python app.py     # -> http://localhost:8765
    ```
 
-## Die Seiten (alle unter http://localhost:8765)
-- **✏️ Editor** (`/`) — jede Buchung prüfen, Kategorie/Labels/Kommentar setzen.
-- **📊 Statistik** (`/statistik.html`) — Einnahmen/Ausgaben pro Monat, Kategorie-Stack,
-  Ranking, Reisen. Filter: Jahr · Kategorien · Verträge · Label. Balken anklicken → Buchungen.
-- **📑 Verträge** (`/vertraege`) — mechanisch erkannte wiederkehrende Zahlungen (= Fixkosten),
-  bestätigen/ablehnen, aktiv/ausgelaufen.
-- **🏖️ Reisen** (`/reisen`) — automatisch erkannte Reisen (zusammenhängend außerhalb der
-  Heimatregion), bestätigen → Buchungen werden zu „Urlaub".
-- **📥 Import** (`/import`) — alle Datenquellen mit Zeitraum/Stand, Zeitachse + Regler für den
-  berücksichtigten Zeitraum, Bank-CSV-Upload und „Daten verarbeiten".
+## The pages (all under http://localhost:8765)
+- **✏️ Editor** (`/`) — review every transaction, set category/labels/comment.
+- **📊 Statistics** (`/statistik.html`) — income/expenses per month, category stack,
+  ranking, trips. Filters: year · categories · contracts · label. Click a bar → transactions.
+- **📑 Contracts** (`/vertraege`) — mechanically detected recurring payments (= fixed costs),
+  confirm/reject, active/expired.
+- **🏖️ Trips** (`/reisen`) — automatically detected trips (contiguous spending outside the
+  home region), confirm → transactions become "Urlaub" (vacation).
+- **📥 Import** (`/import`) — all data sources with range/state, a timeline + slider for the
+  considered period, bank CSV upload and "process data".
 
-## Aufbau
-- `scripts/` — der Kern (Pipeline + Server). Details & Reihenfolge: [`PROCESS.md`](PROCESS.md).
-- `scripts/extra/` — optionale/einmalige Werkzeuge (Text-Report, KI-Seed, Alt-Dashboard),
-  nicht Teil des Hauptlaufs.
-- `vermoegen/` — Vermögens-Snapshot (Salden/Bestände statt Umsätze), eigener Lauf.
-- `konten/` — **Eingang** für Bank-CSV-Exporte · `output/` — generierte Seiten ·
-  `attachments/` — gespeicherte Mailanhänge · `finanzen.db` — die Datenbank.
-- `beispieldaten/` — erfundener Demo-Haushalt zum Ausprobieren · `demo/` — anonymisierte
-  Beispielseite · `docs/bilder/` — Screenshots ·
-  [`DECISIONS.md`](DECISIONS.md) — Protokoll der Entscheidungen.
-- `tests/` — Tests, reine Standardbibliothek: `python -m unittest discover -s tests -t tests`
+## Layout
+- `scripts/` — the core (pipeline + server). Details & order: [`PROCESS.md`](PROCESS.md).
+- `scripts/extra/` — optional/one-off tools (text report, AI seed, legacy dashboard),
+  not part of the main run.
+- `vermoegen/` — assets snapshot (balances/holdings instead of transactions), separate run.
+- `konten/` — **inbox** for bank CSV exports · `output/` — generated pages ·
+  `attachments/` — stored email attachments · `finanzen.db` — the database.
+- `beispieldaten/` — invented demo household for trying things out · `demo/` — anonymised
+  example page · `docs/bilder/` — screenshots ·
+  [`DECISIONS.md`](DECISIONS.md) — log of decisions.
+- `tests/` — tests, pure standard library: `python -m unittest discover -s tests -t tests`
 
-**Versioniert ist nur Code und Doku.** Datenbank, Kontoexporte, Anhänge, generierte
-Seiten und persönliche Konfiguration sind per `.gitignore` ausgeschlossen — dieses Repo
-lässt sich weitergeben, ohne Bankdaten mitzuliefern.
+**Only code and docs are versioned.** Database, account exports, attachments, generated
+pages and personal configuration are excluded via `.gitignore` — this repo can be shared
+without shipping bank data.
 
-## Daten & Privatsphäre
-Alles bleibt **lokal**. Der Server hört ausschließlich auf `127.0.0.1` und weist Anfragen
-mit fremdem `Host`- oder `Origin`-Header ab — sonst könnte eine beliebige Webseite im
-selben Browser mitlesen oder schreiben.
+## Data & privacy
+Everything stays **local**. The server listens exclusively on `127.0.0.1` and rejects
+requests with a foreign `Host` or `Origin` header — otherwise any website in the same
+browser could read or write along.
 
-Nach außen geht genau eine Sache, und nur wenn die OSM-Branchen-Erkennung läuft:
-**Händlername + Ort** an OpenStreetMap/Nominatim (keine Beträge, keine Kontonummern).
-Beachte, dass Händlernamen kleiner Betriebe oft Personennamen sind. Die Bankdaten und
-die Datenbank verlassen den Rechner nie.
+Exactly one thing goes outside, and only when OSM merchant-type detection runs:
+**merchant name + town** to OpenStreetMap/Nominatim (no amounts, no account numbers).
+Note that merchant names of small businesses are often personal names. The bank data and
+the database never leave the machine.
 
-## Mitarbeiten
-Wer die Anwendung mit eigenen Daten benutzt, findet Dinge, die sonst niemand findet: eine
-Bank, deren Format klemmt, einen Händler, den keine Regel trifft, eine missverständliche
-Stelle in der Anleitung. Das ist der wertvollste Beitrag — bitte als Branch zurückgeben:
+## Contributing
+Whoever uses the application with their own data finds things nobody else can find: a bank
+whose format misbehaves, a merchant no rule matches, a confusing spot in the guide. That is
+the most valuable contribution — please return it as a branch:
 
 ```bash
-git checkout -b erfahrung/<kurzer-name>
-python -m unittest discover -s tests -t tests    # bleibt alles grün?
-git commit -am "fix: <was>"
-git push -u origin erfahrung/<kurzer-name>
+git checkout -b erfahrung/<short-name>
+python -m unittest discover -s tests -t tests    # everything still green?
+git commit -am "fix: <what>"
+git push -u origin erfahrung/<short-name>
 ```
 
-| Fund | Wohin |
+| Finding | Where it goes |
 |---|---|
-| Händler, den viele Haushalte haben (Supermarkt, Versicherer, Stromanbieter, Streaming) | `SEED2` in [`scripts/rules.py`](scripts/rules.py) |
-| Händler, den nur dein Haushalt hat | `eigene_regeln` in deiner `konfig.json` — **nicht** committen |
-| Bankformat wird nicht erkannt | [`scripts/parse_konten.py`](scripts/parse_konten.py) + ein Test |
-| Anleitung war missverständlich | `README.md` / `PROCESS.md` |
-| Entscheidung getroffen, die nicht offensichtlich ist | `DECISIONS.md` |
+| Merchant that many households have (supermarket, insurer, utility, streaming) | `SEED2` in [`scripts/rules.py`](scripts/rules.py) |
+| Merchant only your household has | `eigene_regeln` in your `konfig.json` — do **not** commit |
+| Bank format not recognised | [`scripts/parse_konten.py`](scripts/parse_konten.py) + a test |
+| Guide was confusing | `README.md` / `PROCESS.md` |
+| Non-obvious decision made | `DECISIONS.md` |
 
-**Vor dem Push kurz `git diff --cached` ansehen.** Die `.gitignore` deckt Datenbank,
-Exporte, Anhänge und `konfig.json` ab — aber eine Regel mit dem Namen deines Vermieters
-gehört trotzdem nicht in `rules.py`. Der Prüfmaßstab ist nicht „stehen hier IBANs?",
-sondern: **könnte diese Zeile bei einem beliebigen anderen Haushalt genauso stehen?**
-Ein hyperlokaler Laden, ein Kindergarten, der Name einer Haushaltshilfe — das ist keine
-Regel, sondern eine Beobachtung über eine bestimmte Familie an einem bestimmten Ort.
-Solche Muster gehören in die eigene `konfig.json`.
+**Look at `git diff --cached` before pushing.** The `.gitignore` covers database, exports,
+attachments and `konfig.json` — but a rule carrying your landlord's name still does not
+belong in `rules.py`. The yardstick is not "are there IBANs in here?", but: **could this
+line appear unchanged in any other household?** A hyper-local shop, a kindergarten, the
+name of a domestic helper — that is not a rule but an observation about one specific family
+in one specific place. Such patterns belong in your own `konfig.json`.
 
-### Was beim Prüfen eines fremden Beitrags besonders zählt
-Vier Stellen richten mit einer einzigen Zeile großen Schaden an — bei Änderungen daran
-bitte genau hinsehen:
+### What matters most when reviewing someone else's contribution
+Four spots can do great damage with a single line — please look closely at changes there:
 
-| Datei | Warum |
+| File | Why |
 |---|---|
-| `scripts/app.py` (Bind-Adresse) | `127.0.0.1` → `0.0.0.0` hängt den gesamten Datenbestand samt Schreib-Schnittstelle ins Netz |
-| `.gitignore` | eine entfernte Zeile, und beim nächsten `git commit -am` wandern echte Bankdaten unwiderruflich in die öffentliche History |
-| `scripts/frontend.py` / `liste.py` (Einbettung) | hier wird fremdbestimmter Text in die Seite geschrieben; ohne Maskierung ist das eine Lücke |
-| `.claude/skills/**` | wird von einem Agenten **ausgeführt**, nicht nur gelesen |
+| `scripts/app.py` (bind address) | `127.0.0.1` → `0.0.0.0` exposes the entire dataset including the write interface to the network |
+| `.gitignore` | one removed line, and the next `git commit -am` pushes real bank data irrevocably into public history |
+| `scripts/frontend.py` / `liste.py` (embedding) | externally controlled text is written into the page here; without escaping this is a hole |
+| `.claude/skills/**` | gets **executed** by an agent, not just read |
