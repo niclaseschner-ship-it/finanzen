@@ -2,21 +2,40 @@
 
 *[English version](README.md) · die Anwendung selbst ist deutschsprachig.*
 
-**Deine Kontoauszüge werden zu einer Statistik, die dir sagt, wohin das Geld geht —
-auf deinem Rechner, ohne Konto bei irgendwem, und jede Zuordnung ist begründet.**
+**Verstehe, was hinter einer Zahlung steckt — mit Kontobuchungen und den passenden Bestellmails.**
 
-- 🔒 **Lokal.** Keine Cloud, kein Bankzugang, kein Konto. Die Daten verlassen den Rechner nicht.
-- 🔍 **Nachvollziehbar.** Zu jeder Buchung steht da, *warum* sie in dieser Kategorie liegt. Was unklar ist, bleibt sichtbar unklar statt geraten zu werden.
-- 🧾 **Belege statt Rätselraten.** Zu einer Buchung „AMAZON −57,50 €" steht da, *was* drin war —
-  automatisch aus deinen eigenen Bestellmails verknüpft, über die Bestellnummer.
-- ⚡ **Keine Installation.** Python 3.10 genügt — kein `pip install`, kein Build, kein Docker.
-- 📱 **Am Rechner und am Handy.** Eine Adresse: am Rechner die Übersicht, am Telefon eine
-  installierbare App. Hell und dunkel folgen der Systemeinstellung.
+Der Kontoauszug sagt „AMAZON −12,18 €“. Die Bestellmail sagt „Thermoskanne“.
+Finanzen bringt beides zusammen: Der Betrag kommt von der Bank, der Kaufkontext aus der Mail.
+Bestellnummern und Zahlungs-IDs verknüpfen die Belege; unsichere Treffer bleiben als solche erkennbar.
 
-[![Übersicht](docs/bilder/uebersicht.png)](docs/bilder/uebersicht.png)
+- **Konto + Mail.** Produktdetails direkt an der Buchung. Eine Mail wird dabei nie als zweite Zahlung gezählt.
+- **Ein Überblick.** Monat, Kategorien, Fixkosten, Konten, Depot, Immobilien und Kredite.
+- **Deine Entscheidung.** Unklare Vorschläge prüfen, Kategorien korrigieren und eigene Entscheidungen beim nächsten Import behalten.
+- **Auf deinem Rechner oder Server.** Python 3.10+, SQLite, Desktop-Ansicht und installierbare Handy-App (PWA).
+  Die Daten kommen aus Kontoexporten und lokal verfügbaren Mails; die App braucht kein Bank- oder Mail-Passwort.
 
-**[▶ Live-Demo im Browser](https://niclaseschner-ship-it.github.io/finanzen/demo/)** — die echte
-App mit einem erfundenen Haushalt, ohne Installation. Am Handy öffnet sich die Handy-Ansicht.
+**[▶ Live-Demo ausprobieren](https://niclaseschner-ship-it.github.io/finanzen/demo/)** · [Schnellstart](#ausprobieren--ohne-eigene-daten) · [So funktioniert der Belegabgleich](#-belege-aus-e-mails--was-war-eigentlich-in-dem-paket)
+
+## Die App in sechs Bildern
+
+Alle gezeigten Daten stammen aus einem vollständig erfundenen Haushalt. Die Produktmotive basieren auf Aufnahmen der echten Demo-Seiten.
+
+<table>
+<tr>
+<td><a href="docs/produktdemo/01-konto-mail.png"><img src="docs/produktdemo/01-konto-mail.png" width="360" alt="Konto trifft Mail — Buchung und Produkt aus der Bestellmail"></a></td>
+<td><a href="docs/produktdemo/02-monat.png"><img src="docs/produktdemo/02-monat.png" width="360" alt="Monatsüberblick mit Vergleich zum Durchschnitt"></a></td>
+</tr>
+<tr>
+<td><a href="docs/produktdemo/03-pruefen.png"><img src="docs/produktdemo/03-pruefen.png" width="360" alt="Unklare Zuordnungen prüfen und ändern"></a></td>
+<td><a href="docs/produktdemo/04-fixkosten.png"><img src="docs/produktdemo/04-fixkosten.png" width="360" alt="Wiederkehrende Zahlungen und Verträge"></a></td>
+</tr>
+<tr>
+<td><a href="docs/produktdemo/05-statistik.png"><img src="docs/produktdemo/05-statistik.png" width="360" alt="Einnahmen und Ausgaben in der Statistik"></a></td>
+<td><a href="docs/produktdemo/06-vermoegen.png"><img src="docs/produktdemo/06-vermoegen.png" width="360" alt="Vermögen und Verbindlichkeiten zusammen"></a></td>
+</tr>
+</table>
+
+[Originalaufnahmen und Generierungsprompts](docs/produktdemo/README.md).
 
 ## Ausprobieren — ohne eigene Daten
 
@@ -31,24 +50,6 @@ Solange keine eigenen Daten da sind, zeigt die App einen **kompletten erfundenen
 Wohnung mit Darlehen, Tagesgeld und Depot, Bestellmails als echtes mbox, zwei Reisen. Er wird
 beim ersten Start in `beispieldaten/demo/` angelegt — eigene Datenbank, eigene Konfiguration,
 oben rechts als „Beispieldaten“ markiert. Neu erzeugen: `python beispieldaten/erzeugen.py`.
-
-| Buchungen | Statistik | Verträge | Vermögen |
-|---|---|---|---|
-| [![Buchungen](docs/bilder/editor.png)](docs/bilder/editor.png) | [![Statistik](docs/bilder/statistik.png)](docs/bilder/statistik.png) | [![Verträge](docs/bilder/vertraege.png)](docs/bilder/vertraege.png) | [![Vermögen](docs/bilder/vermoegen.png)](docs/bilder/vermoegen.png) |
-| Kategorie, Labels — und die Begründung | Einnahmen, Ausgaben, Kategorien im Verlauf | Fixkosten, allein aus der Wiederholung erkannt | Konten, Depot, Immobilie, Kredit |
-
-### Am Handy
-
-Dieselbe Adresse öffnet am Telefon eine installierbare App (PWA): der Monat gegen den
-Zwölfmonatsschnitt, Buchungen mit Suche, und eine **Prüfliste** für alles, was die Automatik
-nur geraten hat — „Passt“ oder „Ändern“ mit einem Tipp. Umschalten zwischen beiden Ansichten
-geht jederzeit.
-
-[![Handy-App](docs/bilder/handy.png)](docs/bilder/handy.png)
-
-Die Demo zeigt absichtlich auch, was **nicht** aufgeht: ein paar Händler bleiben
-`unkategorisiert`, statt geraten zu werden, eine erkannte Reise und zwei Verträge warten auf
-Bestätigung.
 
 ## Wie es funktioniert
 
@@ -95,12 +96,11 @@ Branchen-Nachschlag → KI-Vorschlag → manuelle Korrektur (schlägt alles) →
 
 ## 🧾 Belege aus E-Mails — was war eigentlich in dem Paket?
 
-Der Kontoauszug sagt „AMAZON PAYMENTS EUROPE S.C.A, −57,50 €". Das ist die Stelle, an der
-jedes Haushaltsbuch aufhört und man selbst im Postfach sucht. Diese App macht den Schritt
+Der Kontoauszug sagt „AMAZON PAYMENTS EUROPE S.C.A, −57,50 €". Ohne Kaufkontext sucht man selbst im Postfach. Diese App macht den Schritt
 mit: sie verknüpft Buchungen mit deinen **eigenen Bestell- und Zahlungsmails** und zeigt
 die Produktzeile direkt an der Buchung.
 
-[![Belegverknüpfung](docs/bilder/belege.png)](docs/bilder/belege.png)
+
 
 **Mechanisch, nicht geraten** — und jede Verknüpfung sagt, wie sicher sie ist:
 
@@ -145,17 +145,17 @@ hier ist absichtlich klein und deckt einen schmalen Fall ab:
 | **[beancount](https://beancount.github.io/) / hledger** | Klartext-Buchhaltung magst und deine Auswertungen selbst schreibst. |
 | **dieses Projekt** | wissen willst, **wo dein Geld hingegangen ist**, ohne dafür ein System aufzusetzen — und ohne dass eine Software je dein Bank- oder Mail-Passwort sieht. |
 
-Was es hier gibt und dort nicht:
+Worauf dieses Projekt sich konzentriert:
 
 - **Belegverknüpfung aus dem eigenen Postfach.** Zu „AMAZON −57,50 €" steht die Produktzeile
   aus deiner Bestellmail. Belegabgleich existiert sonst vor allem als kommerzielles SaaS für
   Spesenabrechnung, oder bei [Midday](https://github.com/midday-ai/midday) für Selbstständige.
 - **Begründungspflicht.** Jede Kategorie trägt ihre Quelle. Was unklar ist, bleibt sichtbar
   unklar — es wird nichts geraten, damit die Statistik hübsch aussieht.
-- **Kein Setup.** Kein Server, kein Docker, keine Datenbank-Installation, kein `pip install`.
+- **Kleine Laufzeit.** Python und SQLite, ohne Docker oder separaten Datenbankdienst.
 - **Reise- und Vertragserkennung** allein aus den Buchungsmustern, ohne dass du etwas anlegst.
 
-Was es hier **nicht** gibt: Budgets und Sollwerte, Mehrbenutzerbetrieb, Handy-App,
+Was es hier **nicht** gibt: Budgets und Sollwerte, Mehrbenutzerbetrieb, native iOS-/Android-Apps,
 automatischen Bankabruf (bewusst — das hieße Zugangsdaten), Fremdwährungskonten,
 doppelte Buchführung. Und die CSV-Formate sind bisher **DKB und GLS**.
 

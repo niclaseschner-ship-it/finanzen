@@ -2,21 +2,40 @@
 
 *[Deutsche Fassung](README.de.md) · the application itself is in German.*
 
-**Your bank statements become a report that tells you where the money went —
-on your own machine, without an account anywhere, and every categorisation is justified.**
+**Understand what a payment was for — by connecting bank transactions with your order emails.**
 
-- 🔒 **Local.** No cloud, no bank access, no account. The data never leaves your machine.
-- 🔍 **Traceable.** Every transaction shows *why* it landed in its category. What is unclear stays visibly unclear instead of being guessed.
-- 🧾 **Receipts instead of guesswork.** For a transaction like "AMAZON −57.50 €" you see *what* was in it —
-  linked automatically from your own order emails, via the order number.
-- ⚡ **No installation.** Python 3.10 is enough — no `pip install`, no build, no Docker.
-- 📱 **Desktop and phone.** One address: the overview on a computer, an installable app on a
-  phone. Light and dark follow the system setting.
+A bank statement says “AMAZON −12.18 €”. The matching order email says “Thermos flask”.
+Finanzen brings them together: the bank provides the amount, the email adds the purchase context.
+Order numbers and payment IDs link receipts; ambiguous matches stay visibly uncertain.
 
-[![Overview](docs/bilder/uebersicht.png)](docs/bilder/uebersicht.png)
+- **Bank + email.** Product details beside the transaction, without counting an email as a second payment.
+- **One overview.** Monthly spending, categories, recurring costs, accounts, portfolio, property and loans.
+- **Your decision.** Review unclear suggestions, correct categories and keep your own decisions across imports.
+- **On your own computer or server.** Python 3.10+, SQLite, desktop view and an installable phone app (PWA).
+  Bank CSVs and locally available emails provide the data; no bank or email password is needed by the app.
 
-**[▶ Live demo in the browser](https://niclaseschner-ship-it.github.io/finanzen/demo/)** — the real
-app with an invented household, no installation. On a phone it opens the phone view.
+**[▶ Try the live demo](https://niclaseschner-ship-it.github.io/finanzen/demo/)** · [Quick start](#try-it--without-your-own-data) · [How receipt matching works](#-receipts-from-emails--what-was-actually-in-that-package)
+
+## Six views of the app
+
+The screenshots use a completely invented household. The product posters are based on captures of the real demo pages.
+
+<table>
+<tr>
+<td><a href="docs/produktdemo/01-konto-mail.png"><img src="docs/produktdemo/01-konto-mail.png" width="360" alt="Konto trifft Mail — Buchung und Produkt aus der Bestellmail"></a></td>
+<td><a href="docs/produktdemo/02-monat.png"><img src="docs/produktdemo/02-monat.png" width="360" alt="Monatsüberblick mit Vergleich zum Durchschnitt"></a></td>
+</tr>
+<tr>
+<td><a href="docs/produktdemo/03-pruefen.png"><img src="docs/produktdemo/03-pruefen.png" width="360" alt="Unklare Zuordnungen prüfen und ändern"></a></td>
+<td><a href="docs/produktdemo/04-fixkosten.png"><img src="docs/produktdemo/04-fixkosten.png" width="360" alt="Wiederkehrende Zahlungen und Verträge"></a></td>
+</tr>
+<tr>
+<td><a href="docs/produktdemo/05-statistik.png"><img src="docs/produktdemo/05-statistik.png" width="360" alt="Einnahmen und Ausgaben in der Statistik"></a></td>
+<td><a href="docs/produktdemo/06-vermoegen.png"><img src="docs/produktdemo/06-vermoegen.png" width="360" alt="Vermögen und Verbindlichkeiten zusammen"></a></td>
+</tr>
+</table>
+
+[Original screenshots and generation prompts](docs/produktdemo/README.md).
 
 ## Try it — without your own data
 
@@ -31,23 +50,6 @@ As long as there is no data of your own, the app shows a **complete invented hou
 loan, savings account and portfolio, order emails as a real mbox, two trips. It is created on
 first start in `beispieldaten/demo/` — its own database and configuration, marked "Beispieldaten"
 (sample data) at the top right. Recreate it: `python beispieldaten/erzeugen.py`.
-
-| Transactions | Statistics | Contracts | Wealth |
-|---|---|---|---|
-| [![Transactions](docs/bilder/editor.png)](docs/bilder/editor.png) | [![Statistics](docs/bilder/statistik.png)](docs/bilder/statistik.png) | [![Contracts](docs/bilder/vertraege.png)](docs/bilder/vertraege.png) | [![Wealth](docs/bilder/vermoegen.png)](docs/bilder/vermoegen.png) |
-| Category, labels — and the justification | Income, spending, categories over time | Fixed costs, detected purely from recurrence | Accounts, portfolio, property, loan |
-
-### On the phone
-
-The same address opens an installable app (PWA) on a phone: the month against the twelve-month
-average, searchable transactions, and a **review list** for everything the automation only
-guessed — "fits" or "change" with one tap. Switch views any time.
-
-[![Phone app](docs/bilder/handy.png)](docs/bilder/handy.png)
-
-The demo deliberately also shows what does **not** work out: a few merchants stay
-`unkategorisiert` instead of being guessed, one detected trip and two contracts await
-confirmation.
 
 ## How it works
 
@@ -88,16 +90,15 @@ manual correction (beats everything) → trip detection (stamps confirmed trips 
   Categories and labels are a derived layer.
 - **Nothing disappears silently** — status instead of deletion.
 - **Mechanics before AI** — deterministic rules first; AI is the scalpel for the rest.
-- **Everything local** — pure standard library, no cloud service.
+- **Your own data store** — bank and mail data are processed locally. Optional merchant lookups and AI categorisation are separate steps.
 
 ## 🧾 Receipts from emails — what was actually in that package?
 
-The bank statement says "AMAZON PAYMENTS EUROPE S.C.A, −57.50 €". That is the point where
-every budgeting tool stops and you go searching your mailbox yourself. This app takes that
+The bank statement says "AMAZON PAYMENTS EUROPE S.C.A, −57.50 €". Without purchase context, you have to search the mailbox yourself. This app takes that
 step with you: it links transactions to your **own order and payment emails** and shows
 the product line right next to the transaction.
 
-[![Receipt linking](docs/bilder/belege.png)](docs/bilder/belege.png)
+
 
 **Mechanical, not guessed** — and every link states how certain it is:
 
@@ -141,17 +142,17 @@ deliberately small and covers a narrow case:
 | **[beancount](https://beancount.github.io/) / hledger** | like plain-text accounting and write your own reports. |
 | **this project** | want to know **where your money went** without setting up a system — and without any software ever seeing your bank or email password. |
 
-What exists here and not there:
+What this project focuses on:
 
 - **Receipt linking from your own mailbox.** Next to "AMAZON −57.50 €" you see the product
   line from your order email. Receipt matching otherwise exists mainly as commercial SaaS
   for expense reports, or in [Midday](https://github.com/midday-ai/midday) for freelancers.
 - **Justification requirement.** Every category carries its source. What is unclear stays
   visibly unclear — nothing is guessed to make the statistics look tidy.
-- **No setup.** No server, no Docker, no database installation, no `pip install`.
+- **Small runtime.** Python and SQLite, without Docker or a separate database service.
 - **Trip and contract detection** purely from transaction patterns, without you creating anything.
 
-What does **not** exist here: budgets and targets, multi-user operation, a mobile app,
+What does **not** exist here: budgets and targets, multi-user operation, native iOS/Android apps,
 automatic bank fetching (deliberately — that would mean credentials), foreign-currency
 accounts, double-entry bookkeeping. And the CSV formats so far are **DKB and GLS**.
 
