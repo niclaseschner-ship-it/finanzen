@@ -63,12 +63,13 @@ def iso(s):
 
 def resolve(rel):
     """Pfad aus positionen.json aufloesen: 'konten/...' liegt unter STEUER,
-    'vermoegen/...' unter dem Projektordner."""
+    'vermoegen/...' im DATENordner (db.BASE). Vorher hier der Programmordner — das fiel
+    nicht auf, solange beide derselbe Ordner waren, las in der Demo aber falsche Dateien."""
     rel = rel.replace("/", os.sep)
     if rel.startswith("konten" + os.sep):
         return os.path.join(STEUER, rel)
     if rel.startswith("vermoegen" + os.sep):
-        return os.path.join(BASE, rel)
+        return os.path.join(db.BASE, rel)
     return os.path.join(HERE, rel)
 
 

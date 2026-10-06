@@ -1,0 +1,263 @@
+<!doctype html><html lang=de><head><script src="daten.js"></script><script src="demo.js"></script><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><title>Finanzen · Editor</title>
+<style>
+ body{font-family:system-ui,Arial,sans-serif;margin:0;background:var(--bg);color:var(--text);font-size:14px}
+ .bar{position:sticky;top:0;background:var(--fl);padding:10px;border-bottom:1px solid var(--linie);display:flex;gap:9px;flex-wrap:wrap;align-items:center;z-index:5}
+ a{color:var(--text2);text-decoration:none;font-weight:600}
+ select,input{background:var(--fl2);color:var(--text);border:1px solid var(--linie);border-radius:7px;padding:6px 8px;font-size:13px}
+ table{width:100%;border-collapse:collapse} td,th{padding:6px 8px;border-bottom:1px solid var(--linie);vertical-align:top}
+ th{position:sticky;top:50px;background:var(--fl);color:var(--text2);text-align:left}
+ .r{text-align:right;white-space:nowrap}.neg{color:var(--rot)}.pos{color:var(--akzent-text)}
+ .ctx{color:var(--text2);font-size:12px;max-width:290px}.why{color:var(--leise);font-size:11px}
+ .mail{color:var(--blau);font-size:11px;margin-top:2px}
+ .vtg{background:var(--lila-fl);color:var(--lila);border-radius:5px;padding:0 5px;font-size:10px;vertical-align:middle}
+ tr.ign{opacity:.45} tr.saved>td{background:var(--akzent-fl)}
+ tr.unsaved>td{background:var(--rot-fl);outline:1px solid var(--rot)}
+ .lbl{width:140px} .stat{margin-left:auto;color:var(--text2)}
+ /* Pruef-Knoepfe und Kommentar: gleiche Optik wie die kanonische Tabelle in shared.js */
+ .pf{white-space:nowrap}
+ .pf .b{background:var(--fl2);border:1px solid var(--linie);color:var(--text2);border-radius:6px;padding:3px 8px;cursor:pointer;font-weight:700}
+ .pf .okb.on{background:var(--akzent-fl);border-color:var(--akzent);color:var(--akzent-text)}
+ .pf .nob.on{background:var(--rot-fl);border-color:var(--rot);color:var(--rot)}
+ /* 124 statt 150: mit den beiden neuen Spalten war die Tabelle sonst 19px breiter
+    als ein 1440er Laptop und die ganze Seite liess sich seitlich schieben. */
+ .komm{width:124px}
+ .c-mon input{width:118px}
+ .c-dat{white-space:nowrap}
+ /* Kein display:block auf der Tabelle, auch nicht fuer breite Fenster: der
+    mitlaufende Tabellenkopf (position:sticky auf th) haengt daran und legt sich
+    sonst ueber die erste Zeile. Die Tabelle passt auf 1440px, seit die
+    Kontextspalte schmaler ist. */
+
+ /* ---- Handy und schmale Fenster -------------------------------------------
+    Zehn Spalten passen auf kein Telefon und auf kein Tablet. Unterhalb von 900px wird deshalb aus
+    jeder Tabellenzeile eine Karte: Kopf weg, Zellen als Bloecke, jede mit
+    eigener Beschriftung aus data-t. Funktion geht dabei keine verloren —
+    alle Felder bleiben da, nur untereinander statt nebeneinander. */
+ @media (max-width:900px){
+  /* Am Telefon ersetzt der Weg zurueck zur Uebersicht die siebenteilige
+     Navigationsleiste. Die Filter der Seite bleiben stehen. */
+  .bar>a:not(.zur),.bar>b{display:none}
+  .zur{display:inline-block!important;font-size:15px}
+
+  .bar{padding:8px;gap:6px}
+  .bar a,.bar b{font-size:13px}
+  .lbl,#fsearch{width:100%!important;box-sizing:border-box}
+  .stat{margin-left:0;width:100%}
+  table,tbody,tr,td{display:block;width:auto}
+  thead{display:none}
+  tr{position:relative;background:var(--fl);border:1px solid var(--linie);border-radius:10px;
+     margin:0 0 10px;padding:9px 11px}
+  tr.saved{border-color:var(--akzent)} tr.unsaved{border-color:var(--rot);outline:0}
+  tr.saved>td,tr.unsaved>td{background:none}
+  td{border:0;padding:3px 0}
+  td[data-t]::before{content:attr(data-t);display:block;color:var(--leise);font-size:11px;margin-bottom:2px}
+  /* Pruefen-Knoepfe oben rechts in die Ecke der Karte */
+  .pf{position:absolute;top:9px;right:11px;padding:0}
+  .c-dat{color:var(--text2);font-size:12px}
+  .c-bet{text-align:left;font-size:20px;font-weight:700;padding:0 0 2px}
+  .c-hdl{font-size:15px;font-weight:600;padding-right:96px;padding-bottom:4px}
+  .c-kat select,.c-kom input,.komm{width:100%;box-sizing:border-box}
+  /* Monat und Geltung nebeneinander. float statt inline-block, weil letzteres den
+     Zeilenumbruch zwischen den <td> als Leerzeichen mitrechnet und dann umbricht. */
+  .c-mon,.c-gel{float:left;width:48%;box-sizing:border-box}
+  .c-mon{margin-right:4%}
+  .c-mon input,.c-gel select{width:100%;box-sizing:border-box}
+  .ctx{clear:both;max-width:none;border-top:1px solid var(--linie);margin-top:7px;padding-top:6px}
+  #lp{width:calc(100vw - 24px);left:12px!important}
+ }
+ .lc{cursor:pointer;min-width:130px} .chip{background:var(--fl2);border-radius:6px;padding:1px 6px;margin:1px;display:inline-block;font-size:12px}
+ .lbe{background:var(--fl2);border:0;color:var(--text2);border-radius:6px;cursor:pointer;padding:1px 7px}
+ #lp{position:fixed;z-index:50;background:var(--fl);border:1px solid var(--linie);border-radius:10px;width:270px;box-shadow:0 8px 30px #000a;display:none}
+ #lp .lphd{padding:10px 12px 6px}
+ #lp .lq{width:100%;box-sizing:border-box;background:var(--fl2);color:var(--text);border:1px solid var(--linie);border-radius:7px;padding:7px 9px;font-size:13px}
+ #lp .lplist{max-height:42vh;overflow:auto;padding:4px 12px 6px}
+ #lp .lo{display:block;padding:3px 0;font-size:13px;cursor:pointer}
+ #lp .lo.on{color:var(--akzent-text);font-weight:600}
+ #lp .lnew{padding:6px 9px;margin:2px 0 6px;background:var(--akzent-fl);color:var(--akzent-text);border:1px solid var(--akzent);border-radius:7px;cursor:pointer;font-size:13px}
+ #lp .lpfoot{padding:8px 12px;border-top:1px solid var(--linie);background:var(--fl);border-radius:0 0 10px 10px}
+ #lp button{background:var(--akzent);border:0;color:var(--auf-akzent);border-radius:7px;padding:6px 10px;cursor:pointer}
+ #lp .sec{background:var(--fl2);color:var(--text)}
+ .zur{display:none;color:var(--akzent)}
+ /* Filter am Telefon zugeklappt: sonst stehen vier Zeilen Bedienelemente vor
+    der ersten Buchung. Am Schreibtisch bleibt alles offen und ohne Aufklapper. */
+ .fltm{display:contents}
+ .fltm>summary{display:none}
+ @media (max-width:900px){
+  .fltm{display:block;width:100%}
+  .fltm>summary{display:block;cursor:pointer;background:var(--fl);border:1px solid var(--linie);
+    border-radius:9px;padding:8px 11px;font-weight:600;color:var(--text);list-style:none}
+  .fltm>summary::-webkit-details-marker{display:none}
+  .fltm>summary::before{content:"▸ ";color:var(--leise)}
+  .fltm[open]>summary::before{content:"▾ "}
+  .fltm>*:not(summary){margin-top:7px}
+ }
+</style><link rel=stylesheet href="stil.css">
+<meta name=theme-color content="#f4f3ef" media="(prefers-color-scheme: light)">
+<meta name=theme-color content="#0f1215" media="(prefers-color-scheme: dark)">
+<link rel=icon href="icon-192.png">
+</head><body>
+<div id=lp></div>
+<header class=fkopf><div class=fkopf-in><a class=marke href="start.html"><img src="icon-192.png" alt=""><span>Finanzen</span></a><nav class=fnav aria-label="Bereiche"><a href="start.html">Übersicht</a><a href="editor.html" class=an aria-current=page>Buchungen</a><a href="statistik.html">Statistik</a><a href="vertraege.html">Verträge</a><a href="reisen.html">Reisen</a><a href="vermoegen.html">Vermögen</a><a href="vorsorge.html">Vorsorge</a></nav><a class=demo-hinweis href="https://github.com/niclaseschner-ship-it/finanzen" title="Erfundener Haushalt. Änderungen bleiben nur in diesem Browser-Tab. Zum Projekt auf GitHub.">Demo · zum Projekt</a><a class=ansicht href="handy.html" title="Zur Handy-Ansicht wechseln"><svg width=16 height=16 viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=2 stroke-linecap=round><rect x=7 y=2.5 width=10 height=19 rx=2.5 /><path d="M11 18.5h2"/></svg><span>Handy-Ansicht</span></a></div></header>
+<div class=bar> 
+       <details class=fltm open><summary>🔎 Filter</summary>
+ <select id=fcat onchange=draw()><option value="">— Kategorie —</option></select>
+ <input id=flabel placeholder="Label…" oninput=draw() class=lbl>
+ <input id=fsearch placeholder="Suche Händler/Kontext…" oninput=draw() style="width:220px">
+ <label><input type=checkbox id=fonly onchange=draw()> nur „Sonstiges"</label>
+ <button onclick=rebuild()>📊 Statistik neu</button>
+</details>
+ <span class=stat id=stat></span>
+</div>
+<!-- Spaltenfolge bis „Kommentar" identisch mit der kanonischen Detailtabelle in shared.js
+     (renderBookings). Danach folgen die Spalten, die es nur im Editor gibt. -->
+<table><thead><tr><th>Prüfen</th><th>Datum</th><th class=r>Betrag</th><th>Händler</th><th>Kategorie</th>
+<th>Labels</th><th>Kommentar</th><th>Monat→</th><th>Geltung</th><th>Kontext</th></tr></thead>
+<tbody id=tb></tbody></table>
+<datalist id=labelcat></datalist>
+<script>
+let ROWS=[], META={cats:[],labels:[]}, OPTS='';
+const LIMIT=150;
+const fmt=x=>x.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
+const esc=s=>{const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML.replace(/"/g,'&quot;').replace(/'/g,'&#39;');};  // textContent maskiert " nicht — in value="..." waere das eine Luecke
+async function load(){
+ META=await (await fetch('api/meta')).json();
+ fcat.innerHTML='<option value="">— Kategorie —</option>'+META.cats.map(c=>`<option>${esc(c)}</option>`).join('');
+ document.getElementById('labelcat').innerHTML=META.labels.map(l=>`<option value="${esc(l)}">`).join('');
+ ROWS=await (await fetch('api/rows')).json(); draw();
+}
+const catOptions=c=>META.cats.map(x=>`<option${x===c?' selected':''}>${esc(x)}</option>`).join('')
+  +`<option value="__new__">➕ neue Kategorie…</option>`;
+function rowHTML(r){
+ const opts=catOptions(r.cat);
+ const ctx=(r.vz||'').replace(/\s·\s*$/,'');
+ // Die data-t-Beschriftungen sind fuer die Handy-Ansicht: dort faellt der
+ // Tabellenkopf weg und jede Zelle traegt ihre eigene Ueberschrift (siehe @media).
+ return `<td class=pf><button class="b okb${r.reviewed?' on':''}" data-a=rev title="geprüft/ok">✓</button> <button class="b nob${r.ignore?' on':''}" data-a=ign title="ignorieren (raus aus Statistik)">✗</button></td>
+   <td class=c-dat>${r.d}${r.effm&&r.effm!==r.d.slice(0,7)?'<div class=why>→'+r.effm+'</div>':''}</td>
+   <td class="r c-bet ${r.b<0?'neg':'pos'}">${fmt(r.b)}</td>
+   <td class=c-hdl>${esc(r.h).slice(0,34)}${r.vtg?' <span class=vtg>Vertrag</span>':''}</td>
+   <td class=c-kat data-t="Kategorie"><select data-f=cat>${opts}</select></td>
+   <td class="lc c-lab" data-t="Labels">${chips(r.labels)}<button type=button class=lbe>＋ Label</button></td>
+   <td class=c-kom data-t="Kommentar"><input data-f=note class=komm value="${esc(r.note||'')}" placeholder="was war das?"></td>
+   <td class=c-mon data-t="Monat→"><input type=month data-f=dov value="${r.dov?r.dov.slice(0,7):''}"></td>
+   <td class=c-gel data-t="Geltung"><select data-f=scope><option value=tx>nur diese</option><option value=merchant>ganzer Vertrag</option></select></td>
+   <td class=ctx>${esc(ctx).slice(0,170)}${r.ctx?'<div class=mail>✉ '+esc(r.ctx).slice(0,130)+'</div>':''}<div class=why>${esc(r.src||'')} · ${esc(r.status)}</div></td>`;
+}
+const chips=s=>(s||'').split(',').map(x=>x.trim()).filter(Boolean).map(l=>`<span class=chip>${esc(l)}</span>`).join('');
+function bind(tr,r){
+ tr.querySelectorAll('[data-f]').forEach(el=>el.addEventListener('change',()=>save(r,tr)));
+ tr.querySelector('.lc').addEventListener('click',e=>openLabels(r,tr,e));
+ // Pruef-Knoepfe wie in der kanonischen Tabelle: erst den Zustand in r drehen, dann speichern.
+ tr.querySelector('[data-a=rev]').addEventListener('click',()=>{r.reviewed=r.reviewed?0:1;save(r,tr);});
+ tr.querySelector('[data-a=ign]').addEventListener('click',()=>{r.ignore=r.ignore?0:1;save(r,tr);});
+}
+// Knopfzustaende nach dem Speichern an die Serverantwort angleichen
+function markState(tr,r){
+ const rv=tr.querySelector('[data-a=rev]'), ig=tr.querySelector('[data-a=ign]');
+ if(rv)rv.classList.toggle('on',!!r.reviewed);
+ if(ig)ig.classList.toggle('on',!!r.ignore);
+ tr.classList.toggle('ign',!!r.ignore);
+}
+function _lev(a,b){const m=a.length,n=b.length;if(!m)return n;if(!n)return m;let p=[];for(let j=0;j<=n;j++)p[j]=j;
+ for(let i=1;i<=m;i++){let c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c;}return p[n];}
+function _lscore(L,Q){ // höher = besser; >=300 = starker Treffer (für Enter)
+ if(L===Q)return 1000; if(L.startsWith(Q))return 600-L.length; const i=L.indexOf(Q); if(i>=0)return 400-i;
+ const d=_lev(L,Q),md=Math.max(1,Math.floor(Q.length/3)); if(d<=md)return 350-d*30;   // Tippfehler-nah
+ let p=0;while(p<L.length&&p<Q.length&&L[p]===Q[p])p++; if(p>=3)return 150+p;          // ähnlicher Wortanfang
+ return -1;}
+function _rank(Q,sel){const ql=Q.toLowerCase(),pool=[...new Set([...(META.labels||[]),...sel])];
+ let it=pool.map(l=>({l,on:sel.has(l),s:ql?_lscore(l.toLowerCase(),ql):0}));
+ if(ql)it=it.filter(x=>x.on||x.s>=0);
+ it.sort((a,b)=>(b.on-a.on)||(b.s-a.s)||a.l.localeCompare(b.l)); return it;}
+function openLabels(r,tr,e){
+ const lp=document.getElementById('lp');
+ const sel=new Set((r.labels||'').split(',').map(x=>x.trim()).filter(Boolean));
+ lp.innerHTML=`<div class=lphd><input id=lq class=lq placeholder="suchen oder neu… ⏎" autocomplete=off></div>`
+  +`<div class=lplist id=lpl></div>`
+  +`<div class=lpfoot><button id=ls>Übernehmen</button> <button id=lc class=sec>Abbrechen</button></div>`;
+ lp.style.display='block';
+ const q=lp.querySelector('#lq'),list=lp.querySelector('#lpl');
+ const draw=()=>{const Q=q.value.trim(),exact=(META.labels||[]).some(l=>l.toLowerCase()===Q.toLowerCase());
+   let h=(Q&&!exact)?`<div class=lnew id=lnew>➕ „${esc(Q)}" anlegen</div>`:'';
+   const it=_rank(Q,sel);
+   h+=it.map(x=>`<label class="lo${x.on?' on':''}"><input type=checkbox value="${esc(x.l)}" ${x.on?'checked':''}> ${esc(x.l)}</label>`).join('');
+   if(!it.length&&!(Q&&!exact))h+='<div class=why style="padding:4px">nichts gefunden</div>';
+   list.innerHTML=h;
+   const nw=list.querySelector('#lnew');if(nw)nw.onclick=()=>addNew(Q);
+   list.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.onchange=()=>{cb.checked?sel.add(cb.value):sel.delete(cb.value);
+     cb.parentElement.classList.toggle('on',cb.checked);});};
+ const addNew=async v=>{v=(v||'').trim();if(!v)return;
+   try{const res=await (await fetch('api/addlabel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:v})})).json();META.labels=res.labels||META.labels;}catch(_){}
+   sel.add(v);q.value='';draw();q.focus();};
+ const toggle=l=>{sel.has(l)?sel.delete(l):sel.add(l);q.value='';draw();q.focus();};
+ q.addEventListener('input',draw);
+ q.addEventListener('keydown',ev=>{
+   if(ev.key==='Enter'){ev.preventDefault();const Q=q.value.trim();if(!Q)return apply();
+     const c=_rank(Q,new Set()).filter(x=>x.s>=300);
+     if(c.length)toggle(c[0].l);else addNew(Q);}
+   else if(ev.key==='Escape')lp.style.display='none';});
+ function apply(){r.labels=[...sel].join(',');
+   tr.querySelector('.lc').innerHTML=chips(r.labels)+'<button type=button class=lbe>＋ Label</button>';
+   tr.querySelector('.lc').addEventListener('click',ev=>openLabels(r,tr,ev));
+   lp.style.display='none';save(r,tr);}
+ lp.querySelector('#ls').onclick=apply;
+ lp.querySelector('#lc').onclick=()=>lp.style.display='none';
+ draw();
+ const w=lp.offsetWidth,h=lp.offsetHeight;
+ lp.style.left=Math.max(8,Math.min(e.clientX,innerWidth-w-12))+'px';
+ lp.style.top=Math.max(8,Math.min(e.clientY,innerHeight-h-12))+'px';
+ q.focus();
+}
+function draw(){
+ const fc=fcat.value,fl=flabel.value.toLowerCase(),fs=fsearch.value.toLowerCase(),fo=fonly.checked;
+ const tb=document.getElementById('tb');tb.innerHTML='';let n=0,sum=0,shown=0;
+ const frag=document.createDocumentFragment();
+ for(const r of ROWS){
+  if(fc&&r.cat!==fc)continue;
+  if(fl&&!(r.labels||'').toLowerCase().includes(fl))continue;
+  if(fs&&!((r.h+' '+r.vz+' '+r.ctx).toLowerCase().includes(fs)))continue;
+  if(fo&&r.status!=='unkategorisiert')continue;
+  n++; if(r.status!=='ignoriert')sum+=r.b;
+  if(shown<LIMIT){const tr=document.createElement('tr');if(r.ignore)tr.className='ign';
+    tr.innerHTML=rowHTML(r);bind(tr,r);frag.appendChild(tr);shown++;}
+ }
+ tb.appendChild(frag);
+ stat.textContent=`${n} Treffer · ${fmt(sum)} €`+(n>shown?` · zeige ${shown} (Filter verfeinern)`:'');
+}
+async function save(r,tr){
+ const g=f=>tr.querySelector(`[data-f=${f}]`);
+ if(g('cat').value==='__new__'){                  // neue Kategorie anlegen
+   const name=(prompt('Neue Kategorie:')||'').trim();
+   if(!name){ g('cat').value=r.cat; return; }
+   const res=await (await fetch('api/addcat',{method:'POST',headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({name})})).json();
+   META.cats=res.cats||META.cats; g('cat').innerHTML=catOptions(name);
+ }
+ const body={tx_id:r.id,cred:r.cred,hkey:r.hkey,scope:g('scope').value,
+   category:g('cat').value,labels:r.labels||'',
+   note:g('note')?g('note').value:'',            // Kommentar — gleiche Spalte wie in shared.js
+   ignore:!!r.ignore,reviewed:!!r.reviewed,      // kommen jetzt aus den Pruef-Knoepfen, nicht aus einer Checkbox
+   datum_override:g('dov').value?g('dov').value+'-01':''};
+ try{
+   const resp=await fetch('api/edit',{method:'POST',headers:{'Content-Type':'application/json'},
+     body:JSON.stringify(body)});
+   if(!resp.ok) throw new Error('HTTP '+resp.status);
+   const res=await resp.json();
+   if(res.full){ROWS=await (await fetch('api/rows')).json();draw();return;}
+   if(!res.row) throw new Error('keine Server-Bestätigung');
+   Object.assign(r,res.row);tr.classList.remove('unsaved');tr.classList.add('saved');markState(tr,r);
+ }catch(e){
+   tr.classList.remove('saved');tr.classList.add('unsaved');
+   alert('⚠ NICHT gespeichert: '+e.message+'\nLäuft der Server (python app.py)? Bitte erneut.');
+ }
+}
+async function rebuild(){stat.textContent='baue Statistik…';await fetch('api/rebuild',{method:'POST'});stat.textContent='Statistik neu ✓';}
+// Label-Panel schliessen: Klick ausserhalb oder Esc
+document.addEventListener('mousedown',e=>{const lp=document.getElementById('lp');
+ if(lp.style.display==='block'&&!lp.contains(e.target)&&!e.target.closest('.lc'))lp.style.display='none';});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.getElementById('lp').style.display='none';});
+// Am Telefon startet der Filterblock zugeklappt.
+if(window.innerWidth<900){const f=document.querySelector('.fltm'); if(f)f.open=false;}
+load();
+</script></body></html>

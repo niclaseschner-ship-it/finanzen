@@ -16,7 +16,7 @@ import json, os, sys
 import db
 
 PFAD     = os.path.join(db.BASE, "konfig.json")
-BEISPIEL = os.path.join(db.BASE, "konfig.beispiel.json")
+BEISPIEL = os.path.join(db.PROJEKT, "konfig.beispiel.json")   # Vorlage liegt im Repo, nicht im Datenordner
 
 
 class KonfigFehler(RuntimeError):

@@ -20,6 +20,9 @@ def _seite(datei):
 def vermoegen_daten():
     """Vermoegens-Snapshot aus dem eigenstaendigen Modul (liest nur Saldenl, nie Umsaetze).
     Lazy importiert, damit die App auch startet, wenn das Modul fehlt."""
+    if not os.path.exists(os.path.join(db.BASE, "vermoegen", "positionen.json")):
+        return {"fehler": "Noch nicht eingerichtet: vermoegen/positionen.json fehlt. Vorlage: "
+                          "vermoegen/positionen.beispiel.json (kopieren und ausfüllen)."}
     try:
         p = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "vermoegen")
         if p not in sys.path:
@@ -614,6 +617,9 @@ def kopfleiste(aktiv):
     return ('<header class=fkopf><div class=fkopf-in>'
             '<a class=marke href="./"><img src="icon-192.png" alt=""><span>Finanzen</span></a>'
             f'<nav class=fnav aria-label="Bereiche">{links}</nav>'
+            + ('<span class=demo-hinweis title="Erfundener Demo-Haushalt. Eigene Daten einrichten: '
+               'python scripts/einrichten.py oder der Skill finanz-einrichtung.">Beispieldaten</span>'
+               if db.DEMO_MODUS else '') +
             '<a class=ansicht href="./?ansicht=handy" title="Zur Handy-Ansicht wechseln">'
             '<svg width=16 height=16 viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=2 '
             'stroke-linecap=round><rect x=7 y=2.5 width=10 height=19 rx=2.5 /><path d="M11 18.5h2"/></svg>'
@@ -912,6 +918,14 @@ class H(http.server.BaseHTTPRequestHandler):
         self._send(404, "{}")
 
 if __name__ == "__main__":
+    if db.DEMO_MODUS and not os.path.exists(db.DB_PATH):
+        # Frischer Klon ohne eigene Daten: den Demo-Haushalt einmal anlegen, dann laeuft
+        # die App sofort. Eigene Daten richtet einrichten.py bzw. der Skill ein.
+        print("Noch keine eigenen Daten — lege den Demo-Haushalt an (einmalig, ~1 Minute) ...")
+        import subprocess
+        subprocess.run([sys.executable, os.path.join(db.PROJEKT, "beispieldaten", "erzeugen.py")], check=True)
+    if db.DEMO_MODUS:
+        print("DEMO-MODUS: erfundener Haushalt aus beispieldaten/demo/. Eigene Daten: python einrichten.py")
     seed_labels()
     print(f"Finanzen:  http://127.0.0.1:{PORT}{BASIS}/   (NICHT 'localhost' -> langsam; Strg+C beendet)")
     socketserver.ThreadingTCPServer.allow_reuse_address = True

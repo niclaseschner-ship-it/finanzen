@@ -8,9 +8,23 @@ import os, sqlite3, datetime, re, pathlib
 # Defaults = bisheriges Setup (damit ein bestehender Lauf unverändert weiterläuft).
 # BASE = der Projektordner. Default: der Ordner, in dem dieses Repo liegt (nicht ein
 # fester Pfad) -> ein Clone läuft ohne Env-Variablen und ohne Code-Änderung.
-BASE     = os.environ.get("FINANZEN_BASE", os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-# Eingang für Bank-CSV-Exporte (= Upload-Ziel der Import-Seite). Liegt im Projekt,
-# damit das Projekt keine Ordner außerhalb braucht.
+#
+# Demo-Modus: Wer das Repo frisch klont, hat noch keine eigenen Daten. Dann arbeitet alles
+# automatisch mit dem erfundenen Demo-Haushalt in beispieldaten/demo/ — ohne Variable,
+# ohne Schalter. Sobald im Projektordner eigene Daten liegen (konfig.json oder
+# finanzen.db), gilt der Projektordner. Demo und eigene Daten liegen dadurch nie im selben
+# Ordner, und ein `git pull` bringt keine Demo-Dateien zwischen die eigenen Exporte.
+PROJEKT  = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DEMO_DIR = os.path.join(PROJEKT, "beispieldaten", "demo")
+if os.environ.get("FINANZEN_BASE"):
+    BASE = os.environ["FINANZEN_BASE"]
+elif any(os.path.exists(os.path.join(PROJEKT, n)) for n in ("konfig.json", "finanzen.db")):
+    BASE = PROJEKT
+else:
+    BASE = DEMO_DIR
+DEMO_MODUS = os.path.realpath(BASE) == os.path.realpath(DEMO_DIR)
+# Eingang für Bank-CSV-Exporte. Liegt im Datenordner, damit das Projekt keine Ordner
+# außerhalb braucht.
 BANK_DIR = os.environ.get("FINANZEN_BANK", os.path.join(BASE, "konten"))
 # Zusammengeführte Konto-CSV, die parse_konten.py aus allen Exporten baut.
 BANK_CSV = os.environ.get("FINANZEN_BANK_CSV", os.path.join(BASE, "output", "transaktionen.csv"))
@@ -25,7 +39,7 @@ STEUER_DIR = os.path.dirname(BANK_DIR)
 # Mit eigenem Datenordner (FINANZEN_BASE: Demo-Haushalt, Tests, zweite Instanz) nie still die
 # zentrale DB einblenden — dort liegen echte Mails, die Demo bekaeme sonst echte Belege.
 # Dann gilt sie nur, wenn FINANZEN_MAILDB ausdruecklich gesetzt ist.
-_MAILDB_STANDARD = "" if os.environ.get("FINANZEN_BASE") else "/srv/mail-db"
+_MAILDB_STANDARD = "" if (os.environ.get("FINANZEN_BASE") or DEMO_MODUS) else "/srv/mail-db"
 MAILDB_DIR = os.environ.get("FINANZEN_MAILDB", _MAILDB_STANDARD)
 MAILDB_PATH = os.path.join(MAILDB_DIR, "mails.db") if MAILDB_DIR else ""
 MAILDB_AKTIV = bool(MAILDB_PATH) and os.path.exists(MAILDB_PATH)

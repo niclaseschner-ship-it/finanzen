@@ -1,0 +1,115 @@
+<!doctype html><html lang=de><head><script src="daten.js"></script><script src="demo.js"></script><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><title>Finanzen · Reisen</title>
+<style>
+ body{font-family:system-ui,Arial,sans-serif;margin:0;background:var(--bg);color:var(--text);font-size:14px}
+ .bar{position:sticky;top:0;background:var(--fl);padding:10px;border-bottom:1px solid var(--linie);display:flex;gap:10px;align-items:center;z-index:5;flex-wrap:wrap}
+ a{color:var(--text2);text-decoration:none;font-weight:600}
+ .wrap{padding:16px 28px;max-width:1500px;margin:0 auto}
+ .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:8px 0 18px}
+ .kpi{background:var(--fl);border:1px solid var(--linie);border-radius:12px;padding:14px}
+ .kpi .v{font-size:22px;font-weight:700}.kpi .l{color:var(--text2);font-size:12px;margin-top:3px}
+ table{width:100%;border-collapse:collapse}td,th{padding:7px 8px;border-bottom:1px solid var(--linie);vertical-align:top}
+ th{position:sticky;top:48px;background:var(--fl);color:var(--text2);text-align:left}
+ .r{text-align:right;white-space:nowrap}
+ input{background:var(--fl2);color:var(--text);border:1px solid var(--linie);border-radius:7px;padding:5px 7px;font-size:13px}
+ .nm{width:230px} .b{background:var(--fl2);border:1px solid var(--linie);color:var(--text);border-radius:6px;padding:4px 9px;cursor:pointer;font-weight:600}
+ .b.ok{background:var(--akzent-fl);border-color:var(--akzent);color:var(--akzent-text)} .b.no{background:var(--rot-fl);border-color:var(--rot);color:var(--rot)}
+ .pill{font-size:11px;border-radius:6px;padding:1px 7px}
+ .s-confirmed{background:var(--akzent-fl);color:var(--akzent-text)}.s-candidate{background:var(--linie);color:var(--text)}.s-rejected{background:var(--rot-fl);color:var(--rot)}
+ tr.rej{opacity:.45} .hint{color:var(--leise);font-size:12px} #msg{margin-left:auto;color:var(--text2)}
+ .cnt{background:var(--fl2);border:1px solid var(--linie);color:var(--text);border-radius:6px;padding:2px 8px;cursor:pointer;font-size:13px}
+ .orte{color:var(--blau)} #ov{position:fixed;inset:0;background:#000a;display:none;z-index:60;align-items:center;justify-content:center}
+ #mod{background:var(--fl);border:1px solid var(--linie);border-radius:12px;max-width:780px;width:92%;max-height:82vh;overflow:auto;padding:16px}
+ .prodc{color:var(--akzent-text)}
+ #detail{margin-top:8px}
+
+ /* Handy: breite Tabellen scrollen in sich selbst, statt die ganze Seite
+    seitlich zu schieben. Alle Spalten bleiben erreichbar. */
+ @media(max-width:760px){
+  .wrap{padding:12px}
+  table{display:block;overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch}
+ }
+ .zur{display:none;color:var(--akzent)}
+@media(max-width:900px){
+  /* Am Telefon ersetzt der Weg zurueck zur Uebersicht die siebenteilige
+     Navigationsleiste. Die Filter der Seite bleiben stehen. */
+  .bar>a:not(.zur),.bar>b{display:none}
+  .zur{display:inline-block!important;font-size:15px}
+ }
+</style><link rel=stylesheet href="stil.css">
+<meta name=theme-color content="#f4f3ef" media="(prefers-color-scheme: light)">
+<meta name=theme-color content="#0f1215" media="(prefers-color-scheme: dark)">
+<link rel=icon href="icon-192.png">
+</head><body>
+<script src="shared.js"></script>
+<header class=fkopf><div class=fkopf-in><a class=marke href="start.html"><img src="icon-192.png" alt=""><span>Finanzen</span></a><nav class=fnav aria-label="Bereiche"><a href="start.html">Übersicht</a><a href="editor.html">Buchungen</a><a href="statistik.html">Statistik</a><a href="vertraege.html">Verträge</a><a href="reisen.html" class=an aria-current=page>Reisen</a><a href="vermoegen.html">Vermögen</a><a href="vorsorge.html">Vorsorge</a></nav><a class=demo-hinweis href="https://github.com/niclaseschner-ship-it/finanzen" title="Erfundener Haushalt. Änderungen bleiben nur in diesem Browser-Tab. Zum Projekt auf GitHub.">Demo · zum Projekt</a><a class=ansicht href="handy.html" title="Zur Handy-Ansicht wechseln"><svg width=16 height=16 viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=2 stroke-linecap=round><rect x=7 y=2.5 width=10 height=19 rx=2.5 /><path d="M11 18.5h2"/></svg><span>Handy-Ansicht</span></a></div></header>
+<div class=bar> 
+       <span>Jahr: <select id=yr onchange=draw()></select></span>
+ <label class=hint><input type=checkbox id=hiderej onchange=draw()> abgelehnte ausblenden</label>
+ <span id=msg></span>
+</div>
+<div class=wrap>
+<div class=kpis id=kpis></div>
+<p class=hint>Reise = zusammenhängend >2 Tage außerhalb der Heimatregion (mehrere Orte = EINE Reise).
+Bestätige echte Reisen (✓) oder lehne Transit/Tagesausflüge ab (✗). Klick auf „Buchungen" zeigt, was dazugehört.</p>
+<table><thead><tr><th>Status</th><th>Name</th><th>Zeitraum</th><th>Orte</th>
+<th class=r>Buchungen</th><th class=r>Kosten</th></tr></thead><tbody id=tb></tbody></table>
+<h3 id=dh style="margin-top:22px"></h3><div id=detail></div>
+</div>
+<script>
+let T=[], FS;
+const fmt=x=>Math.round(x).toLocaleString('de-DE');
+const esc=s=>{const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML.replace(/"/g,'&quot;').replace(/'/g,'&#39;');};  // textContent maskiert " nicht — in value="..." waere das eine Luecke
+async function load(){ await BK.init(); T=await (await fetch('api/trips')).json();
+ const ys=[...new Set(T.flatMap(t=>[t.start.slice(0,4),t.ende.slice(0,4)]))].sort();
+ yr.innerHTML=['Alle',...ys].map(y=>`<option>${y}</option>`).join(''); yr.value=ys[ys.length-1]||'Alle';
+ FS=BK.filterState('reisen'); const s=FS.load();   // Filter über Seitenwechsel merken
+ if(s){ if(s.yr!=null&&[...yr.options].some(o=>o.value===s.yr))yr.value=s.yr;
+   if(s.hiderej!=null)document.getElementById('hiderej').checked=s.hiderej; }
+ draw(); }
+function kpis(){
+ const y=document.getElementById('yr').value, inY=t=>y==='Alle'||(t.start.slice(0,4)<=y&&t.ende.slice(0,4)>=y);
+ const ok=T.filter(t=>t.status==='confirmed'&&inY(t)), cand=T.filter(t=>t.status==='candidate'&&inY(t));
+ const sum=ok.reduce((s,t)=>s+t.kosten,0);
+ document.getElementById('kpis').innerHTML=[
+  ['Bestätigte Reisen',ok.length],['Summe (bestätigt)',fmt(sum)+' €'],
+  ['Ø pro Reise',ok.length?fmt(sum/ok.length)+' €':'–'],['offen (zu prüfen)',cand.length]
+ ].map(([l,v])=>`<div class=kpi><div class=v>${v}</div><div class=l>${esc(l)}</div></div>`).join('');
+}
+function draw(){
+ kpis(); const hide=document.getElementById('hiderej').checked, y=document.getElementById('yr').value;
+ if(FS)FS.save({yr:y,hiderej:hide});
+ const tb=document.getElementById('tb'); tb.innerHTML='';
+ for(const t of T){
+  if(hide&&t.status==='rejected')continue;
+  if(y!=='Alle' && !(t.start.slice(0,4)<=y && t.ende.slice(0,4)>=y))continue;
+  const tr=document.createElement('tr'); if(t.status==='rejected')tr.className='rej';
+  tr.innerHTML=`<td><button class="b ok" data-a=confirmed title="echte Reise">✓</button>
+     <button class="b no" data-a=rejected title="kein Urlaub">✗</button>
+     <div class="pill s-${t.status}">${t.status}</div></td>
+   <td><input class=nm value="${esc(t.name)}" placeholder="${esc(t.orte.split(',')[0]||t.start)}"></td>
+   <td>${t.start} … ${t.ende}<div class=hint>${t.tage} Tage</div></td>
+   <td class=orte>${esc(t.orte)}</td>
+   <td class=r><button class=cnt>${t.n} ▸</button></td>
+   <td class=r>${fmt(t.kosten)} €</td>`;
+  tr.querySelector('.nm').onchange=e=>save(t,{name:e.target.value});
+  tr.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>save(t,{status:b.dataset.a}));
+  tr.querySelector('.cnt').onclick=()=>showTx(t);
+  tb.appendChild(tr);
+ }
+}
+function showTx(t){    // Buchungen INLINE darunter (gleiche Detailtabelle wie überall)
+ document.getElementById('dh').textContent='🏖️ '+(t.name||t.orte)+'  ('+t.start+' … '+t.ende+')';
+ BK.loadInto('detail','api/rows?trip='+encodeURIComponent(t.id));
+ document.getElementById('dh').scrollIntoView({behavior:'smooth',block:'start'});
+}
+async function save(t,patch){
+ document.getElementById('msg').textContent='speichere…';
+ const res=await (await fetch('api/trip_edit',{method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({id:t.id,...patch})})).json();
+ if(res.trips)T=res.trips;
+ document.getElementById('msg').textContent='gespeichert ✓';
+ draw();
+}
+load();
+</script></body></html>

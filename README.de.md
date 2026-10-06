@@ -15,50 +15,83 @@ auf deinem Rechner, ohne Konto bei irgendwem, und jede Zuordnung ist begründet.
 
 [![Übersicht](docs/bilder/uebersicht.png)](docs/bilder/uebersicht.png)
 
-## In 30 Sekunden ausprobieren — ohne eigene Daten
+**[▶ Live-Demo im Browser](https://niclaseschner-ship-it.github.io/finanzen/demo/)** — die echte
+App mit einem erfundenen Haushalt, ohne Installation. Am Handy öffnet sich die Handy-Ansicht.
 
-Ein kompletter, erfundener Beispielhaushalt über 18 Monate im echten Bankformat:
+## Ausprobieren — ohne eigene Daten
 
 ```bash
 git clone https://github.com/niclaseschner-ship-it/finanzen.git
 cd finanzen
-python beispieldaten/erzeugen.py     # Daten + Konfiguration anlegen, Pipeline laufen lassen
+python scripts/app.py        # -> http://localhost:8765/finanzen/
 ```
 
-Das Skript sagt dir am Ende, wie du den Server startest. Die Demo hat ihre **eigene
-Datenbank** in `beispieldaten/demo/` — sie fasst nichts an, und `beispieldaten/demo/`
-löschen macht sie spurlos wieder weg.
+Solange keine eigenen Daten da sind, zeigt die App einen **kompletten erfundenen Haushalt**:
+18 Monate, zwei Konten in zwei Bankformaten, Gehalt, Miete, Fixkosten, eine vermietete
+Wohnung mit Darlehen, Tagesgeld und Depot, Bestellmails als echtes mbox, zwei Reisen. Er wird
+beim ersten Start in `beispieldaten/demo/` angelegt — eigene Datenbank, eigene Konfiguration,
+oben rechts als „Beispieldaten“ markiert. Neu erzeugen: `python beispieldaten/erzeugen.py`.
 
-| Buchungen | Statistik | Verträge | Reisen |
+| Buchungen | Statistik | Verträge | Vermögen |
 |---|---|---|---|
-| [![Buchungen](docs/bilder/editor.png)](docs/bilder/editor.png) | [![Statistik](docs/bilder/statistik.png)](docs/bilder/statistik.png) | [![Verträge](docs/bilder/vertraege.png)](docs/bilder/vertraege.png) | [![Reisen](docs/bilder/reisen.png)](docs/bilder/reisen.png) |
-| Kategorie, Labels — und die Begründung | Einnahmen, Ausgaben, Kategorien im Verlauf | Fixkosten, allein aus der Wiederholung erkannt | Urlaube, allein aus den Einkaufsorten erkannt |
+| [![Buchungen](docs/bilder/editor.png)](docs/bilder/editor.png) | [![Statistik](docs/bilder/statistik.png)](docs/bilder/statistik.png) | [![Verträge](docs/bilder/vertraege.png)](docs/bilder/vertraege.png) | [![Vermögen](docs/bilder/vermoegen.png)](docs/bilder/vermoegen.png) |
+| Kategorie, Labels — und die Begründung | Einnahmen, Ausgaben, Kategorien im Verlauf | Fixkosten, allein aus der Wiederholung erkannt | Konten, Depot, Immobilie, Kredit |
 
 ### Am Handy
 
 Dieselbe Adresse öffnet am Telefon eine installierbare App (PWA): der Monat gegen den
 Zwölfmonatsschnitt, Buchungen mit Suche, und eine **Prüfliste** für alles, was die Automatik
 nur geraten hat — „Passt“ oder „Ändern“ mit einem Tipp. Umschalten zwischen beiden Ansichten
-geht jederzeit (`?ansicht=handy` / `?ansicht=desktop`).
+geht jederzeit.
 
 [![Handy-App](docs/bilder/handy.png)](docs/bilder/handy.png)
 
-Die Demo bringt auch **Beleg-Mails** mit (als echtes mbox, genau wie Thunderbird es
-anlegt) — die Belegverknüpfung lässt sich also sofort sehen. Sie zeigt absichtlich auch,
-was **nicht** aufgeht: ein paar Händler bleiben `unkategorisiert`, statt geraten zu werden.
-Ohne eigene Daten leer bleibt nur die **Vermögens**-Ansicht (die braucht gepflegte Zahlen);
-die Vorsorge-Rechnung lässt sich sofort durchspielen.
+Die Demo zeigt absichtlich auch, was **nicht** aufgeht: ein paar Händler bleiben
+`unkategorisiert`, statt geraten zu werden, eine erkannte Reise und zwei Verträge warten auf
+Bestätigung.
 
 ## Wie es funktioniert
 
-Eine SQLite-Datei ist die einzige Wahrheit; alle Auswertungen werden daraus
-**reproduzierbar** neu berechnet. Buchungen kommen 1:1 aus den Bankdaten und werden nie
-erfunden; Kategorien und Labels sind eine ableitbare Schicht, die jederzeit neu rechenbar
-ist. Nichts wird still gelöscht — Status statt Löschen.
+Rohe **Kontoauszüge** — ergänzt um **E-Mail-Belege** — werden zu einer durchsuchbaren,
+kategorisierten Ausgaben-Statistik. Eine SQLite-Datei ist die einzige Wahrheit; alle
+Auswertungen werden daraus **reproduzierbar** neu berechnet.
 
-Unterstützt werden die CSV-Exporte von **DKB** und **GLS**. Andere Banken brauchen ein
-paar Zeilen in [`scripts/parse_konten.py`](scripts/parse_konten.py) — Beiträge willkommen,
-siehe [Mitarbeiten](#mitarbeiten).
+**Datenquellen**
+
+- 🏦 **Bank-Konten (CSV)** — Format wird automatisch erkannt, Überlappungen mehrerer Exporte
+  werden dedupliziert. Die Buchung ist die Wahrheit der Geldflüsse. Unterstützt: **DKB** und
+  **GLS**; andere Banken brauchen ein paar Zeilen in
+  [`scripts/parse_konten.py`](scripts/parse_konten.py) — Beiträge willkommen.
+- 📧 **E-Mail-Postfächer** (mbox, z. B. aus Thunderbird) — liefern Belege und Produktdetails,
+  „PayPal *Ref" wird so zu „Laufschuhe". Nur als Kontext, nie als Buchung.
+- 🗺️ **OpenStreetMap** — unbekannte Kartenhändler werden einmalig nachgeschlagen (Branche →
+  Kategorie) und zwischengespeichert. Kein Schlüssel, keine Beträge nach außen.
+- 🧠 **KI, nur für den Rest** — für unklare Restposten ein prüfbarer Vorschlag mit Konfidenz
+  und Begründung. Die eigene Korrektur schlägt immer alles.
+
+**Ablauf** — eine idempotente Pipeline (`scripts/run_all.py`), beliebig oft wiederholbar;
+manuelle Entscheidungen bleiben über stabile Buchungs-IDs erhalten:
+
+1. **Konten zusammenführen** — alle Exporte vereinen, Überlappungen robust deduplizieren
+2. **Einlesen + Systemgrenze** — interne Umbuchungen raus, Sparen/Kredit/Einnahme markieren
+3. **Anreichern** — Zahlungsart, Händler, Ort, echtes Kaufdatum, Gläubiger-ID, wiederkehrend
+4. **Belege abgleichen** — Buchung ↔ Mail (Bestellnummer, PayPal-ID, Betrag+Händler+Datum)
+5. **Kategorisieren** — Regeln, Reisen, Verträge; genau eine Kategorie, beliebig viele Labels
+6. **Auswerten** — jede Frage ist Filter + Gruppierung über dieselben Buchungen
+
+**Der Kategorisierungs-Trichter** — von der sichersten Quelle zur unsichersten; was nicht
+greift, fällt nie weg, sondern landet sichtbar in „Sonstiges":
+Systemgrenze (eigene Konten, Kontenkarte) → Regeln (Gläubiger-ID vor Händler-Stichwort) →
+Branchen-Nachschlag → KI-Vorschlag → manuelle Korrektur (schlägt alles) → Reise-Erkennung
+(stempelt bestätigte Reisen auf „Urlaub").
+
+**Prinzipien**
+
+- **Rohdaten unantastbar** — Buchungen kommen 1:1 aus der Bank und werden nie erfunden.
+  Kategorien und Labels sind eine ableitbare Schicht.
+- **Nichts fällt still weg** — Status statt Löschen.
+- **Mechanik vor KI** — deterministische Regeln zuerst; die KI ist das Skalpell für den Rest.
+- **Alles lokal** — reine Standardbibliothek, kein Cloud-Dienst.
 
 ## 🧾 Belege aus E-Mails — was war eigentlich in dem Paket?
 
@@ -133,9 +166,24 @@ doppelte Buchführung. Und die CSV-Formate sind bisher **DKB und GLS**.
   wird neben die erzeugte Seite gelegt — die Seite trägt alle Buchungen in sich, da hat
   ein Skript von fremdem Server nichts zu suchen.
 
-## Einrichtung
-Es gibt **nichts zu installieren** außer Python — die Arbeit ist Konfiguration. Der
-geführte Weg liest die Kontoexporte und fragt nur, was in keiner CSV steht:
+## Von der Demo zu den eigenen Zahlen
+
+Es gibt **nichts zu installieren** außer Python — die Arbeit ist Konfiguration. Der Weg ist
+derselbe Haushalt, Bereich für Bereich durch die eigenen Daten ersetzt:
+
+1. **Konten und Kontenkarte** — eigene CSV-Exporte nach `konten/` (mindestens 12 Monate),
+   dann `python scripts/einrichten.py`. Es liest die Exporte und fragt nur, was in keiner CSV
+   steht (welche Konten die eigenen sind, Heimatorte). Sobald `konfig.json` im Projektordner
+   liegt, zeigt die App die eigenen Zahlen; die Demo bleibt in `beispieldaten/demo/` liegen.
+2. **Belege** (optional) — `python scripts/einrichten.py --mail` liest mbox-Dateien, z. B. aus
+   Thunderbird.
+3. **Vermögen** (optional) — `vermoegen/positionen.beispiel.json` nach
+   `vermoegen/positionen.json` kopieren und ausfüllen; die Demo zeigt, wie es aussieht.
+4. **Vorsorge** — direkt auf der Seite; die Istwerte kommen aus den Buchungen.
+
+Wer Claude Code nutzt, startet den mitgelieferten Skill **`finanz-einrichtung`**
+([`.claude/skills/`](.claude/skills/)): er geht diese Schritte mit, prüft die Vorschläge,
+bevor sie in die Konfiguration wandern, und zweifelt das Ergebnis an.
 
 ```bash
 cd scripts
@@ -143,10 +191,6 @@ python einrichten.py --pruefen   # rein lesend: was steckt in den Exporten?
 python einrichten.py             # erzeugt konfig.json
 python einrichten.py --mail      # optional: Belege aus Thunderbird
 ```
-
-Wer Claude Code nutzt, kann stattdessen den mitgelieferten Skill
-`finanz-einrichtung` ([`.claude/skills/`](.claude/skills/)) starten — der geht
-zusätzlich das Ergebnis durch und sucht nach typischen Einrichtungsfehlern.
 
 **Jeden Monat:** neue Exporte nach `konten/` und `python run_all.py`. Eine Import-Seite gibt
 es bewusst nicht. Mit Claude Code übernimmt das der Skill `finanz-monatsimport`: er prüft,
@@ -185,8 +229,8 @@ Umgebungsvariable überschreibbar:
 
 | Env-Variable | Default | Bedeutung |
 |---|---|---|
-| `FINANZEN_BASE` | der Ordner dieses Repos | Projektordner: DB, `output/`, `attachments/` |
-| `FINANZEN_BANK` | `<BASE>\konten` | Eingang für Bank-CSV-Exporte (= Upload-Ziel) |
+| `FINANZEN_BASE` | der Ordner dieses Repos — bzw. `beispieldaten/demo/`, solange dort keine eigenen Daten (`konfig.json`, `finanzen.db`) liegen | Datenordner: DB, `output/`, `attachments/` |
+| `FINANZEN_BANK` | `<BASE>\konten` | Eingang für Bank-CSV-Exporte |
 | `FINANZEN_BANK_CSV` | `<BASE>\output\transaktionen.csv` | zusammengeführte Konto-CSV |
 | `FINANZEN_PORT` | `8765` | Port des Servers — eigener Port, wenn eine zweite Instanz (z.B. die Demo) parallel laufen soll |
 
@@ -198,21 +242,12 @@ Umgebungsvariablen. Setzen muss man sie nur, wenn Daten woanders liegen sollen:
 set FINANZEN_BANK=D:\bank-exporte
 ```
 
-## Schnellstart
-1. **Bank-Exporte ablegen:** DKB-/GLS-CSV nach `konten/` kopieren. Format wird automatisch erkannt.
-   Sinnvoll sind mindestens 12 Monate — Vertrags- und Reise-Erkennung brauchen
-   Wiederholungen.
-2. **Konfiguration anlegen:** `python scripts/einrichten.py` (oder die Vorlage
-   `konfig.beispiel.json` von Hand ausfüllen). Prüfen: `python scripts/konfig.py`.
-3. **Pipeline laufen lassen** (idempotent, beliebig oft wiederholbar):
-   ```bash
-   cd scripts
-   python run_all.py
-   ```
-4. **Editor/Statistik starten:**
-   ```bash
-   python app.py     # -> http://localhost:8765/finanzen/
-   ```
+## Schnellstart (eigene Daten, ohne Assistent)
+1. DKB-/GLS-CSV nach `konten/` kopieren (mindestens 12 Monate).
+2. `python scripts/einrichten.py` — oder die Vorlage `konfig.beispiel.json` als `konfig.json`
+   von Hand ausfüllen. Prüfen: `python scripts/konfig.py`.
+3. `cd scripts && python run_all.py` (idempotent, beliebig oft wiederholbar)
+4. `python app.py` → http://localhost:8765/finanzen/
 
 ## Die Seiten (alle unter http://localhost:8765/finanzen/)
 - **Übersicht** (`/finanzen/`) — der Monat gegen den Durchschnitt, Kennzahlen, Kategorien.
@@ -224,6 +259,8 @@ set FINANZEN_BANK=D:\bank-exporte
   bestätigen/ablehnen, aktiv/ausgelaufen.
 - **Reisen** (`/finanzen/reisen`) — automatisch erkannte Reisen (zusammenhängend außerhalb der
   Heimatregion), bestätigen → Buchungen werden zu „Urlaub".
+- **Vermögen** (`/finanzen/vermoegen`) — Konten, Depot, Immobilien mit Bewertungsspanne, Kredite.
+- **Vorsorge** (`/finanzen/vorsorge`) — Ruhestandsplanung Jahr für Jahr, mit Istwerten aus den Buchungen.
 
 ## Aufbau
 - `scripts/` — der Kern (Pipeline + Server). Details & Reihenfolge: [`PROCESS.md`](PROCESS.md).
@@ -232,8 +269,8 @@ set FINANZEN_BANK=D:\bank-exporte
 - `vermoegen/` — Vermögens-Snapshot (Salden/Bestände statt Umsätze), eigener Lauf.
 - `konten/` — **Eingang** für Bank-CSV-Exporte · `output/` — generierte Seiten ·
   `attachments/` — gespeicherte Mailanhänge · `finanzen.db` — die Datenbank.
-- `beispieldaten/` — erfundener Demo-Haushalt zum Ausprobieren · `demo/` — anonymisierte
-  Beispielseite · `docs/bilder/` — Screenshots ·
+- `beispieldaten/` — Generator des erfundenen Demo-Haushalts · `demo/` — die Online-Demo:
+  die echten Seiten mit dem Demo-Haushalt, gebaut von `demo/bauen.py` · `docs/bilder/` — Screenshots ·
   [`DECISIONS.md`](DECISIONS.md) — Protokoll der Entscheidungen.
 - `tests/` — Tests, reine Standardbibliothek: `python -m unittest discover -s tests -t tests`
 

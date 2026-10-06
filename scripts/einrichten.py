@@ -17,10 +17,14 @@ Detailspalte bleibt leerer.
 import json, os, re, shutil, subprocess, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Einrichten gilt immer den EIGENEN Daten im Projektordner — auch solange die App mangels
+# eigener Daten noch den Demo-Haushalt zeigt. Sonst landete die eigene konfig.json im
+# Demo-Ordner. Ein ausdrücklich gesetztes FINANZEN_BASE geht vor.
+os.environ.setdefault("FINANZEN_BASE", os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import db, enrich, parse_konten, rules
 
 KONFIG   = os.path.join(db.BASE, "konfig.json")
-BEISPIEL = os.path.join(db.BASE, "konfig.beispiel.json")
+BEISPIEL = os.path.join(db.PROJEKT, "konfig.beispiel.json")
 
 try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")

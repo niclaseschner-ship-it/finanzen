@@ -1,0 +1,166 @@
+<!doctype html><html lang=de><head><script src="daten.js"></script><script src="demo.js"></script><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><title>Finanzen · Vermögen</title>
+<style>
+ body{font-family:system-ui,Arial,sans-serif;margin:0;background:var(--bg);color:var(--text);font-size:14px}
+ .bar{position:sticky;top:0;background:var(--fl);padding:10px;border-bottom:1px solid var(--linie);display:flex;gap:10px;align-items:center;z-index:5;flex-wrap:wrap}
+ a{color:var(--text2);text-decoration:none;font-weight:600} a:hover{color:var(--text)}
+ .wrap{padding:16px 26px 80px;max-width:1500px;margin:0 auto}
+ h1{font-size:22px;margin:8px 0 2px} h2{font-size:15px;margin:0 0 10px;color:var(--text)}
+ .sub{color:var(--text2);max-width:900px;line-height:1.55;margin:2px 0 14px}
+ .grp{background:var(--fl);border:1px solid var(--linie);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+ .grp h2{border-bottom:1px solid var(--linie);padding-bottom:7px}
+ .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-bottom:14px}
+ .kpi{background:var(--fl);border:1px solid var(--linie);border-radius:12px;padding:13px 14px}
+ .kpi .v{font-size:22px;font-weight:700}.kpi .l{color:var(--text2);font-size:12px;margin-top:3px}
+ .kpi .s{color:var(--leise);font-size:11px;margin-top:2px}
+ .kpi.hero .v{font-size:26px;color:var(--text)}
+ .neg{color:var(--rot)}.pos{color:var(--akzent-text)}
+ .cbar{display:flex;height:32px;border-radius:8px;overflow:hidden;gap:2px}
+ .cbar div{min-width:3px}
+ .leg{margin-top:12px;display:grid;gap:8px}
+ .lg{display:flex;align-items:center;gap:10px;font-size:13px}
+ .lg .sw{width:11px;height:11px;border-radius:3px;flex:none}
+ .lg .n{flex:1;color:var(--text)}
+ .lg .v{font-weight:700;font-variant-numeric:tabular-nums}
+ .lg .p{color:var(--leise);width:46px;text-align:right;font-variant-numeric:tabular-nums}
+ table.det{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+ table.det td{padding:9px 8px;border-bottom:1px solid var(--linie);vertical-align:top}
+ table.det tr:last-child td{border-bottom:none}
+ table.det td.nm{color:var(--text);font-weight:600}
+ table.det td.nm span{display:block;color:var(--leise);font-size:11.5px;font-weight:400;margin-top:2px;max-width:56ch;line-height:1.45}
+ table.det td.an{color:var(--text2);text-align:right;white-space:nowrap;font-size:12px}
+ table.det td.vl{text-align:right;white-space:nowrap;font-weight:700;color:var(--text)}
+ table.det td.gt{text-align:right;white-space:nowrap;width:1%}
+ .grph td{color:var(--leise);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding-top:16px;border-bottom:1px solid var(--linie)}
+ .sumr td{border-top:1px solid var(--linie);border-bottom:none;padding-top:13px;font-size:15px;font-weight:700}
+ .bdg{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;border:1px solid var(--linie);color:var(--text2)}
+ .mk{padding:12px 0;border-bottom:1px solid var(--linie)}
+ .mk:last-child{border-bottom:none;padding-bottom:0}
+ .mk h3{font-size:13.5px;font-weight:700;margin:0 0 5px;color:var(--text)}
+ .mk p{margin:0 0 4px;color:var(--text2);font-size:12.5px;line-height:1.55}
+ .mk .nt{color:var(--leise)}
+ .mk .rs{color:var(--text);font-weight:600}
+ .disc{color:var(--leise);font-size:12px;line-height:1.6;margin-top:12px}
+ .err{background:var(--rot-fl);border:1px solid var(--rot);border-radius:12px;padding:14px 16px;color:var(--rot)}
+
+ /* Handy: breite Tabellen scrollen in sich selbst, statt die ganze Seite
+    seitlich zu schieben. Alle Spalten bleiben erreichbar. */
+ @media(max-width:760px){
+  .wrap{padding:12px}
+  table{display:block;overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch}
+ }
+ .zur{display:none;color:var(--akzent)}
+@media(max-width:900px){
+  /* Am Telefon ersetzt der Weg zurueck zur Uebersicht die siebenteilige
+     Navigationsleiste. Die Filter der Seite bleiben stehen. */
+  .bar>a:not(.zur),.bar>b{display:none}
+  .zur{display:inline-block!important;font-size:15px}
+ }
+</style><link rel=stylesheet href="stil.css">
+<meta name=theme-color content="#f4f3ef" media="(prefers-color-scheme: light)">
+<meta name=theme-color content="#0f1215" media="(prefers-color-scheme: dark)">
+<link rel=icon href="icon-192.png">
+</head><body>
+<header class=fkopf><div class=fkopf-in><a class=marke href="start.html"><img src="icon-192.png" alt=""><span>Finanzen</span></a><nav class=fnav aria-label="Bereiche"><a href="start.html">Übersicht</a><a href="editor.html">Buchungen</a><a href="statistik.html">Statistik</a><a href="vertraege.html">Verträge</a><a href="reisen.html">Reisen</a><a href="vermoegen.html" class=an aria-current=page>Vermögen</a><a href="vorsorge.html">Vorsorge</a></nav><a class=demo-hinweis href="https://github.com/niclaseschner-ship-it/finanzen" title="Erfundener Haushalt. Änderungen bleiben nur in diesem Browser-Tab. Zum Projekt auf GitHub.">Demo · zum Projekt</a><a class=ansicht href="handy.html" title="Zur Handy-Ansicht wechseln"><svg width=16 height=16 viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=2 stroke-linecap=round><rect x=7 y=2.5 width=10 height=19 rx=2.5 /><path d="M11 18.5h2"/></svg><span>Handy-Ansicht</span></a></div></header>
+<div class=bar> 
+       <span id=stand style="margin-left:auto;color:var(--text2);font-size:13px">–</span>
+</div>
+<div class=wrap>
+ <h1>Vermögen</h1>
+ <p class=sub id=sub>lädt …</p>
+ <div id=body></div>
+</div>
+<script>
+const F=['var(--kat1)','var(--kat2)','var(--kat3)','var(--kat4)'];
+const $=i=>document.getElementById(i);
+const e0=n=>(n==null?'–':Math.round(n).toLocaleString('de-DE'));
+const rng=(a,b)=>Math.abs(b-a)<1?e0(a)+' €':e0(a)+' – '+e0(b)+' €';
+const esc=s=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+function zeile(z){
+ const w=rng(z.a_min,z.a_max), neg=z.a_min<0?' neg':'';
+ const an=z.anteil_text||(z.anteil===1?'':Math.round(z.anteil*100)+' %');
+ return '<tr><td class=nm>'+esc(z.name)+'<span>'+esc(z.detail)+'</span></td>'+
+        '<td class=an>'+esc(an)+'</td><td class="vl'+neg+'">'+w+'</td>'+
+        '<td class=gt><span class=bdg>'+esc(z.guete)+'</span></td></tr>';
+}
+
+function render(d){
+ if(d.fehler){
+  // Der haeufigste Fall ist nicht ein Fehler, sondern "noch nicht eingerichtet":
+  // die Vermoegensansicht braucht gepflegte Zahlen, die in keiner Bank-CSV stehen.
+  const fehlt = /positionen\.json/i.test(d.fehler);
+  $('sub').innerHTML='';
+  $('body').innerHTML = fehlt
+    ? '<div class=err><b>Vermögensansicht noch nicht eingerichtet.</b><br><br>'
+      + 'Sie zeigt Kontostände, Depot und Immobilien auf einen Stichtag — dafür braucht sie '
+      + 'Angaben, die in keinem Kontoauszug stehen: Kaufpreise, Anteile, Kreditkonditionen.<br><br>'
+      + 'Vorlage kopieren und ausfüllen:<br>'
+      + '<code>vermoegen/positionen.beispiel.json</code> &rarr; <code>vermoegen/positionen.json</code>'
+      + '<br><br>Danach diese Seite neu laden.</div>'
+    : '<div class=err><b>Snapshot nicht berechenbar.</b><br>'+esc(d.fehler)+'</div>';
+  return;}
+ const s=d.summen, mid=(s.netto_min+s.netto_max)/2;
+ const de=d.stichtag.slice(8)+'.'+d.stichtag.slice(5,7)+'.'+d.stichtag.slice(0,4);
+ $('stand').textContent='Stand '+de;
+ $('sub').innerHTML='<b>'+esc(d.sicht)+'</b> · Stand '+de+'. '+esc(d.sicht_hinweis);
+
+ // KPIs
+ let h='<div class=kpis>'+
+  '<div class="kpi hero"><div class=v>'+rng(s.netto_min,s.netto_max)+'</div><div class=l>Nettovermögen</div>'+
+   '<div class=s>Mittelwert '+e0(mid)+' € · Spanne '+e0(s.netto_max-s.netto_min)+' €</div></div>'+
+  '<div class=kpi><div class=v>'+e0(s.anlagen)+' €</div><div class=l>Anlagen &amp; Konten</div>'+
+   '<div class=s>'+Math.round(s.anlagen/mid*100)+' % des Vermögens</div></div>'+
+  '<div class=kpi><div class=v>'+rng(s.immo_min,s.immo_max)+'</div><div class=l>Immobilien (Marktwert)</div>'+
+   '<div class=s>Anteile berücksichtigt</div></div>'+
+  '<div class=kpi><div class="v neg">'+e0(s.schulden)+' €</div><div class=l>Verbindlichkeiten</div>'+
+   '<div class=s>1,8 % fest bis 04/2032</div></div></div>';
+
+ // Zusammensetzung: Anlagen + je Immobilie netto nach zugeordnetem Darlehen
+ const immos=d.zeilen.filter(z=>z.gruppe==='immobilien');
+ const seg=[{n:'Anlagen & Konten',w:s.anlagen}];
+ immos.forEach(z=>{
+  const t=d.zeilen.filter(x=>x.gruppe==='schulden'&&x.id===z.id).reduce((a,x)=>a+x.a_min,0);
+  seg.push({n:z.name.split(',')[0],w:(z.a_min+z.a_max)/2+t});
+ });
+ const tot=seg.reduce((a,x)=>a+x.w,0);
+ h+='<div class=grp><h2>Zusammensetzung</h2><div class=cbar>'+
+    seg.map((x,i)=>'<div style="flex:'+(x.w/tot)+';background:'+F[i%4]+'"></div>').join('')+
+    '</div><div class=leg>'+seg.map((x,i)=>
+      '<div class=lg><span class=sw style="background:'+F[i%4]+'"></span><span class=n>'+esc(x.n)+
+      '</span><span class=v>'+e0(x.w)+' €</span><span class=p>'+Math.round(x.w/tot*100)+' %</span></div>'
+    ).join('')+'</div></div>';
+
+ // Bilanz
+ const grp=(t,rows)=>'<tr class=grph><td colspan=4>'+t+'</td></tr>'+rows.map(zeile).join('');
+ h+='<div class=grp><h2>Bilanz</h2><table class=det>'+
+    grp('Anlagen &amp; Konten',d.zeilen.filter(z=>z.gruppe==='anlagen'))+
+    grp('Immobilien',immos)+
+    grp('Verbindlichkeiten',d.zeilen.filter(z=>z.gruppe==='schulden'))+
+    '<tr class=sumr><td>Nettovermögen</td><td></td><td class=vl>'+rng(s.netto_min,s.netto_max)+'</td><td></td></tr>'+
+    '</table></div>';
+
+ // Depot
+ h+='<div class=grp><h2>Depot im Detail</h2><table class=det>'+d.depot.map(p=>
+   '<tr><td class=nm>'+esc(p.name)+'<span>'+esc(p.isin)+' · '+esc(p.klasse)+'</span></td>'+
+   '<td class=an>'+p.stueck.toLocaleString('de-DE',{maximumFractionDigits:3})+' St.</td>'+
+   '<td class=vl>'+e0(p.wert)+' €</td>'+
+   '<td class="gt '+((p.gv||0)>=0?'pos':'neg')+'" style="font-weight:700">'+
+   ((p.gv||0)>=0?'+':'')+e0(p.gv)+' €</td></tr>').join('')+'</table></div>';
+
+ // Herleitung
+ h+='<div class=grp><h2>Herleitung der Bewertungen</h2>'+d.methodik.map(m=>
+   '<div class=mk><h3>'+esc(m.titel)+'</h3>'+m.text.map(t=>'<p>'+esc(t)+'</p>').join('')+
+   (m.note?'<p class=nt>'+esc(m.note)+'</p>':'')+
+   (m.ergebnis?'<p class=rs>'+esc(m.ergebnis)+'</p>':'')+'</div>').join('')+'</div>';
+
+ // 'Nicht enthalten' kommt aus positionen.json (Feld nicht_enthalten) – was bewusst
+ // fehlt, ist pro Haushalt anders. Leer = Satz faellt weg statt leerer Ueberschrift.
+ h+='<p class=disc>Quellen: '+d.quellen.map(esc).join(', ')+'.<br>'+
+    'Güte: <b>exakt</b> = Kontostand bzw. aus Vertragsdaten gerechnet · <b>gut</b> = realer Ankerpreis, indexiert und gegengeprüft · <b>grob</b> = Spanne aus Vergleichsverkäufen.'+
+    (d.nicht_enthalten?'<br>Nicht enthalten: '+esc(d.nicht_enthalten):'')+'</p>';
+ $('body').innerHTML=h;
+}
+fetch('api/vermoegen').then(r=>r.json()).then(render)
+ .catch(e=>{$('body').innerHTML='<div class=err>Laden fehlgeschlagen: '+esc(e)+'</div>';});
+</script></body></html>

@@ -99,6 +99,10 @@ begrenzt alle Auswertungen; der laufende Monat bleibt immer draußen (nur vollen
 - `contracts` (erkannte Verträge/Fixkosten) · `trips` (erkannte Reisen) · `settings` (Zeitraum) · `cats_catalog`/`labels_catalog`
 
 ## Schnell-Wege
+- **Online-Demo neu bauen** (nach Änderungen an Seiten oder Daten-Funktionen):
+  `python demo/bauen.py` — die echten Seiten mit dem Demo-Haushalt, ohne Server lauffähig.
+- **Screenshots neu aufnehmen:** `python docs/bilder/aufnehmen.py` (braucht Playwright) —
+  README-Auswahl in `docs/bilder/`, alle Ansichten hell/dunkel in `docs/bilder/alle/`.
 - **Neuer Kontoexport:** CSV in `konten/` ablegen → `python run_all.py` (auf dem Pi macht das der Skill `finanz-monatsimport`; eine Import-Seite gibt es seit 06.10.2026 nicht mehr).
   Manuelle Entscheidungen bleiben erhalten (tx-id stabil).
 - **Regeln ergänzen:** Zeile in `SEED2` (breites, allgemeines Muster) ODER `konfig.json` →

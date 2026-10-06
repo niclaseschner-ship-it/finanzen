@@ -53,7 +53,7 @@ def main():
     if bis: print(f"Auswertung bis: {bis} (letzter von allen Konten voll gedeckter Monat)")
     step("8 Statistik-Seite (frontend)", frontend.run)
     step("9 Editor-/Listendaten (liste)", liste.run)
-    print("FERTIG. Editor: python app.py  ->  http://localhost:8765")
+    print("FERTIG. Ansehen: python app.py  ->  http://localhost:8765/finanzen/")
 
 if __name__ == "__main__":
     # Erwartbare Fehler (Konfiguration fehlt/unbrauchbar, kein Kontoexport) sind für den

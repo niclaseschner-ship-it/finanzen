@@ -1,0 +1,37 @@
+{
+  "name": "Finanzen (Demo)",
+  "short_name": "Finanzen",
+  "description": "Ausgaben, Buchungen, Verträge und Vermögen des Haushalts – die Handy-Ansicht der Finanz-App.",
+  "id": "/finanzen-demo",
+  "start_url": "handy.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0f1215",
+  "theme_color": "#0f1215",
+  "lang": "de",
+  "dir": "ltr",
+  "orientation": "portrait",
+  "categories": [
+    "finance"
+  ],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

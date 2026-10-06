@@ -28,6 +28,9 @@ ZWEIT  = "DE00222200000000000002"      # zweites eigenes Konto (GLS-Format)
 SPAREN = "DE00333300000000000003"      # zugeordnet: Sparen/Invest
 GEHALT = "DE00444400000000000004"      # Arbeitgeber
 MIETE  = "DE00555500000000000005"      # Vermieter — ausdrücklich NICHT intern
+TAGES  = "DE00666600000000000006"      # Tagesgeld: Ziel des Sparplans, nur in der Vermögensansicht
+DARLEHEN = "DE00777700000000000007"    # Darlehen der vermieteten Wohnung (Bausparkasse)
+MIETER = "DE00888800000000000008"      # Mieter der eigenen Wohnung
 
 R = random.Random(20260730)   # fester Startwert: gleiche Demo bei jedem Lauf
 
@@ -76,7 +79,14 @@ def buchungen():
         b.append((d(5), "Stadtwerke Musterstadt", "Abschlag Strom", -95.00, "", "Ausgang"))
         b.append((d(8), "Telekom Deutschland GmbH", "Mobilfunk", -29.99, "", "Ausgang"))
         b.append((d(10), "Netflix International", "Abo", -13.99, "", "Ausgang"))
+        # Kontoführung am Monatsletzten: ein Monat gilt erst als abgeschlossen, wenn ALLE
+        # Konten bis zu seinem Ende reichen — ohne diese Buchung endete das Zweitkonto am 10.
+        b.append((d(31), "Musterbank eG", "Kontoführungsentgelt", -4.90, "", "Ausgang"))
         b.append((d(15), "Sparen", "Sparplan", -400.00, SPAREN, "Ausgang"))
+        # --- Die vermietete Eigentumswohnung: Miete kommt, Darlehensrate geht. Daran
+        # zeigen Vermögen (Restschuld) und Vorsorge (Mietrendite) echte Zahlen.
+        b.append((d(3), "Jana Schmidt", "Miete Musterstraße 1, 2. OG", 720.00, MIETER, "Eingang"))
+        b.append((d(30), "Bausparkasse Muster", "Darlehen 000000 Rate", -550.00, DARLEHEN, "Ausgang"))
 
         # --- Alltag: Lebensmittel, Drogerie, ab und zu essen gehen, tanken.
         for _ in range(R.randint(9, 14)):
@@ -111,6 +121,14 @@ def buchungen():
             b.append((d(tag), "AMAZON PAYMENTS EUROPE S.C.A",
                       f"{nr} AMZN Mktp DE", wert, "", "Ausgang"))
             BESTELLUNGEN.append((d(tag), nr, produkt, wert))
+
+        # --- Ein verlängertes Wochenende am See: bleibt als Kandidat offen, damit die
+        # Reisen-Seite beide Zustände zeigt (bestätigt und noch zu prüfen).
+        if (jahr, monat) == monate[-6]:
+            for tag in range(16, 20):
+                emp, zweck = karte(R.choice(["Hotel Seeblick", "Fischerstube", "Faehre Konstanz",
+                                             "Bodensee Schifffahrt"]), R.choice(["Lindau", "Konstanz"]))
+                b.append((d(tag), emp, zweck, betrag(20, 140), "", "Ausgang"))
 
         # --- Die Reise: acht Tage am Stück außerhalb der Heimatregion.
         if (jahr, monat) == urlaub_monat:
@@ -172,8 +190,16 @@ def mbox_schreiben(pfad):
     return len(teile)
 
 
-def dkb_datei(pfad, iban, zeilen):
-    kopf = (f'"Girokonto";"{iban}"\n\n"Kontostand vom 31.12.2099:";"2.480,00 €"\n""\n'
+def de_betrag(x):
+    return f"{x:,.2f}".replace(",", "·").replace(".", ",").replace("·", ".")
+
+
+def dkb_datei(pfad, iban, zeilen, art="Girokonto", start=2500.0):
+    """DKB-Umsatzliste. Der Kontostand im Kopf passt zu den Buchungen (Startwert plus
+    Summe) und steht auf dem Tag der letzten Buchung — so wie die Bank ihn liefert."""
+    stand = start + sum(z[3] for z in zeilen)
+    letzter = max(z[0] for z in zeilen).strftime("%d.%m.%Y")
+    kopf = (f'"{art}";"{iban}"\n\n"Kontostand vom {letzter}:";"{de_betrag(stand)} €"\n""\n'
             '"Buchungsdatum";"Wertstellung";"Status";"Zahlungspflichtige*r";'
             '"Zahlungsempfänger*in";"Verwendungszweck";"Umsatztyp";"IBAN";"Betrag (€)";'
             '"Gläubiger-ID";"Mandatsreferenz";"Kundenreferenz"\n')
@@ -187,18 +213,21 @@ def dkb_datei(pfad, iban, zeilen):
         f.write(kopf + "\n".join(aus) + "\n")
 
 
-def gls_datei(pfad, iban, zeilen):
+def gls_datei(pfad, iban, zeilen, start=900.0):
     kopf = ("Bezeichnung Auftragskonto;IBAN Auftragskonto;BIC Auftragskonto;"
             "Bankname Auftragskonto;Buchungstag;Valutadatum;Name Zahlungsbeteiligter;"
             "IBAN Zahlungsbeteiligter;BIC (SWIFT-Code) Zahlungsbeteiligter;Buchungstext;"
             "Verwendungszweck;Betrag;Waehrung;Saldo nach Buchung;Bemerkung;"
             "Gekennzeichneter Umsatz;Glaeubiger ID;Mandatsreferenz\n")
-    aus = []
-    for datum, emp, zweck, wert, ig, _typ in zeilen:
+    aus, saldo = [], start
+    for datum, emp, zweck, wert, ig, _typ in sorted(zeilen, key=lambda z: z[0]):
+        saldo += wert                                   # 'Saldo nach Buchung' laeuft mit
         d = datum.strftime("%d.%m.%Y")
         w = f"{wert:.2f}".replace(".", ",")
+        sd = f"{saldo:.2f}".replace(".", ",")
         aus.append(f"Musterbank;{iban};GENODEM1XXX;Musterbank eG;{d};{d};{emp};{ig};BICXXX;"
-                   f"Umsatz;{zweck};{w};EUR;900,00;;;;")
+                   f"Umsatz;{zweck};{w};EUR;{sd};;;;")
+    aus.reverse()                                       # GLS liefert neueste zuerst
     with open(pfad, "w", encoding="utf-8-sig", newline="") as f:
         f.write(kopf + "\n".join(aus) + "\n")
 
@@ -215,16 +244,19 @@ KONFIG = {
                    "Gesundheit", "Kinder", "Freizeit/Hobby", "Urlaub", "Shopping/Haushalt",
                    "Abo/Digital", "Wohnen", "Gebühren", "Dienstleistung",
                    "Spenden/Geschenke", "Bargeld", "Einnahme", "Sparen/Invest",
-                   "Kredit/Immobilie", "Umbuchung intern", "PayPal (ungeklärt)", "Sonstiges"],
+                   "Kredit/Immobilie", "Immobilie Musterstadt", "Umbuchung intern",
+                   "PayPal (ungeklärt)", "Sonstiges"],
     "kategorien_immer_vertrag": [],
     "kategorien_nicht_reise": [],
-    "kategorien_kein_konsum": [],
+    "kategorien_kein_konsum": ["Immobilie Musterstadt"],
     "konten": {
         "eigene_giro": {GIRO: "Muster-Giro", ZWEIT: "Muster-Zweitkonto"},
         "weitere_intern": {},
         "zuordnung": {
             SPAREN: {"kategorie": "Sparen/Invest", "notiz": "Sparplan"},
             GEHALT: {"kategorie": "Einnahme", "notiz": "Gehalt"},
+            DARLEHEN: {"kategorie": "Immobilie Musterstadt", "notiz": "Darlehen vermietete Wohnung"},
+            MIETER: {"kategorie": "Immobilie Musterstadt", "notiz": "Miete vermietete Wohnung"},
         },
     },
     "eigene_regeln": [
@@ -232,8 +264,91 @@ KONFIG = {
          "kategorie": "Wohnen", "labels": "wohnen,miete,fixkosten"},
         {"name": "Strom", "prio": 12, "typ": "haendler_kw", "muster": "stadtwerke",
          "kategorie": "Wohnen", "labels": "strom,fixkosten"},
+        {"name": "Kontoführung", "prio": 12, "typ": "haendler_kw", "muster": "musterbank",
+         "kategorie": "Gebühren", "labels": "bank,fixkosten"},
     ],
 }
+
+
+def vermoegen_schreiben(haupt):
+    """Vermögensansicht des Demo-Haushalts: Tagesgeld (Ziel des Sparplans), ein Depot,
+    die vermietete Wohnung mit Darlehen. Gleiche Dateiformate wie im Ernstfall."""
+    import json
+    stichtag = max(z[0] for z in haupt)
+    # Tagesgeld: die Sparraten kommen hier an (Gegenbuchung zum Sparplan auf dem Giro)
+    sparen = [(z[0], "Familie Muster", "Sparplan", -z[3], GIRO, "Eingang") for z in haupt if z[4] == SPAREN]
+    eingang = os.path.join(DEMO, "vermoegen", "eingang")
+    depot = os.path.join(DEMO, "vermoegen", "depot")
+    os.makedirs(eingang, exist_ok=True); os.makedirs(depot, exist_ok=True)
+    dkb_datei(os.path.join(eingang, "Umsatzliste_Tagesgeld_Beispiel.csv"), TAGES, sparen,
+              art="Tagesgeld", start=6000.0)
+    # Depot: drei breit gestreute Fonds, erfundene Kennungen
+    pos = [("Welt-Aktien-ETF (Beispiel)", "XX0000000001", 210.0, 118.40, 96.20, "ETFs"),
+           ("Schwellenländer-ETF (Beispiel)", "XX0000000002", 150.0, 31.75, 29.10, "ETFs"),
+           ("Euro-Staatsanleihen-ETF (Beispiel)", "XX0000000003", 40.0, 148.90, 152.30, "ETFs")]
+    k = ["Datum der Erstellung", "Wertpapierbezeichnung", "ISIN", "Stückzahl",
+         "Bewertungskurs", "Einstiegskurs", "Assetklasse"]
+    zeilen = [";".join(k)] + [";".join([stichtag.strftime("%d.%m.%Y"), n, i,
+              f"{st:.4f}".replace(".", ","), f"{ku:.2f}".replace(".", ","),
+              f"{ei:.2f}".replace(".", ","), a]) for n, i, st, ku, ei, a in pos]
+    with open(os.path.join(depot, "depot-export-Beispiel.csv"), "w", encoding="utf-8-sig") as f:
+        f.write("\n".join(zeilen) + "\n")
+    erste_rate = min(z[0] for z in haupt if z[4] == DARLEHEN)
+    cfg = {
+        "_hinweis": "Vermögensaufstellung des Demo-Haushalts (erfunden). Vorlage für die eigene: "
+                    "vermoegen/positionen.beispiel.json im Repo.",
+        "stichtag": stichtag.isoformat(),
+        "sicht": "Familie Muster (Beispieldaten)",
+        "sicht_hinweis": "Erfundener Haushalt. Die vermietete Wohnung gehört beiden je zur Hälfte "
+                         "und wird voll gezählt.",
+        "spanne_hinweis": "aus der Bewertung der Wohnung",
+        "nicht_enthalten": "Auto (abgeschrieben), Mietkaution (Durchlaufposten).",
+        "konten": [
+            {"name": "Girokonto Haushalt", "iban": GIRO, "format": "dkb",
+             "datei": "konten/Umsatzliste_Girokonto_Beispiel.csv"},
+            {"name": "Zweitkonto", "iban": ZWEIT, "format": "gls",
+             "datei": "konten/Umsaetze_Zweitkonto_Beispiel.csv"},
+            {"name": "Tagesgeld", "iban": TAGES, "format": "dkb",
+             "datei": "vermoegen/eingang/Umsatzliste_Tagesgeld_Beispiel.csv"}],
+        "depots": [{"name": "Depot (Beispiel)", "datei": "vermoegen/depot/depot-export-Beispiel.csv"}],
+        "immobilien": [{
+            "id": "musterstadt", "name": "Musterstadt, Musterstraße 1",
+            "detail": "Eigentumswohnung, 68 m², 2. OG, Baujahr 1994, vermietet",
+            "anteil": 1.0, "anteil_text": "je 1/2 zwei Personen = 1/1 Haushalt", "guete": "gut",
+            "methode": "vergleichswert_index", "anker_wert": 210000,
+            "anker_datum": (erste_rate.replace(day=1)).strftime("%Y-%m"),
+            "anker_quelle": "Kaufpreis lt. Kaufvertrag, ohne Nebenkosten (erfunden)",
+            "index_name": "Beispiel-Preisindex, Eigentumswohnungen",
+            "index_von": 100.0, "index_von_stand": erste_rate.strftime("%Y-%m"),
+            "index_bis": 103.5, "index_bis_stand": stichtag.strftime("%Y-%m"),
+            "spanne_pct": 0.06,
+            "gegenprobe": "210.000 € / 68 m² = 3.088 €/m², im Rahmen vergleichbarer Wohnungen vor Ort."}],
+        "darlehen": [{
+            "id": "darlehen-musterstadt", "objekt": "musterstadt",
+            "name": "Bausparkasse Muster, Darlehen Nr. 000000", "konto": DARLEHEN,
+            "betrag": 160000.0, "zins_nominal": 0.021, "rate": 550.0,
+            "erste_rate": (erste_rate.replace(day=1) - datetime.timedelta(days=365 * 4)).replace(day=1).isoformat(),
+            "zinsbindung_bis": f"{stichtag.year + 7}-06-30", "anteil": 1.0,
+            "verifikation": "Erfundene Beispielwerte."}],
+    }
+    with open(os.path.join(DEMO, "vermoegen", "positionen.json"), "w", encoding="utf-8") as f:
+        json.dump(cfg, f, ensure_ascii=False, indent=2)
+
+
+def reisen_entscheiden(umgebung):
+    """So, wie es nach ein paar Wochen Nutzung aussieht: die große Reise ist bestätigt und
+    benannt, das Wochenende bleibt offen; die offensichtlichen Verträge sind bestätigt,
+    zwei bleiben zur Prüfung stehen. Alles über dieselben Funktionen wie in der App."""
+    code = ("import app, db\n"
+            "con=db.connect(); t=con.execute(\"select id from trips where orte like '%Vernazza%' "
+            "or orte like '%Spezia%' or orte like '%Riomaggiore%'\").fetchone()\n"
+            "offen=('telekom','netflix')\n"
+            "vtg=[r[0] for r in con.execute('select id,lower(name) from contracts') if not any(o in r[1] for o in offen)]\n"
+            "con.close()\n"
+            "t and app.trip_edit({'id': t[0], 'status': 'confirmed', 'name': 'Cinque Terre'})\n"
+            "[app.contract_edit({'id': c, 'status': 'confirmed'}) for c in vtg]\n")
+    subprocess.run([sys.executable, "-c", code], cwd=os.path.join(WURZEL, "scripts"), env=umgebung,
+                   stdout=subprocess.DEVNULL)
 
 
 def main():
@@ -241,10 +356,12 @@ def main():
     os.makedirs(KONTEN, exist_ok=True)
     alle = buchungen()
     # Zwei Konten, damit die Systemgrenze und beide Bankformate vorkommen.
-    zweit = [b for b in alle if b[1] in ("Netflix International", "Muster Versicherung AG")]
+    zweit = [b for b in alle if b[1] in ("Netflix International", "Muster Versicherung AG",
+                                          "Musterbank eG")]
     haupt = [b for b in alle if b not in zweit]
     dkb_datei(os.path.join(KONTEN, "Umsatzliste_Girokonto_Beispiel.csv"), GIRO, haupt)
-    gls_datei(os.path.join(KONTEN, "Umsaetze_Zweitkonto_Beispiel.csv"), ZWEIT, zweit)
+    vermoegen_schreiben(haupt)
+    gls_datei(os.path.join(KONTEN, "Umsaetze_Zweitkonto_Beispiel.csv"), ZWEIT, zweit, start=1800.0)
     with open(os.path.join(DEMO, "konfig.json"), "w", encoding="utf-8") as f:
         json.dump(KONFIG, f, ensure_ascii=False, indent=2)
     mbox = os.path.join(DEMO, "beleg-mails.mbox")
@@ -268,25 +385,23 @@ def main():
                        cwd=os.path.join(WURZEL, "scripts"), env=umgebung)
     if e.returncode != 0:
         return e.returncode
-    print("\nDemo ansehen — Umgebungsvariable setzen, dann Server starten:")
-    if os.name == "nt":
-        # PowerShell ist unter Windows 11 das Standard-Terminal. Dort ist `set` ein
-        # Alias fuer Set-Variable und erzeugt KEINE Umgebungsvariable — kommentarlos.
-        # Der Server liefe dann gegen die echten Daten statt gegen die Demo.
-        print("  PowerShell:")
-        print(f'    $env:FINANZEN_BASE = "{DEMO}"')
-        print('    $env:FINANZEN_PORT = "8766"')
-        print('    python scripts/app.py')
-        print("  cmd.exe:")
-        print(f'    set FINANZEN_BASE={DEMO}')
-        print('    set FINANZEN_PORT=8766')
-        print('    python scripts/app.py')
-    else:
-        print(f'  FINANZEN_BASE="{DEMO}" FINANZEN_PORT=8766 python scripts/app.py')
-    print("\n  ->  http://localhost:8766/finanzen/   (eigener Port, damit eine laufende Instanz")
-    print("      mit den echten Daten auf 8765 nicht gestoert wird)")
-    return 0
+    reisen_entscheiden(umgebung)
 
+    eigene = any(os.path.exists(os.path.join(WURZEL, n)) for n in ("konfig.json", "finanzen.db"))
+    print("\nFertig. Ansehen:")
+    if not eigene:
+        # Ohne eigene Daten zeigt die App von selbst den Demo-Haushalt (db.DEMO_MODUS).
+        print("  python scripts/app.py   ->  http://localhost:8765/finanzen/")
+    else:
+        # Eigene Daten vorhanden: die Demo auf eigenem Port, damit nichts verwechselt wird.
+        if os.name == "nt":
+            # PowerShell: `set` ist dort ein Alias für Set-Variable und erzeugt KEINE
+            # Umgebungsvariable — der Server liefe kommentarlos gegen die echten Daten.
+            print(f'  $env:FINANZEN_BASE = "{DEMO}"; $env:FINANZEN_PORT = "8766"; python scripts/app.py')
+        else:
+            print(f'  FINANZEN_BASE="{DEMO}" FINANZEN_PORT=8766 python scripts/app.py')
+        print("  ->  http://localhost:8766/finanzen/")
+    return 0
 
 if __name__ == "__main__":
     sys.exit(main())

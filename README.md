@@ -15,50 +15,80 @@ on your own machine, without an account anywhere, and every categorisation is ju
 
 [![Overview](docs/bilder/uebersicht.png)](docs/bilder/uebersicht.png)
 
-## Try it in 30 seconds — without your own data
+**[▶ Live demo in the browser](https://niclaseschner-ship-it.github.io/finanzen/demo/)** — the real
+app with an invented household, no installation. On a phone it opens the phone view.
 
-A complete, invented example household covering 18 months in the real bank format:
+## Try it — without your own data
 
 ```bash
 git clone https://github.com/niclaseschner-ship-it/finanzen.git
 cd finanzen
-python beispieldaten/erzeugen.py     # creates data + configuration, runs the pipeline
+python scripts/app.py        # -> http://localhost:8765/finanzen/
 ```
 
-The script tells you at the end how to start the server. The demo has its **own
-database** in `beispieldaten/demo/` — it touches nothing else, and deleting
-`beispieldaten/demo/` removes it without a trace.
+As long as there is no data of your own, the app shows a **complete invented household**:
+18 months, two accounts in two bank formats, salary, rent, fixed costs, a rented-out flat with a
+loan, savings account and portfolio, order emails as a real mbox, two trips. It is created on
+first start in `beispieldaten/demo/` — its own database and configuration, marked "Beispieldaten"
+(sample data) at the top right. Recreate it: `python beispieldaten/erzeugen.py`.
 
-| Transactions | Statistics | Contracts | Trips |
+| Transactions | Statistics | Contracts | Wealth |
 |---|---|---|---|
-| [![Transactions](docs/bilder/editor.png)](docs/bilder/editor.png) | [![Statistics](docs/bilder/statistik.png)](docs/bilder/statistik.png) | [![Contracts](docs/bilder/vertraege.png)](docs/bilder/vertraege.png) | [![Trips](docs/bilder/reisen.png)](docs/bilder/reisen.png) |
-| Category, labels — and the justification | Income, spending, categories over time | Fixed costs, detected purely from recurrence | Vacations, detected purely from purchase locations |
+| [![Transactions](docs/bilder/editor.png)](docs/bilder/editor.png) | [![Statistics](docs/bilder/statistik.png)](docs/bilder/statistik.png) | [![Contracts](docs/bilder/vertraege.png)](docs/bilder/vertraege.png) | [![Wealth](docs/bilder/vermoegen.png)](docs/bilder/vermoegen.png) |
+| Category, labels — and the justification | Income, spending, categories over time | Fixed costs, detected purely from recurrence | Accounts, portfolio, property, loan |
 
 ### On the phone
 
 The same address opens an installable app (PWA) on a phone: the month against the twelve-month
 average, searchable transactions, and a **review list** for everything the automation only
-guessed — "fits" or "change" with one tap. Switch views any time (`?ansicht=handy` /
-`?ansicht=desktop`).
+guessed — "fits" or "change" with one tap. Switch views any time.
 
 [![Phone app](docs/bilder/handy.png)](docs/bilder/handy.png)
 
-The demo also ships **receipt emails** (as a real mbox, exactly as Thunderbird creates it) —
-so the receipt linking is visible immediately. It deliberately also shows what does **not**
-resolve: a few merchants stay `unkategorisiert` (uncategorised) instead of being guessed.
-Only the **assets** view stays empty without your own data (it needs maintained numbers);
-the retirement projection can be explored right away.
+The demo deliberately also shows what does **not** work out: a few merchants stay
+`unkategorisiert` instead of being guessed, one detected trip and two contracts await
+confirmation.
 
 ## How it works
 
-One SQLite file is the single source of truth; every report is **reproducibly** recomputed
-from it. Transactions come 1:1 from the bank data and are never invented; categories and
-labels are a derived layer that can be recalculated at any time. Nothing is silently
-deleted — status instead of deletion.
+Raw **bank statements** — enriched with **email receipts** — become a searchable, categorised
+spending report. One SQLite file is the single source of truth; every report is recomputed from
+it **reproducibly**.
 
-Supported are the CSV exports of **DKB** and **GLS**. Other banks need a few lines in
-[`scripts/parse_konten.py`](scripts/parse_konten.py) — contributions welcome, see
-[Contributing](#contributing).
+**Data sources**
+
+- 🏦 **Bank accounts (CSV)** — format detected automatically, overlapping exports deduplicated.
+  The transaction is the truth of money flows. Supported: **DKB** and **GLS**; other banks need
+  a few lines in [`scripts/parse_konten.py`](scripts/parse_konten.py) — contributions welcome.
+- 📧 **Mailboxes** (mbox, e.g. from Thunderbird) — provide receipts and product details,
+  "PayPal *Ref" becomes "running shoes". Context only, never a transaction.
+- 🗺️ **OpenStreetMap** — unknown card merchants are looked up once (industry → category) and
+  cached. No key, no amounts sent anywhere.
+- 🧠 **AI, only for the rest** — for unclear leftovers a reviewable suggestion with confidence
+  and justification. Your own correction always wins.
+
+**Flow** — an idempotent pipeline (`scripts/run_all.py`), repeatable at will; manual decisions
+survive via stable transaction IDs:
+
+1. **Merge accounts** — combine all exports, deduplicate overlaps robustly
+2. **Ingest + system boundary** — internal transfers out, savings/loan/income marked
+3. **Enrich** — payment type, merchant, place, real purchase date, creditor ID, recurring
+4. **Match receipts** — transaction ↔ email (order number, PayPal ID, amount+merchant+date)
+5. **Categorise** — rules, trips, contracts; exactly one category, any number of labels
+6. **Report** — every question is a filter + group-by over the same transactions
+
+**The categorisation funnel** — from the safest source to the least safe; nothing that fails to
+match is dropped, it lands visibly in "Sonstiges" (other): system boundary (own accounts,
+account map) → rules (creditor ID before merchant keyword) → industry lookup → AI suggestion →
+manual correction (beats everything) → trip detection (stamps confirmed trips as vacation).
+
+**Principles**
+
+- **Raw data untouchable** — transactions come 1:1 from the bank and are never invented.
+  Categories and labels are a derived layer.
+- **Nothing disappears silently** — status instead of deletion.
+- **Mechanics before AI** — deterministic rules first; AI is the scalpel for the rest.
+- **Everything local** — pure standard library, no cloud service.
 
 ## 🧾 Receipts from emails — what was actually in that package?
 
@@ -132,20 +162,31 @@ accounts, double-entry bookkeeping. And the CSV formats so far are **DKB and GLS
   and is placed next to the generated page — the page carries all transactions in itself,
   so a script from a foreign server has no business there.
 
-## Setup
-There is **nothing to install** beyond Python — the work is configuration. The guided path
-reads the account exports and only asks what no CSV contains:
+## From the demo to your own numbers
+
+There is **nothing to install** except Python — the work is configuration. The path is the same
+household, replaced area by area with your own data:
+
+1. **Accounts and account map** — your CSV exports into `konten/` (at least 12 months), then
+   `python scripts/einrichten.py`. It reads the exports and only asks what no CSV contains
+   (which accounts are yours, home towns). As soon as `konfig.json` is in the project folder,
+   the app shows your own numbers; the demo stays in `beispieldaten/demo/`.
+2. **Receipts** (optional) — `python scripts/einrichten.py --mail` reads mbox files, e.g. from
+   Thunderbird.
+3. **Wealth** (optional) — copy `vermoegen/positionen.beispiel.json` to
+   `vermoegen/positionen.json` and fill it in; the demo shows what it looks like.
+4. **Retirement planning** — directly on the page; actual values come from the transactions.
+
+If you use Claude Code, start the bundled skill **`finanz-einrichtung`**
+([`.claude/skills/`](.claude/skills/)): it walks through these steps, checks suggestions before
+they go into the configuration, and questions the result.
 
 ```bash
 cd scripts
-python einrichten.py --pruefen   # read-only: what is inside the exports?
+python einrichten.py --pruefen   # read-only: what is in the exports?
 python einrichten.py             # creates konfig.json
 python einrichten.py --mail      # optional: receipts from Thunderbird
 ```
-
-If you use Claude Code, you can start the bundled skill `finanz-einrichtung`
-([`.claude/skills/`](.claude/skills/)) instead — it additionally reviews the result and
-looks for typical setup mistakes.
 
 **Every month:** new exports into `konten/` and `python run_all.py`. There is deliberately no
 import page. With Claude Code the skill `finanz-monatsimport` does this: it checks that the
@@ -184,8 +225,8 @@ via environment variables:
 
 | Env variable | Default | Meaning |
 |---|---|---|
-| `FINANZEN_BASE` | this repo's folder | project folder: DB, `output/`, `attachments/` |
-| `FINANZEN_BANK` | `<BASE>\konten` | inbox for bank CSV exports (= upload target) |
+| `FINANZEN_BASE` | this repo's folder — or `beispieldaten/demo/` as long as there is no own data (`konfig.json`, `finanzen.db`) | data folder: DB, `output/`, `attachments/` |
+| `FINANZEN_BANK` | `<BASE>\konten` | inbox for bank CSV exports |
 | `FINANZEN_BANK_CSV` | `<BASE>\output\transaktionen.csv` | merged account CSV |
 | `FINANZEN_PORT` | `8765` | server port — use a different one if a second instance (e.g. the demo) runs in parallel |
 
@@ -197,20 +238,12 @@ variables set. You only set them if the data should live elsewhere:
 set FINANZEN_BANK=D:\bank-exporte
 ```
 
-## Quickstart
-1. **Drop bank exports:** copy DKB/GLS CSVs into `konten/`. The format is detected automatically.
-   At least 12 months make sense — contract and trip detection need recurrences.
-2. **Create the configuration:** `python scripts/einrichten.py` (or fill in the template
-   `konfig.beispiel.json` by hand). Validate: `python scripts/konfig.py`.
-3. **Run the pipeline** (idempotent, repeatable at will):
-   ```bash
-   cd scripts
-   python run_all.py
-   ```
-4. **Start editor/statistics:**
-   ```bash
-   python app.py     # -> http://localhost:8765/finanzen/
-   ```
+## Quickstart (own data, without assistant)
+1. Copy DKB/GLS CSVs into `konten/` (at least 12 months).
+2. `python scripts/einrichten.py` — or fill in the template `konfig.beispiel.json` as
+   `konfig.json` by hand. Check: `python scripts/konfig.py`.
+3. `cd scripts && python run_all.py` (idempotent, repeatable)
+4. `python app.py` → http://localhost:8765/finanzen/
 
 ## The pages (all under http://localhost:8765/finanzen/)
 - **Overview** (`/finanzen/`) — the month against the average, key figures, categories.
@@ -222,6 +255,8 @@ set FINANZEN_BANK=D:\bank-exporte
   confirm/reject, active/expired.
 - **Trips** (`/finanzen/reisen`) — automatically detected trips (contiguous spending outside the
   home region), confirm → transactions become "Urlaub" (vacation).
+- **Wealth** (`/finanzen/vermoegen`) — accounts, portfolio, property with valuation range, loans.
+- **Retirement** (`/finanzen/vorsorge`) — year-by-year planning, with actual values from the transactions.
 
 ## Layout
 - `scripts/` — the core (pipeline + server). Details & order: [`PROCESS.md`](PROCESS.md).
@@ -230,8 +265,8 @@ set FINANZEN_BANK=D:\bank-exporte
 - `vermoegen/` — assets snapshot (balances/holdings instead of transactions), separate run.
 - `konten/` — **inbox** for bank CSV exports · `output/` — generated pages ·
   `attachments/` — stored email attachments · `finanzen.db` — the database.
-- `beispieldaten/` — invented demo household for trying things out · `demo/` — anonymised
-  example page · `docs/bilder/` — screenshots ·
+- `beispieldaten/` — generator of the invented demo household · `demo/` — the online demo: the
+  real pages with the demo household, built by `demo/bauen.py` · `docs/bilder/` — screenshots ·
   [`DECISIONS.md`](DECISIONS.md) — log of decisions.
 - `tests/` — tests, pure standard library: `python -m unittest discover -s tests -t tests`
 

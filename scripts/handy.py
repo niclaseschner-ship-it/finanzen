@@ -120,6 +120,7 @@ def uebersicht():
                     "sparen": round(mo["sparen"], 2), "n": mo["n"], "voll": ym <= bis,
                     "kat": {k: round(v, 2) for k, v in mo["kat"].items() if abs(v) >= 0.005}})
     return {"monate": aus, "bis": bis, "von": von, "offen": offen, "letzte": letzte,
+            "demo": db.DEMO_MODUS,
             "schnitt": {"monate": voll, "ein": schnitt(lambda m: m["ein"]),
                         "konsum": schnitt(lambda m: m["konsum"]),
                         "sparen": schnitt(lambda m: m["sparen"]),

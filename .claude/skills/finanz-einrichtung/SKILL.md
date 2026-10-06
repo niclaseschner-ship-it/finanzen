@@ -1,6 +1,6 @@
 ---
 name: finanz-einrichtung
-description: Begleitet einen neuen Nutzer von "gerade heruntergeladen" bis "meine eigenen Zahlen stehen" — Python prüfen, Demo zeigen, Demo wieder rauswerfen, Kontenkarte (konfig.json) aufbauen, Thunderbird für Beleg-Mails, erster Lauf, Ergebnis prüfen, auf Wunsch am Handy nutzbar machen, und am Ende die eigenen Verbesserungen als Branch zurückgeben. Auslöser: "einrichten", "erstes Mal", "gerade geklont", "Setup", "Demo ansehen", "konfig.json anlegen", "meine eigenen Daten reinlegen".
+description: Begleitet einen neuen Nutzer von "gerade geklont" bis "meine eigenen Zahlen stehen" — die App startet mit einem erfundenen Demo-Haushalt, und der Skill ersetzt ihn Bereich für Bereich durch die eigenen Daten — Konten und Kontenkarte (konfig.json), Beleg-Mails über Thunderbird, Vermögen, Vorsorge —, prüft das Ergebnis, macht die App auf Wunsch am Handy nutzbar und gibt am Ende die eigenen Verbesserungen als Branch zurück. Auslöser: "einrichten", "erstes Mal", "gerade geklont", "Setup", "Demo ansehen", "konfig.json anlegen", "meine eigenen Daten reinlegen".
 ---
 
 # Einrichtung — vom Herunterladen bis zu den eigenen Zahlen
@@ -16,8 +16,27 @@ Teil, den ein Skript nicht kann: **die Vorschläge prüfen, bevor sie in die Kon
 wandern**, und am Ende **das Ergebnis anzweifeln**. Eine falsche Kontenkarte macht die
 Statistik doppelt so hoch, und niemand merkt es.
 
-Führe den Nutzer durch die vier Phasen. Überspringe keine, aber halte dich nicht auf, wenn
-eine offensichtlich schon erledigt ist.
+**Das Bild dahinter:** Wer das Repo klont, hat sofort eine laufende App mit einem
+erfundenen Haushalt (`beispieldaten/demo/`). Der Weg zu den eigenen Zahlen ist derselbe
+Haushalt, Bereich für Bereich ersetzt: erst Konten und Kontenkarte, dann Belege, dann
+Vermögen und Vorsorge. Jeder Bereich ist für sich fertig, bevor der nächste kommt.
+
+**Wo was liegt — das musst du sicher wissen:**
+
+| | Demo | eigene Daten |
+|---|---|---|
+| Ordner | `beispieldaten/demo/` (eigene DB, eigene `konfig.json`) | der Projektordner selbst |
+| Kontoexporte | `beispieldaten/demo/konten/` | `konten/` |
+| Vermögen | `beispieldaten/demo/vermoegen/positionen.json` | `vermoegen/positionen.json` |
+
+Die App entscheidet selbst (`scripts/db.py`, `DEMO_MODUS`): Liegt im Projektordner eine
+`konfig.json` oder `finanzen.db`, zeigt sie die eigenen Daten, sonst die Demo — oben rechts
+dann „Beispieldaten“. **Demo und eigene Daten liegen nie im selben Ordner**; nie Demo-Dateien
+in `konten/` kopieren und nie eigene in `beispieldaten/demo/`. `einrichten.py` arbeitet
+immer auf dem Projektordner, auch solange die App noch die Demo zeigt.
+
+Führe den Nutzer durch die Phasen. Überspringe keine, aber halte dich nicht auf, wenn
+eine offensichtlich schon erledigt ist — und frag am Anfang, wie weit er schon ist.
 
 ## Grundregeln
 
@@ -38,61 +57,47 @@ eine offensichtlich schon erledigt ist.
 
 ## Phase 1 — Ankommen: erst sehen, dann entscheiden
 
-Der Nutzer hat gerade heruntergeladen und weiß noch nicht, ob sich das lohnt. **Zeig es
-ihm, bevor er seine Kontoauszüge exportiert.** Es gibt einen kompletten erfundenen
-Haushalt im Repo:
+Der Nutzer weiß noch nicht, ob sich das lohnt. **Zeig es ihm, bevor er Kontoauszüge
+exportiert.** Es gibt nichts vorzubereiten:
 
 ```bash
-python beispieldaten/erzeugen.py
+python scripts/app.py        # -> http://localhost:8765/finanzen/
 ```
 
-Das erzeugt 18 Monate Beispieldaten (echtes Bankformat), eine passende Konfiguration und
-fährt die ganze Pipeline durch — in einem **eigenen Ordner** `beispieldaten/demo/`, mit
-eigener Datenbank. Danach den Server auf die Demo zeigen lassen (die Befehle gibt das
-Skript am Ende selbst aus) und gemeinsam durchgehen:
-
-Alles liegt unter `http://localhost:8766/finanzen/` (die Demo nimmt einen eigenen Port):
+Ohne eigene Daten legt die App beim ersten Start den Demo-Haushalt an (etwa eine Minute)
+und zeigt ihn. Gemeinsam durchgehen:
 
 - **Übersicht** — der letzte Monat gegen den Durchschnitt, Kennzahlen, Kategorien
 - **Buchungen** — jede Buchung mit Kategorie, Labels und der Begründung, warum sie dort
-  liegt; bei Online-Käufen mit der Produktzeile aus der Bestellmail (die Demo bringt
-  erfundene Beleg-Mails mit)
-- **Statistik** — Einnahmen/Ausgaben pro Monat, Kategorie-Stack, Ranking
-- **Verträge** — die Fixkosten, rein aus der Wiederholung erkannt
-- **Reisen** — der Urlaub, allein aus den Einkaufsorten erkannt
-- **Handy-Ansicht** — oben rechts „Handy-Ansicht": so sieht es am Telefon aus
+  liegt; bei Online-Käufen die Produktzeile aus der Bestellmail
+- **Statistik**, **Verträge** (Fixkosten, nur aus der Wiederholung erkannt), **Reisen**
+  (Urlaub, nur aus den Einkaufsorten erkannt)
+- **Vermögen** und **Vorsorge** — Konten, Depot, Immobilie mit Kredit; Ruhestandsplanung
+- **Handy-Ansicht** — oben rechts: so sieht es am Telefon aus
 
-Sag dabei ehrlich, was die Demo **nicht** zeigt: die Vermögensansicht (die braucht
-gepflegte Zahlen in `vermoegen/positionen.json`). Die Vorsorge-Rechnung lässt sich sofort
-durchspielen.
+Ohne Python-Umgebung geht es auch: die Online-Demo
+(<https://niclaseschner-ship-it.github.io/finanzen/demo/>) sind dieselben Seiten.
 
 **Das Ziel dieser Phase ist eine Entscheidung**, nicht Begeisterung. Frag danach direkt:
 „Willst du das mit deinen eigenen Zahlen?" Bei Nein: aufhören, nichts weiter einrichten.
 
-## Phase 2 — Umschalten: Demo raus, eigene Daten rein
+## Phase 2 — Konten: der erste Bereich wird ersetzt
 
-Der häufigste Anfängerfehler ist, in der Demo weiterzuarbeiten und sich zu wundern, warum
-die eigenen Zahlen nicht auftauchen. **Mach den Schnitt ausdrücklich.**
-
-1. **Demo wegräumen** — sie ist jederzeit neu erzeugbar, es geht nichts verloren:
-   ```bash
-   # Windows
-   rmdir /s /q beispieldaten\demo
-   # macOS/Linux
-   rm -rf beispieldaten/demo
-   ```
-   Und, falls im Terminal gesetzt: `FINANZEN_BASE` wieder **löschen**, sonst zeigt alles
-   weiter auf die Demo. Das ist die Stolperfalle — prüf es aktiv nach.
-2. **Eigene Kontoexporte holen.** Im Online-Banking als CSV herunterladen und nach
-   `konten/` legen. Sinnvoll sind **mindestens 12 Monate**: Vertrags- und Reiseerkennung
-   brauchen Wiederholungen, um überhaupt etwas zu finden. Mehrere überlappende Exporte
-   sind unkritisch, die Deduplizierung fängt das ab.
+1. **Eigene Kontoexporte holen.** Im Online-Banking als CSV herunterladen und nach
+   `konten/` im **Projektordner** legen (nicht in `beispieldaten/demo/konten/`). Sinnvoll
+   sind **mindestens 12 Monate**: Vertrags- und Reiseerkennung brauchen Wiederholungen.
+   Mehrere überlappende Exporte sind unkritisch, die Deduplizierung fängt das ab.
+2. **`FINANZEN_BASE` darf nicht gesetzt sein** (aus früheren Versuchen im Terminal), sonst
+   zeigt alles weiter auf einen anderen Ordner. Prüf es aktiv nach.
 3. **Lage ansehen**, bevor du irgendetwas fragst:
    ```bash
    cd scripts && python einrichten.py --pruefen
    ```
    Rein lesend. Zeigt Exporte, die Konten dahinter, häufige Gegenkonten und die Orte aus
    Kartenzahlungen. **Lies das selbst** — die Hälfte der Antworten steht da schon drin.
+   Die Demo-Konfiguration (`beispieldaten/demo/konfig.json`) ist ein gutes Anschauungsstück,
+   wie eine fertige Kontenkarte aussieht — aber nie als Vorlage kopieren, ihre IBANs sind
+   erfunden.
 
 ## Phase 3 — Die Kontenkarte (der kritische Teil)
 
@@ -150,6 +155,11 @@ ist idempotent — abbrechen und später fortsetzen ist gefahrlos.
 
 ## Phase 4 — Erster Lauf und ehrliche Prüfung
 
+Mit der fertigen `konfig.json` im Projektordner wechselt die App von selbst auf die eigenen
+Daten — den Server danach einmal neu starten. Die Demo bleibt in `beispieldaten/demo/`
+liegen und lässt sich jederzeit getrennt ansehen
+(`FINANZEN_BASE=beispieldaten/demo FINANZEN_PORT=8766 python scripts/app.py`).
+
 ```bash
 python konfig.py       # prüft die Konfiguration
 python run_all.py      # die Pipeline
@@ -177,13 +187,30 @@ Melde das als kurze Liste mit konkreten nächsten Schritten. Trage die getroffen
 Entscheidungen in `DECISIONS.md` ein — besonders alles, was bei einer IBAN unklar war und
 wie es entschieden wurde.
 
+## Phase 5 — Vermögen und Vorsorge
+
+Beide sind optional und unabhängig von den Buchungen. Bis sie eingerichtet sind, sagen die
+Seiten das ehrlich, statt Demo-Werte zu zeigen — echte Buchungen neben erfundenem Vermögen
+wären schlimmer als eine leere Seite.
+
+- **Vermögen:** `vermoegen/positionen.beispiel.json` nach `vermoegen/positionen.json`
+  kopieren und gemeinsam ausfüllen. Kontostände und Depot liest die Seite direkt aus den
+  Exporten (Tagesgeld nach `vermoegen/eingang/`, Depot-Export nach `vermoegen/depot/`);
+  in die Datei gehört nur, was nirgends maschinell steht: Kaufpreise, Anteile,
+  Kreditkonditionen, Bewertung. Wie das fertig aussieht, zeigt
+  `beispieldaten/demo/vermoegen/positionen.json`. Bei Immobilien die Bewertung als Spanne
+  und mit Quelle — keine Zahl ohne Herkunft.
+- **Vorsorge:** direkt auf der Seite. „Ist-Werte übernehmen“ holt Bedarf, Sparrate und
+  Mietüberschuss aus den Buchungen und Bestände aus der Vermögensseite; den Rest (Alter,
+  Rente laut Bescheid) fragt du ab.
+
 **Und ab dann jeden Monat:** neue Exporte nach `konten/`, `run_all.py`, prüfen. Das
 übernimmt der Skill **`finanz-monatsimport`** (liegt daneben in `.claude/skills/`) — er
 prüft die Lücken, kategorisiert den Rest und sichtet das Ergebnis. Eine Import-Seite in der
 App gibt es bewusst nicht. Sag dem Nutzer, dass er beim nächsten Mal einfach „Monatsimport"
 sagen kann.
 
-## Optional — am Handy nutzen
+## Phase 6 (optional) — am Handy nutzen
 
 Die App erkennt das Gerät: dieselbe Adresse zeigt am Telefon eine eigene Handy-Ansicht.
 Dafür muss das Telefon den Rechner erreichen. **Ohne Anmeldung (Standard) gilt: nur im
@@ -202,7 +229,7 @@ alle Buchungen.
 
 ---
 
-## Phase 5 — Zurückgeben, was du gelernt hast
+## Phase 7 — Zurückgeben, was du gelernt hast
 
 **Das gehört zur Einrichtung, nicht obendrauf.** Wer die Anwendung zum ersten Mal mit
 eigenen Daten benutzt, findet Dinge, die niemand sonst finden kann: eine Bank, deren
@@ -248,8 +275,9 @@ Chatverlauf.
 
 | Symptom | Ursache |
 |---|---|
-| „Es läuft noch die BEISPIEL-Konfiguration" | `konfig.beispiel.json` → `konfig.json` kopieren |
-| Eigene Zahlen tauchen nicht auf, Demo-Zahlen schon | `FINANZEN_BASE` zeigt noch auf `beispieldaten/demo` |
+| „Es läuft noch die BEISPIEL-Konfiguration" | `python einrichten.py` (oder `konfig.beispiel.json` → `konfig.json` kopieren und ausfüllen) |
+| Eigene Zahlen tauchen nicht auf, Demo-Zahlen schon | noch keine `konfig.json` im Projektordner, oder `FINANZEN_BASE` zeigt noch auf `beispieldaten/demo` (Server nach dem Einrichten neu starten) |
+| Oben rechts steht „Beispieldaten“ | richtig so, solange keine eigenen Daten eingerichtet sind |
 | `http://localhost:8765` leitet weiter / zeigt nichts | Die App liegt unter `/finanzen/` |
 | „Unerwarteter Host-Header" vom Handy aus | `FINANZEN_HOST` nicht gesetzt oder falsche IP |
 | `KonfigFehler: Kategorie '…' steht nicht in 'kategorien'` | Tippfehler in `konfig.json`; die Prüfung ist absichtlich streng |

@@ -348,7 +348,7 @@ function zeichneMonat() {
   const u = S.ue, ms = u.monate, i = ms.findIndex((m) => m.ym === S.monat);
   const m = ms[i], sch = u.schnitt;
   $('#m-titel').textContent = ymName(m.ym);
-  $('#m-unter').textContent = m.voll ? m.n + ' Buchungen' : 'läuft noch · bis ' + datumKurz(u.letzte);
+  $('#m-unter').textContent = (u.demo ? 'Beispieldaten · ' : '') + (m.voll ? m.n + ' Buchungen' : 'läuft noch · bis ' + datumKurz(u.letzte));
   $('#m-zurueck').disabled = i <= 0;
   $('#m-vor').disabled = i >= ms.length - 1;
 

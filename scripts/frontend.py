@@ -196,7 +196,7 @@ def run():
 <link rel=icon href="icon-192.png">
 </head><body><script src="shared.js"></script><!--FNAV:statistik-->
 <div class=wrap>
-<h1>📊 Finanz-Statistik <span id=stand class=hint style="font-size:13px;font-weight:400"></span></h1>
+<h1>Statistik <span id=stand class=hint style="font-size:13px;font-weight:400"></span></h1>
 <details id=fltbox open><summary>🔎 Filter und Kategorien</summary>
 <div class=toolbar>
  <span>Jahr: <select id=yr onchange=render()></select></span>
@@ -334,7 +334,7 @@ yr.value=YEARS[YEARS.length-1]||'Alle';   // Fokus aufs aktuelle Jahr
 const LABC={}; D.tx.forEach(t=>(t.lab||'').split(',').filter(Boolean).forEach(l=>LABC[l]=(LABC[l]||0)+1));
 Object.keys(LABC).sort((a,b)=>LABC[b]-LABC[a]).forEach(l=>{
   const o=document.createElement('option');o.value=l;o.textContent='nur: '+l+' ('+LABC[l]+')';lf.appendChild(o);});
-document.getElementById('stand').textContent=`· Stand: ${D.build} · OSM-Branchen erkannt: ${D.osm_n} (von ${D.osm_tot} abgefragt)`;
+document.getElementById('stand').textContent=`· Stand: ${D.build}`+(D.osm_tot?` · OSM-Branchen erkannt: ${D.osm_n} (von ${D.osm_tot} abgefragt)`:'');
 
 // Filter merken (Seitenwechsel) / zurücksetzen (F5 oder „alle Buchungen")
 const FS=BK.filterState('statistik');

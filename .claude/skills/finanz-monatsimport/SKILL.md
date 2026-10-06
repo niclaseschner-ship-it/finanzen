@@ -16,6 +16,10 @@ jetzt ganz. Dort steht, was nur für diesen Haushalt gilt — wo die App läuft,
 hereinkommen, welche Konten und Objekte es gibt, welche Prüfungen zusätzlich anstehen. Was
 dort steht, geht dieser Datei vor.
 
+**Steht oben rechts in der App „Beispieldaten“**, ist noch nichts eingerichtet: die App
+zeigt den erfundenen Demo-Haushalt (`beispieldaten/demo/`). Dann nicht importieren, sondern
+erst den Skill `finanz-einrichtung` — sonst landen echte Exporte im falschen Ordner.
+
 Im Folgenden ist `<projekt>` der Ordner der App (dort liegen `finanzen.db`, `konten/`,
 `scripts/`).
 
