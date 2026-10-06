@@ -16,9 +16,11 @@ with sync_playwright() as p:
     desktop = browser.new_context(viewport={'width':1280,'height':900}, color_scheme='light', service_workers='block')
     desktop.route('**/*', safe)
     page = desktop.new_page()
-    for name in ['statistik','vertraege','vermoegen']:
+    for name in ['statistik','vertraege','vermoegen','vorsorge']:
+        page.set_viewport_size({'width':1280,'height':1400 if name == 'vorsorge' else 900})
         page.goto(DEMO+name+'.html'); page.wait_for_timeout(1800)
         page.screenshot(path=str(OUT/(name+'.png')))
+    page.set_viewport_size({'width':1280,'height':900})
     page.goto(DEMO+'editor.html'); page.wait_for_timeout(1000)
     page.locator('#fsearch').fill('amazon'); page.wait_for_timeout(500)
     page.screenshot(path=str(OUT/'konto-mail.png'))

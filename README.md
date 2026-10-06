@@ -9,14 +9,14 @@ Finanzen brings them together: the bank provides the amount, the email adds the 
 Order numbers and payment IDs link receipts; ambiguous matches stay visibly uncertain.
 
 - **Bank + email.** Product details beside the transaction, without counting an email as a second payment.
-- **One overview.** Monthly spending, categories, recurring costs, accounts, portfolio, property and loans.
+- **One overview.** Monthly spending, categories, recurring costs, accounts, portfolio, property, loans and retirement scenarios.
 - **Your decision.** Review unclear suggestions, correct categories and keep your own decisions across imports.
 - **On your own computer or server.** Python 3.10+, SQLite, desktop view and an installable phone app (PWA).
   Bank CSVs and locally available emails provide the data; no bank or email password is needed by the app.
 
 **[▶ Try the live demo](https://niclaseschner-ship-it.github.io/finanzen/demo/)** · [Quick start](#try-it--without-your-own-data) · [How receipt matching works](#-receipts-from-emails--what-was-actually-in-that-package)
 
-## Six views of the app
+## Seven views of the app
 
 The screenshots use a completely invented household. The product posters are based on captures of the real demo pages.
 
@@ -32,6 +32,9 @@ The screenshots use a completely invented household. The product posters are bas
 <tr>
 <td><a href="docs/produktdemo/05-statistik.png"><img src="docs/produktdemo/05-statistik.png" width="360" alt="Einnahmen und Ausgaben in der Statistik"></a></td>
 <td><a href="docs/produktdemo/06-vermoegen.png"><img src="docs/produktdemo/06-vermoegen.png" width="360" alt="Vermögen und Verbindlichkeiten zusammen"></a></td>
+</tr>
+<tr>
+<td colspan="2" align="center"><a href="docs/produktdemo/07-vorsorge.png"><img src="docs/produktdemo/07-vorsorge.png" width="360" alt="Vorsorgerechner: Sparrate, Rentenbeginn, Inflation und Vermögensverlauf"></a></td>
 </tr>
 </table>
 

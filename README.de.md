@@ -9,14 +9,14 @@ Finanzen bringt beides zusammen: Der Betrag kommt von der Bank, der Kaufkontext 
 Bestellnummern und Zahlungs-IDs verknüpfen die Belege; unsichere Treffer bleiben als solche erkennbar.
 
 - **Konto + Mail.** Produktdetails direkt an der Buchung. Eine Mail wird dabei nie als zweite Zahlung gezählt.
-- **Ein Überblick.** Monat, Kategorien, Fixkosten, Konten, Depot, Immobilien und Kredite.
+- **Ein Überblick.** Monat, Kategorien, Fixkosten, Konten, Depot, Immobilien, Kredite und Vorsorgeszenarien.
 - **Deine Entscheidung.** Unklare Vorschläge prüfen, Kategorien korrigieren und eigene Entscheidungen beim nächsten Import behalten.
 - **Auf deinem Rechner oder Server.** Python 3.10+, SQLite, Desktop-Ansicht und installierbare Handy-App (PWA).
   Die Daten kommen aus Kontoexporten und lokal verfügbaren Mails; die App braucht kein Bank- oder Mail-Passwort.
 
 **[▶ Live-Demo ausprobieren](https://niclaseschner-ship-it.github.io/finanzen/demo/)** · [Schnellstart](#ausprobieren--ohne-eigene-daten) · [So funktioniert der Belegabgleich](#-belege-aus-e-mails--was-war-eigentlich-in-dem-paket)
 
-## Die App in sechs Bildern
+## Die App in sieben Bildern
 
 Alle gezeigten Daten stammen aus einem vollständig erfundenen Haushalt. Die Produktmotive basieren auf Aufnahmen der echten Demo-Seiten.
 
@@ -32,6 +32,9 @@ Alle gezeigten Daten stammen aus einem vollständig erfundenen Haushalt. Die Pro
 <tr>
 <td><a href="docs/produktdemo/05-statistik.png"><img src="docs/produktdemo/05-statistik.png" width="360" alt="Einnahmen und Ausgaben in der Statistik"></a></td>
 <td><a href="docs/produktdemo/06-vermoegen.png"><img src="docs/produktdemo/06-vermoegen.png" width="360" alt="Vermögen und Verbindlichkeiten zusammen"></a></td>
+</tr>
+<tr>
+<td colspan="2" align="center"><a href="docs/produktdemo/07-vorsorge.png"><img src="docs/produktdemo/07-vorsorge.png" width="360" alt="Vorsorgerechner: Sparrate, Rentenbeginn, Inflation und Vermögensverlauf"></a></td>
 </tr>
 </table>
 

@@ -1,6 +1,6 @@
 # Finanzen – Produktdemo
 
-Sechs Produktmotive mit Konto und Mail als Kern: Die Bank liefert den Geldfluss, die passende Bestellmail ergänzt das gekaufte Produkt. Die übrigen Motive zeigen Monatsüberblick, Prüfung, wiederkehrende Zahlungen, Statistik und Vermögen.
+Sieben Produktmotive mit Konto und Mail als Kern: Die Bank liefert den Geldfluss, die passende Bestellmail ergänzt das gekaufte Produkt. Die weiteren Motive zeigen Monatsüberblick, Prüfung, wiederkehrende Zahlungen, Statistik, Vermögen und den Vorsorgerechner.
 
 1. [Konto trifft Mail](01-konto-mail.png)
 2. [Dein Monat](02-monat.png)
@@ -8,6 +8,9 @@ Sechs Produktmotive mit Konto und Mail als Kern: Die Bank liefert den Geldfluss,
 4. [Fixkosten erkennen](04-fixkosten.png)
 5. [Wohin geht dein Geld?](05-statistik.png)
 6. [Das ganze Bild](06-vermoegen.png)
+7. [Vorsorge durchrechnen](07-vorsorge.png)
+
+Motiv 07 ergänzt die ursprüngliche Sechser-Serie; sein zusätzlicher Generierungsprompt liegt in [prompt-vorsorge.txt](prompt-vorsorge.txt). Der Rechner zeigt eine vereinfachte Modellrechnung mit veränderbaren Annahmen: Sparrate, Rentenbeginn, Inflation, heutige Kaufkraft und Vermögensverlauf. Die dargestellten Ergebnisse sind keine Zusicherung künftiger Vermögenswerte.
 
 ## Herkunft und Datenschutz
 
