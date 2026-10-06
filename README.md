@@ -10,8 +10,10 @@ on your own machine, without an account anywhere, and every categorisation is ju
 - 🧾 **Receipts instead of guesswork.** For a transaction like "AMAZON −57.50 €" you see *what* was in it —
   linked automatically from your own order emails, via the order number.
 - ⚡ **No installation.** Python 3.10 is enough — no `pip install`, no build, no Docker.
+- 📱 **Desktop and phone.** One address: the overview on a computer, an installable app on a
+  phone. Light and dark follow the system setting.
 
-[![Statistics](docs/bilder/statistik.png)](docs/bilder/statistik.png)
+[![Overview](docs/bilder/uebersicht.png)](docs/bilder/uebersicht.png)
 
 ## Try it in 30 seconds — without your own data
 
@@ -27,10 +29,19 @@ The script tells you at the end how to start the server. The demo has its **own
 database** in `beispieldaten/demo/` — it touches nothing else, and deleting
 `beispieldaten/demo/` removes it without a trace.
 
-| ✏️ Editor | 📑 Contracts | 🏖️ Trips |
-|---|---|---|
-| [![Editor](docs/bilder/editor.png)](docs/bilder/editor.png) | [![Contracts](docs/bilder/vertraege.png)](docs/bilder/vertraege.png) | [![Trips](docs/bilder/reisen.png)](docs/bilder/reisen.png) |
-| Category, labels — and the justification | Fixed costs, detected purely from recurrence | Vacations, detected purely from purchase locations |
+| Transactions | Statistics | Contracts | Trips |
+|---|---|---|---|
+| [![Transactions](docs/bilder/editor.png)](docs/bilder/editor.png) | [![Statistics](docs/bilder/statistik.png)](docs/bilder/statistik.png) | [![Contracts](docs/bilder/vertraege.png)](docs/bilder/vertraege.png) | [![Trips](docs/bilder/reisen.png)](docs/bilder/reisen.png) |
+| Category, labels — and the justification | Income, spending, categories over time | Fixed costs, detected purely from recurrence | Vacations, detected purely from purchase locations |
+
+### On the phone
+
+The same address opens an installable app (PWA) on a phone: the month against the twelve-month
+average, searchable transactions, and a **review list** for everything the automation only
+guessed — "fits" or "change" with one tap. Switch views any time (`?ansicht=handy` /
+`?ansicht=desktop`).
+
+[![Phone app](docs/bilder/handy.png)](docs/bilder/handy.png)
 
 The demo also ships **receipt emails** (as a real mbox, exactly as Thunderbird creates it) —
 so the receipt linking is visible immediately. It deliberately also shows what does **not**
@@ -136,6 +147,11 @@ If you use Claude Code, you can start the bundled skill `finanz-einrichtung`
 ([`.claude/skills/`](.claude/skills/)) instead — it additionally reviews the result and
 looks for typical setup mistakes.
 
+**Every month:** new exports into `konten/` and `python run_all.py`. There is deliberately no
+import page. With Claude Code the skill `finanz-monatsimport` does this: it checks that the
+exports connect without gaps, categorises the unclear rest with a justification and reports
+what stands out — missing rent, expired contracts, new trips.
+
 ## Configuration — `konfig.json`
 Everything that differs from household to household lives in **one** file in the project
 folder. **No source-code editing required.** Doing it by hand works too:
@@ -182,8 +198,7 @@ set FINANZEN_BANK=D:\bank-exporte
 ```
 
 ## Quickstart
-1. **Drop bank exports:** copy DKB/GLS CSVs into `konten/`
-   (or upload later via the import page). The format is detected automatically.
+1. **Drop bank exports:** copy DKB/GLS CSVs into `konten/`. The format is detected automatically.
    At least 12 months make sense — contract and trip detection need recurrences.
 2. **Create the configuration:** `python scripts/einrichten.py` (or fill in the template
    `konfig.beispiel.json` by hand). Validate: `python scripts/konfig.py`.
@@ -194,19 +209,19 @@ set FINANZEN_BANK=D:\bank-exporte
    ```
 4. **Start editor/statistics:**
    ```bash
-   python app.py     # -> http://localhost:8765
+   python app.py     # -> http://localhost:8765/finanzen/
    ```
 
-## The pages (all under http://localhost:8765)
-- **✏️ Editor** (`/`) — review every transaction, set category/labels/comment.
-- **📊 Statistics** (`/statistik.html`) — income/expenses per month, category stack,
+## The pages (all under http://localhost:8765/finanzen/)
+- **Overview** (`/finanzen/`) — the month against the average, key figures, categories.
+  On a phone the same address opens the phone app.
+- **Transactions** (`/finanzen/editor`) — review every transaction, set category/labels/comment.
+- **Statistics** (`/finanzen/statistik.html`) — income/expenses per month, category stack,
   ranking, trips. Filters: year · categories · contracts · label. Click a bar → transactions.
-- **📑 Contracts** (`/vertraege`) — mechanically detected recurring payments (= fixed costs),
+- **Contracts** (`/finanzen/vertraege`) — mechanically detected recurring payments (= fixed costs),
   confirm/reject, active/expired.
-- **🏖️ Trips** (`/reisen`) — automatically detected trips (contiguous spending outside the
+- **Trips** (`/finanzen/reisen`) — automatically detected trips (contiguous spending outside the
   home region), confirm → transactions become "Urlaub" (vacation).
-- **📥 Import** (`/import`) — all data sources with range/state, a timeline + slider for the
-  considered period, bank CSV upload and "process data".
 
 ## Layout
 - `scripts/` — the core (pipeline + server). Details & order: [`PROCESS.md`](PROCESS.md).

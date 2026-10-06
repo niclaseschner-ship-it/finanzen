@@ -254,7 +254,8 @@ def main():
     print(f"Konfiguration -> {os.path.join(DEMO, 'konfig.json')}")
 
     # Pipeline im Demo-Ordner laufen lassen: eigene Datenbank, eigene Konfiguration.
-    umgebung = dict(os.environ, FINANZEN_BASE=DEMO, FINANZEN_BANK=KONTEN)
+    # FINANZEN_MAILDB leer: nie die zentrale Mail-DB eines Pi einblenden (echte Mails).
+    umgebung = dict(os.environ, FINANZEN_BASE=DEMO, FINANZEN_BANK=KONTEN, FINANZEN_MAILDB="")
     umgebung.pop("FINANZEN_BANK_CSV", None)
 
     # Mails VOR der Pipeline importieren — der Matcher (Schritt 4) braucht sie schon.
@@ -282,7 +283,7 @@ def main():
         print('    python scripts/app.py')
     else:
         print(f'  FINANZEN_BASE="{DEMO}" FINANZEN_PORT=8766 python scripts/app.py')
-    print("\n  ->  http://localhost:8766   (eigener Port, damit eine laufende Instanz")
+    print("\n  ->  http://localhost:8766/finanzen/   (eigener Port, damit eine laufende Instanz")
     print("      mit den echten Daten auf 8765 nicht gestoert wird)")
     return 0
 

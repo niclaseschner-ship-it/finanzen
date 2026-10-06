@@ -17,6 +17,8 @@ os.makedirs(KONTEN, exist_ok=True)
 os.environ["FINANZEN_BASE"] = BASE
 os.environ["FINANZEN_BANK"] = KONTEN
 os.environ.pop("FINANZEN_BANK_CSV", None)
+# Nie die zentrale Mail-DB des Rechners (Pi: /srv/mail-db) in Tests einblenden.
+os.environ["FINANZEN_MAILDB"] = ""
 atexit.register(lambda: shutil.rmtree(BASE, ignore_errors=True))
 
 # Testkonfiguration: bewusst klein und erfunden. Die IBANs sind Platzhalter.

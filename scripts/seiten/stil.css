@@ -1,0 +1,127 @@
+/* Gemeinsames Aussehen der Desktop-Seiten, angeglichen an die Handy-App (seiten/handy/).
+ *
+ * Die Farbwerte sind dieselben wie in handy/index.html. Die Seiten selbst tragen keine
+ * festen Farben mehr, nur noch diese Variablen; dadurch folgen sie dem Hell- oder
+ * Dunkelmodus des Systems. Wird nach dem <style> der Seite geladen und darf deshalb
+ * deren Grundregeln (Schrift, Tabellen, Felder, Knoepfe) ueberschreiben.
+ *
+ * Kategorienfarben --kat1..4: mit dem Paletten-Pruefer des Diagramm-Leitfadens fuer
+ * hell und dunkel geprueft (Helligkeitsband, Farbsehschwaeche, Kontrast).
+ */
+:root{
+  --bg:#f4f3ef; --fl:#ffffff; --fl2:#ecebe6; --fl3:#e3e1db; --linie:#e2e0da;
+  --text:#16191d; --text2:#4a515b; --leise:#7a818c;
+  --akzent:#138a62; --akzent-fl:#dcf3e9; --akzent-text:#0d6b4b; --auf-akzent:#ffffff;
+  --warn:#b7701a; --warn-fl:#fbeedb;
+  --rot:#c2412d; --rot-fl:#fbe4df;
+  --blau:#2f5fb8; --blau-fl:#e2eafa;
+  --lila:#6d48b8; --lila-fl:#ece5f8;
+  --kat1:#138a62; --kat2:#3b6fd8; --kat3:#c27a12; --kat4:#8a5cd6;
+  --balken:#cfd3d9;
+  --schatten:0 1px 2px rgba(20,24,30,.05),0 4px 16px rgba(20,24,30,.05);
+  --deckel:rgba(15,18,21,.38);
+  --r:16px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0f1215; --fl:#171b20; --fl2:#1f242b; --fl3:#272d35; --linie:#262c34;
+    --text:#eef1f4; --text2:#b4bcc6; --leise:#808a97;
+    --akzent:#4fd1a1; --akzent-fl:#12382b; --akzent-text:#6fe0b5; --auf-akzent:#08261b;
+    --warn:#f2b45c; --warn-fl:#3a2b14;
+    --rot:#ff8f7a; --rot-fl:#3a1c18;
+    --blau:#8fb3ff; --blau-fl:#1a2742;
+    --lila:#c4adff; --lila-fl:#2a2240;
+    --kat1:#1fa776; --kat2:#5b8ff0; --kat3:#c4862a; --kat4:#9c7cf0;
+    --balken:#39414b;
+    --schatten:none;
+    --deckel:rgba(0,0,0,.55);
+    color-scheme:dark;
+  }
+}
+
+/* ---- Grundlage --------------------------------------------------------------- */
+html{background:var(--bg)}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif!important;
+  background:var(--bg)!important;color:var(--text)!important;font-size:14.5px;line-height:1.45;
+  -webkit-font-smoothing:antialiased}
+h1{font-size:28px;letter-spacing:-.025em;font-weight:750;margin:22px 0 6px}
+h2{font-size:13px!important;font-weight:650;color:var(--leise)!important;letter-spacing:.04em;
+  text-transform:uppercase;border:0!important;padding:0!important;margin:28px 0 10px!important}
+h3{letter-spacing:-.01em}
+a{color:var(--akzent-text)}
+td,th,.r,.zahl,.kpi .v{font-variant-numeric:tabular-nums}
+::selection{background:var(--akzent-fl)}
+
+/* Felder und Knoepfe */
+select,input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]),textarea{
+  background:var(--fl)!important;color:var(--text)!important;border:1px solid var(--linie)!important;
+  border-radius:10px!important;padding:7px 10px!important;font:inherit;font-size:14px!important;outline:0}
+select:focus,input:focus,textarea:focus{box-shadow:0 0 0 2px var(--akzent)}
+input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--akzent)}
+button{font:inherit;cursor:pointer;border-radius:10px}
+button:not([class]),.fbtn{background:var(--fl2)!important;color:var(--text)!important;border:0!important;
+  padding:7px 13px!important;font-weight:600;font-size:13.5px!important}
+button:not([class]):hover,.fbtn:hover{background:var(--fl3)!important}
+
+/* Tabellen */
+table{border-collapse:collapse}
+th{color:var(--leise)!important;font-size:12px;font-weight:650;text-transform:uppercase;letter-spacing:.04em;
+  background:var(--bg)!important;border-bottom:1px solid var(--linie)!important}
+td{border-bottom:1px solid var(--linie)!important}
+tbody tr:hover>td{background:color-mix(in srgb,var(--fl2) 55%,transparent)}
+.neg,.bk-neg{color:var(--text)!important}
+.pos,.bk-pos{color:var(--akzent-text)!important}
+
+/* Karten */
+.kpi,.grp,.cbox,#detail,#catfilter,.karte{background:var(--fl)!important;border:0!important;
+  border-radius:var(--r)!important;box-shadow:var(--schatten)}
+.kpi .v{font-weight:720;letter-spacing:-.02em}
+.kpi .l{color:var(--leise)!important}
+
+/* Werkzeugleiste der Seite (Filter, Status): ruhig, unter der Kopfleiste */
+.bar{background:color-mix(in srgb,var(--bg) 88%,transparent)!important;border-bottom:1px solid var(--linie)!important;
+  backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);
+  padding:10px 24px!important;gap:10px!important;min-height:30px}
+.hint{color:var(--leise)!important}
+
+/* Popups und Dialoge aus shared.js und den Seiten */
+#lp,#bklp,#bkmod,#mod{background:var(--fl)!important;border:1px solid var(--linie)!important;
+  border-radius:var(--r)!important;box-shadow:0 12px 40px rgba(0,0,0,.18)!important}
+#ov,#bkov{background:var(--deckel)!important}
+.bk-kopf{background:var(--fl)!important}
+
+/* ---- Kopfleiste (vom Server eingesetzt, app.py: kopfleiste) ------------------ */
+.fkopf{background:var(--bg);border-bottom:1px solid var(--linie)}
+.fkopf-in{max-width:1500px;margin:0 auto;padding:0 24px;height:60px;display:flex;align-items:center;gap:22px}
+.fkopf .marke{display:flex;align-items:center;gap:10px;color:var(--text);text-decoration:none;font-weight:750;
+  font-size:17px;letter-spacing:-.02em;flex:none}
+.fkopf .marke img{width:30px;height:30px;border-radius:9px}
+.fnav{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;flex:1;min-width:0}
+.fnav::-webkit-scrollbar{display:none}
+.fnav a{color:var(--text2);text-decoration:none;font-weight:600;font-size:14px;padding:7px 12px;border-radius:10px;
+  white-space:nowrap}
+.fnav a:hover{background:var(--fl2);color:var(--text)}
+.fnav a.an{background:var(--fl);color:var(--text);box-shadow:var(--schatten)}
+@media (prefers-color-scheme: dark){.fnav a.an{background:var(--fl2)}}
+.fkopf .ansicht{flex:none;display:flex;align-items:center;gap:6px;color:var(--text2);text-decoration:none;font-size:13.5px;
+  font-weight:600;padding:7px 11px;border-radius:10px;border:1px solid var(--linie)}
+.fkopf .ansicht:hover{color:var(--text);background:var(--fl2)}
+@media (max-width:700px){.fkopf .marke span,.fkopf .ansicht span{display:none}.fkopf-in{gap:10px;padding:0 12px}}
+
+/* Alte Zurueck-Links der Seiten sind durch die Kopfleiste ersetzt */
+.zur{display:none!important}
+
+/* Felder in Tabellen kompakt halten, sonst laufen Editor und Vertraege bei 1440px ueber */
+body table td select,body table td input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]){
+  padding:4px 8px!important;font-size:13px!important;border-radius:8px!important}
+td{font-size:13.5px}
+.grp>h2:first-child,.karte>h2:first-child,.grp h2{margin-top:0!important}
+#catfilter .amt{white-space:nowrap}
+/* Breite Tabellen (Editor, Vertraege): etwas engere Zellen, damit 1440px reichen */
+td,th{padding-left:6px!important;padding-right:6px!important}
+.ctx{max-width:240px!important;overflow-wrap:anywhere}
+.komm{width:118px!important}
+/* Seiten ohne eigene Filter (Import, Vermoegen, Vorsorge): nur eine leise Statuszeile */
+.bar:not(:has(select,input,button,details)){background:transparent!important;border-bottom:0!important;
+  backdrop-filter:none;-webkit-backdrop-filter:none;padding-top:8px!important;padding-bottom:0!important;min-height:0}

@@ -94,6 +94,10 @@ EIGENE_NAMEN = [s.strip().lower() for s in _H.get("eigene_namen", []) if s.strip
 # Heimatregion für die Reise-Erkennung: Einkauf in einem dieser Orte = "zuhause".
 # Ohne das ist der Alltag eine Dauerreise.
 HEIMAT_ORTE = [s.strip().lower() for s in _H.get("heimat_orte", []) if s.strip()]
+# Tage, an denen eine Reise zwingend endet (JJJJ-MM-TT): eine neue Reise beginnt frühestens
+# an diesem Tag. Für zwei Reisen ohne Heim-Einkauf dazwischen, etwa wenn ein Teil des Haushalts
+# direkt von einer Reise zur nächsten aufbricht.
+REISE_TRENNUNGEN = sorted(s.strip() for s in _H.get("reise_trennungen", []) if s.strip())
 
 # ---- Kategorien ------------------------------------------------------------
 # Genau eine pro Buchung. Reihenfolge = Reihenfolge in den Auswahlfeldern.

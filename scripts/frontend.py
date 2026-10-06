@@ -52,7 +52,7 @@ def clean_ort(o):
 
 def run():
     con = db.connect()
-    MINM, MAXM = db.period_bounds()   # berücksichtigter Zeitraum (Import-Seite); Monat unvollendet -> immer raus
+    MINM, MAXM = db.period_bounds()   # berücksichtigter Zeitraum (settings, von run_all gesetzt); Monat unvollendet -> immer raus
     # eff_monat (= Datum-Override falls gesetzt) statt Roh-Monat; Ignorierte raus
     rows = con.execute("""select t.id,c.eff_monat,t.datum,t.betrag,t.flow,c.category,
         coalesce(e.haendler_norm,t.gegenpartei),
@@ -119,55 +119,55 @@ def run():
 <meta name=viewport content="width=device-width,initial-scale=1"><title>Finanzen · Statistik</title>
 <script src="chart.min.js"></script>
 <style>
- body{font-family:system-ui,Arial,sans-serif;margin:0;background:#0f1117;color:#e6e6e6}
+ body{font-family:system-ui,Arial,sans-serif;margin:0;background:var(--bg);color:var(--text)}
  .wrap{max-width:1850px;margin:0 auto;padding:20px 30px}
- nav a{color:#9aa4b2;text-decoration:none;margin-right:16px;font-weight:600} nav a.active{color:#4f8cff}
- h2{margin-top:30px;border-bottom:1px solid #2a2f3a;padding-bottom:6px} h3{margin:14px 0 6px}
+ nav a{color:var(--text2);text-decoration:none;margin-right:16px;font-weight:600} nav a.active{color:var(--akzent)}
+ h2{margin-top:30px;border-bottom:1px solid var(--linie);padding-bottom:6px} h3{margin:14px 0 6px}
  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:12px;margin:16px 0}
- .kpi{background:#171a23;border:1px solid #262b36;border-radius:12px;padding:14px}
- .kpi .v{font-size:22px;font-weight:700} .kpi .l{color:#9aa4b2;font-size:12px;margin-top:3px}
+ .kpi{background:var(--fl);border:1px solid var(--linie);border-radius:12px;padding:14px}
+ .kpi .v{font-size:22px;font-weight:700} .kpi .l{color:var(--text2);font-size:12px;margin-top:3px}
  /* Diagramme: feste Hoehe ueber den Rahmen, NICHT ueber das Seitenverhaeltnis.
     Vorher ergab sich die Hoehe aus dem Verhaeltnis der Canvas-Attribute — auf einem
     Telefon waren die Diagramme dadurch nur gut hundert Pixel hoch und unlesbar. */
- .cbox{position:relative;height:330px;background:#171a23;border-radius:12px;padding:10px;margin-top:10px}
+ .cbox{position:relative;height:330px;background:var(--fl);border-radius:12px;padding:10px;margin-top:10px}
  .cbox.hoch{height:520px}
  .cbox canvas{width:100%!important;height:100%!important}
- select{background:#1b1f2a;color:#e6e6e6;border:1px solid #2c323f;border-radius:8px;padding:7px 9px}
- table{width:100%;border-collapse:collapse;font-size:14px} td,th{padding:6px 8px;border-bottom:1px solid #232834}
- th{color:#9aa4b2;text-align:left} .r{text-align:right}
- #detail{background:#141823;border:1px solid #262b36;border-radius:12px;padding:12px;margin-top:12px;min-height:40px}
- .hint{color:#6b7280;font-size:12px}
+ select{background:var(--fl2);color:var(--text);border:1px solid var(--linie);border-radius:8px;padding:7px 9px}
+ table{width:100%;border-collapse:collapse;font-size:14px} td,th{padding:6px 8px;border-bottom:1px solid var(--linie)}
+ th{color:var(--text2);text-align:left} .r{text-align:right}
+ #detail{background:var(--fl);border:1px solid var(--linie);border-radius:12px;padding:12px;margin-top:12px;min-height:40px}
+ .hint{color:var(--leise);font-size:12px}
  .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:6px 0 4px}
- .fbtn{background:#222a38;border:1px solid #2c323f;color:#cbd5e1;border-radius:7px;padding:6px 11px;cursor:pointer;font-size:13px}
- .fbtn:hover{background:#2a3343}
+ .fbtn{background:var(--fl2);border:1px solid var(--linie);color:var(--text);border-radius:7px;padding:6px 11px;cursor:pointer;font-size:13px}
+ .fbtn:hover{background:var(--fl2)}
  #catfilter{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:2px 14px;
-   background:#141823;border:1px solid #262b36;border-radius:12px;padding:12px 14px;margin:8px 0}
+   background:var(--fl);border:1px solid var(--linie);border-radius:12px;padding:12px 14px;margin:8px 0}
  #catfilter label{display:flex;align-items:center;gap:7px;font-size:13px;padding:2px 0;cursor:pointer}
- #catfilter .amt{margin-left:auto;color:#6b7280;font-size:12px}
- #catfilter .amt.neg{color:#ff8a8a}#catfilter .amt.pos{color:#7ee0a0}
- .filterbadge{color:#f0b46b;font-size:13px}
- #detail .neg{color:#ff8a8a}#detail .pos{color:#7ee0a0}
- #detail td{vertical-align:top} #detail .dctx{color:#9aa4b2;font-size:12px;max-width:520px}
- #detail .mail{color:#7f9cc7;font-size:11px} #detail .why{color:#6b7280;font-size:11px}
- #detail .prod{color:#7ee0a0;font-weight:600;font-size:13px;margin:2px 0}
- #detail select,#detail input{background:#1b1f2a;color:#e6e6e6;border:1px solid #2c323f;border-radius:7px;padding:4px 6px;font-size:13px}
+ #catfilter .amt{margin-left:auto;color:var(--leise);font-size:12px}
+ #catfilter .amt.neg{color:var(--rot)}#catfilter .amt.pos{color:var(--akzent-text)}
+ .filterbadge{color:var(--warn);font-size:13px}
+ #detail .neg{color:var(--rot)}#detail .pos{color:var(--akzent-text)}
+ #detail td{vertical-align:top} #detail .dctx{color:var(--text2);font-size:12px;max-width:520px}
+ #detail .mail{color:var(--blau);font-size:11px} #detail .why{color:var(--leise);font-size:11px}
+ #detail .prod{color:var(--akzent-text);font-weight:600;font-size:13px;margin:2px 0}
+ #detail select,#detail input{background:var(--fl2);color:var(--text);border:1px solid var(--linie);border-radius:7px;padding:4px 6px;font-size:13px}
  #detail .komm{width:170px}
- tr.saved>td{background:#16301d}
- #detail tr.unsaved>td{background:#3a1620;outline:1px solid #ff8a8a}
- .vtgtag{background:#3a2f4d;color:#c9b6ec;border-radius:5px;padding:0 5px;font-size:10px;vertical-align:middle}
- #detail .lc{cursor:pointer;min-width:150px} .chip{background:#26324a;border-radius:6px;padding:1px 6px;margin:1px;display:inline-block;font-size:12px}
- .lbe{background:#2a3343;border:0;color:#9aa4b2;border-radius:6px;cursor:pointer;padding:1px 7px}
- #lp{position:fixed;z-index:50;background:#11141c;border:1px solid #3a4252;border-radius:10px;width:250px;box-shadow:0 8px 30px #000a;display:none}
+ tr.saved>td{background:var(--akzent-fl)}
+ #detail tr.unsaved>td{background:var(--rot-fl);outline:1px solid var(--rot)}
+ .vtgtag{background:var(--lila-fl);color:var(--lila);border-radius:5px;padding:0 5px;font-size:10px;vertical-align:middle}
+ #detail .lc{cursor:pointer;min-width:150px} .chip{background:var(--fl2);border-radius:6px;padding:1px 6px;margin:1px;display:inline-block;font-size:12px}
+ .lbe{background:var(--fl2);border:0;color:var(--text2);border-radius:6px;cursor:pointer;padding:1px 7px}
+ #lp{position:fixed;z-index:50;background:var(--fl);border:1px solid var(--linie);border-radius:10px;width:250px;box-shadow:0 8px 30px #000a;display:none}
  #lp .lplist{max-height:38vh;overflow:auto;padding:12px 12px 6px}
  #lp .lo{display:block;padding:3px 0;font-size:13px}
- #lp .lpfoot{padding:8px 12px;border-top:1px solid #2c323f;background:#11141c;border-radius:0 0 10px 10px}
+ #lp .lpfoot{padding:8px 12px;border-top:1px solid var(--linie);background:var(--fl);border-radius:0 0 10px 10px}
  #lp .newl{display:flex;gap:6px;margin-bottom:8px}
- #lp button{background:#4f8cff;border:0;color:#fff;border-radius:7px;padding:6px 10px;cursor:pointer}
- #lp .sec{background:#2a3343;color:#cbd5e1}
- .mailbtn{background:#22324a;border:1px solid #2c4060;color:#9ec1ff;border-radius:6px;cursor:pointer;padding:1px 7px;font-size:11px}
+ #lp button{background:var(--akzent);border:0;color:var(--auf-akzent);border-radius:7px;padding:6px 10px;cursor:pointer}
+ #lp .sec{background:var(--fl2);color:var(--text)}
+ .mailbtn{background:var(--blau-fl);border:1px solid var(--blau-fl);color:var(--blau);border-radius:6px;cursor:pointer;padding:1px 7px;font-size:11px}
  #ov{position:fixed;inset:0;background:#000a;display:none;z-index:60;align-items:center;justify-content:center}
- #mod{background:#11141c;border:1px solid #3a4252;border-radius:12px;max-width:820px;width:92%;max-height:82vh;overflow:auto;padding:16px;box-shadow:0 12px 40px #000b}
- #mod h3{margin:0 6px 2px 0}#mod h4{margin:14px 0 4px;color:#9ec1ff}#mod .x{float:right;background:#2a3343;border:0;color:#cbd5e1;border-radius:7px;padding:5px 10px;cursor:pointer}
+ #mod{background:var(--fl);border:1px solid var(--linie);border-radius:12px;max-width:820px;width:92%;max-height:82vh;overflow:auto;padding:16px;box-shadow:0 12px 40px #000b}
+ #mod h3{margin:0 6px 2px 0}#mod h4{margin:14px 0 4px;color:var(--blau)}#mod .x{float:right;background:var(--fl2);border:0;color:var(--text);border-radius:7px;padding:5px 10px;cursor:pointer}
  /* ---- Handy und Tablet ---------------------------------------------------- */
  #fltbox>summary{display:none}          /* am Schreibtisch immer offen, kein Aufklapper */
  @media(max-width:900px){
@@ -178,10 +178,10 @@ def run():
   h2{margin-top:20px;font-size:17px}
   .kpis{grid-template-columns:1fr 1fr;gap:8px}
   .kpi{padding:10px}.kpi .v{font-size:17px}
-  #fltbox>summary{display:block;cursor:pointer;background:#171a23;border:1px solid #262b36;
+  #fltbox>summary{display:block;cursor:pointer;background:var(--fl);border:1px solid var(--linie);
     border-radius:10px;padding:9px 12px;font-weight:600;margin-bottom:8px;list-style:none}
   #fltbox>summary::-webkit-details-marker{display:none}
-  #fltbox>summary::before{content:"▸ ";color:#6b7280}
+  #fltbox>summary::before{content:"▸ ";color:var(--leise)}
   #fltbox[open]>summary::before{content:"▾ "}
   .toolbar{flex-wrap:wrap;gap:7px}
   #catfilter{grid-template-columns:1fr 1fr}
@@ -189,9 +189,13 @@ def run():
   .cbox{height:300px} .cbox.hoch{height:560px}
   table{display:block;overflow-x:auto;max-width:100%}
  }
- .mailbody{white-space:pre-wrap;font-family:inherit;font-size:13px;line-height:1.45;color:#dfe5ee;background:#141823;border:1px solid #232834;border-radius:8px;padding:10px;margin:6px 0;overflow-wrap:anywhere}
-</style></head><body><script src="/shared.js"></script><div class=wrap>
-<nav><a href="/">✏️ Editor</a><a href="statistik.html" class=active>📊 Statistik</a><a href="/vertraege">📑 Verträge</a><a href="/reisen">🏖️ Reisen</a><a href="/import">📥 Import</a><a href="/vermoegen">💰 Vermögen</a><a href="/vorsorge">🎯 Vorsorge</a></nav>
+ .mailbody{white-space:pre-wrap;font-family:inherit;font-size:13px;line-height:1.45;color:var(--text);background:var(--fl);border:1px solid var(--linie);border-radius:8px;padding:10px;margin:6px 0;overflow-wrap:anywhere}
+</style><link rel=stylesheet href="stil.css">
+<meta name=theme-color content="#f4f3ef" media="(prefers-color-scheme: light)">
+<meta name=theme-color content="#0f1215" media="(prefers-color-scheme: dark)">
+<link rel=icon href="icon-192.png">
+</head><body><script src="shared.js"></script><!--FNAV:statistik-->
+<div class=wrap>
 <h1>📊 Finanz-Statistik <span id=stand class=hint style="font-size:13px;font-weight:400"></span></h1>
 <details id=fltbox open><summary>🔎 Filter und Kategorien</summary>
 <div class=toolbar>
@@ -204,7 +208,7 @@ def run():
  <span>🏷️ <select id=lf onchange=render()><option value="">alle Labels</option></select></span>
  <button class=fbtn onclick="resetAll()" title="alle Filter zurücksetzen">⟳ alle Buchungen</button>
  <span class=filterbadge id=fbadge></span>
- <span class=hint>· berücksichtigter Zeitraum __PERIOD__ (<a href="/import">Import</a>) · Filter-Zahlen = Netto über alle Jahre · Balken anklicken → Buchungen</span>
+ <span class=hint>· berücksichtigter Zeitraum __PERIOD__ · Filter-Zahlen = Netto über alle Jahre · Balken anklicken → Buchungen</span>
 </div>
 <div id=catfilter></div>
 </details>
@@ -218,6 +222,7 @@ def run():
 <h2>🏖️ Reisen</h2><table id=trips><tr><th>Reise (Orte)</th><th>Zeit</th><th class=r>Kosten</th></tr></table>
 <datalist id=labcat></datalist>
 <script>
+const FV=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const D=__DATA__, BT=["Einnahme","Konsum","Sparen"];
 const PAL=['#4f8cff','#34d399','#f59e0b','#ef4444','#a78bfa','#22d3ee','#f472b6','#84cc16',
  '#fb923c','#60a5fa','#2dd4bf','#facc15','#c084fc','#fca5a5','#94a3b8','#4ade80','#e879f9','#38bdf8'];
@@ -297,24 +302,24 @@ function render(){
  charts.forEach(c=>c.destroy()); charts=[];
  const SCHMAL = window.innerWidth < 900;   // Telefon/Tablet
  charts.push(new Chart(c1,{type:'bar',data:{labels,datasets:[
-   {label:'Einnahmen',data:A.ein,backgroundColor:'#34d399'},{label:'Ausgaben',data:A.kon,backgroundColor:'#ef4444'},
-   {label:'Sparen',data:A.spar,backgroundColor:'#4f8cff'}]},
+   {label:'Einnahmen',data:A.ein,backgroundColor:FV('--akzent')},{label:'Ausgaben',data:A.kon,backgroundColor:FV('--balken')},
+   {label:'Sparen',data:A.spar,backgroundColor:FV('--kat2')}]},
    options:{maintainAspectRatio:false,onClick:(e,el)=>{if(!el.length)return;const m=labels[el[0].index],bt=BT[el[0].datasetIndex];
      detailRows(`${bt} · ${m}`, D.tx.filter(t=>t.m===m&&t.bt===bt&&cok(t)&&vok(t)&&lok(t)));},
-    plugins:{legend:{labels:{color:'#cbd5e1'}}},scales:{x:{ticks:{color:'#9aa4b2'}},y:{ticks:{color:'#9aa4b2'}}}}}));
+    plugins:{legend:{labels:{color:FV('--text2')}}},scales:{x:{ticks:{color:FV('--leise')}},y:{ticks:{color:FV('--leise')}}}}}));
  const konCats=Object.keys(A.catm).sort((x,y)=>sum(A.catm[y])-sum(A.catm[x]));
  charts.push(new Chart(c2,{type:'bar',data:{labels,datasets:konCats.map(c=>(
-   {label:c,data:A.catm[c],backgroundColor:COL[c]||'#94a3b8'}))},
+   {label:c,data:A.catm[c],backgroundColor:COL[c]||FV('--leise')}))},
    options:{maintainAspectRatio:false,onClick:(e,el)=>{if(!el.length)return;const m=labels[el[0].index],cat=konCats[el[0].datasetIndex];
      detailRows(`${cat} · ${m}`, D.tx.filter(t=>t.m===m&&t.c===cat&&vok(t)&&lok(t)));},
-    plugins:{legend:{display:!SCHMAL,labels:{color:'#cbd5e1',boxWidth:12,font:{size:10}}}},
-    scales:{x:{stacked:true,ticks:{color:'#9aa4b2'}},y:{stacked:true,ticks:{color:'#9aa4b2'}}}}}));
+    plugins:{legend:{display:!SCHMAL,labels:{color:FV('--text2'),boxWidth:12,font:{size:10}}}},
+    scales:{x:{stacked:true,ticks:{color:FV('--leise')}},y:{stacked:true,ticks:{color:FV('--leise')}}}}}));
  const curCt=konCats.map(c=>[c,sum(A.catm[c])]).filter(x=>x[1]>0);
  charts.push(new Chart(c3,{type:'bar',data:{labels:curCt.map(x=>x[0]),
-   datasets:[{data:curCt.map(x=>x[1]),backgroundColor:curCt.map(x=>COL[x[0]]||'#94a3b8')}]},
+   datasets:[{data:curCt.map(x=>x[1]),backgroundColor:curCt.map(x=>COL[x[0]]||FV('--leise'))}]},
    options:{maintainAspectRatio:false,indexAxis:'y',onClick:(e,el)=>{if(!el.length)return;const cat=curCt[el[0].index][0];
      detailRows(`${cat} · Zeitraum`, D.tx.filter(t=>yok(t.m)&&t.c===cat&&vok(t)&&lok(t)));},
-    plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#9aa4b2'}},y:{ticks:{color:'#9aa4b2'}}}}}));
+    plugins:{legend:{display:false}},scales:{x:{ticks:{color:FV('--leise')}},y:{ticks:{color:FV('--leise')}}}}}));
  document.getElementById('trips').innerHTML='<tr><th>Reise (Orte)</th><th>Zeit</th><th class=r>Kosten</th></tr>'+
    D.trips.filter(t=>yr.value==='Alle'||t.ym.startsWith(yr.value)).map(t=>
      `<tr><td>${esc(t.orte)}</td><td>${t.ym}</td><td class=r>${fmt(t.kosten)} €</td></tr>`).join('');

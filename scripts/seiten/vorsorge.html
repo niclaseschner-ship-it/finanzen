@@ -1,12 +1,12 @@
 <!doctype html><html lang=de><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>Finanzen · Vorsorge</title>
 <style>
- body{font-family:system-ui,Arial,sans-serif;margin:0;background:#0f1117;color:#e6e6e6;font-size:14px}
- .bar{position:sticky;top:0;background:#11141c;padding:10px;border-bottom:1px solid #262b36;display:flex;gap:10px;align-items:center;z-index:5;flex-wrap:wrap}
- a{color:#9aa4b2;text-decoration:none;font-weight:600} a:hover{color:#cbd5e1}
+ body{font-family:system-ui,Arial,sans-serif;margin:0;background:var(--bg);color:var(--text);font-size:14px}
+ .bar{position:sticky;top:0;background:var(--fl);padding:10px;border-bottom:1px solid var(--linie);display:flex;gap:10px;align-items:center;z-index:5;flex-wrap:wrap}
+ a{color:var(--text2);text-decoration:none;font-weight:600} a:hover{color:var(--text)}
  .wrap{padding:16px 26px 80px;max-width:1500px;margin:0 auto}
- h1{font-size:22px;margin:8px 0 2px} h2{font-size:15px;margin:0 0 10px;color:#cbd5e1}
- .sub{color:#9aa4b2;max-width:900px;line-height:1.55;margin:2px 0 14px}
+ h1{font-size:22px;margin:8px 0 2px} h2{font-size:15px;margin:0 0 10px;color:var(--text)}
+ .sub{color:var(--text2);max-width:900px;line-height:1.55;margin:2px 0 14px}
  .layout{display:grid;grid-template-columns:minmax(320px,430px) 1fr;gap:22px;align-items:start}
  /* min-width:0 ist hier load-bearing: eine Grid-Spur waechst sonst auf die
     Mindestbreite ihres breitesten Kindes. Auf dem Handy schob das die
@@ -27,60 +27,62 @@
      white-space:nowrap steht und die Tabelle dadurch breit bleibt. */
   table.det{display:block;overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch}
  }
- .grp{background:#171a23;border:1px solid #262b36;border-radius:12px;padding:14px 16px;margin-bottom:14px}
- .grp h2{border-bottom:1px solid #262b36;padding-bottom:7px}
+ .grp{background:var(--fl);border:1px solid var(--linie);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+ .grp h2{border-bottom:1px solid var(--linie);padding-bottom:7px}
  .field{display:flex;align-items:center;gap:8px;margin:7px 0}
- .field .fl{flex:1;color:#cbd5e1}
- .field input{width:130px;background:#1b1f2a;color:#e6e6e6;border:1px solid #2c323f;border-radius:7px;padding:6px 8px;font-size:14px;text-align:right}
- .field input:focus{outline:none;border-color:#4f8cff}
- .field .fu{width:64px;color:#6b7280;font-size:12px}
- .chk{display:flex;align-items:center;gap:8px;color:#cbd5e1;margin:2px 0 8px;cursor:pointer;font-weight:600}
- .chk input{width:16px;height:16px;accent-color:#4f8cff}
- .subh{color:#cbd5e1;font-weight:600;font-size:12px;margin:12px 0 6px;border-top:1px solid #262b36;padding-top:10px;line-height:1.4}
- .hint{color:#6b7280;font-size:12px;line-height:1.5;margin:2px 0 6px}
+ .field .fl{flex:1;color:var(--text)}
+ .field input{width:130px;background:var(--fl2);color:var(--text);border:1px solid var(--linie);border-radius:7px;padding:6px 8px;font-size:14px;text-align:right}
+ .field input:focus{outline:none;border-color:var(--akzent)}
+ .field .fu{width:64px;color:var(--leise);font-size:12px}
+ .chk{display:flex;align-items:center;gap:8px;color:var(--text);margin:2px 0 8px;cursor:pointer;font-weight:600}
+ .chk input{width:16px;height:16px;accent-color:var(--akzent)}
+ .subh{color:var(--text);font-weight:600;font-size:12px;margin:12px 0 6px;border-top:1px solid var(--linie);padding-top:10px;line-height:1.4}
+ .hint{color:var(--leise);font-size:12px;line-height:1.5;margin:2px 0 6px}
  .szen{display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 6px}
- .szb{background:#222a38;border:1px solid #2c323f;color:#cbd5e1;border-radius:8px;padding:6px 11px;cursor:pointer;font-weight:600;font-size:13px}
- .szb:hover{border-color:#4f8cff}
+ .szb{background:var(--fl2);border:1px solid var(--linie);color:var(--text);border-radius:8px;padding:6px 11px;cursor:pointer;font-weight:600;font-size:13px}
+ .szb:hover{border-color:var(--akzent)}
  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
- .btn{background:#222a38;border:1px solid #2c323f;color:#cbd5e1;border-radius:8px;padding:8px 13px;cursor:pointer;font-weight:600}
- .btn.go{background:#16301d;border-color:#2c6b3f;color:#7ee0a0}.btn:hover{border-color:#4f8cff}
+ .btn{background:var(--fl2);border:1px solid var(--linie);color:var(--text);border-radius:8px;padding:8px 13px;cursor:pointer;font-weight:600}
+ .btn.go{background:var(--akzent-fl);border-color:var(--akzent);color:var(--akzent-text)}.btn:hover{border-color:var(--akzent)}
  .verdict{border-radius:12px;padding:14px 16px;margin-bottom:14px;line-height:1.5}
- .verdict.ok{background:#132a1c;border:1px solid #2c6b3f}
- .verdict.bad{background:#2a1620;border:1px solid #6b2c3a}
+ .verdict.ok{background:var(--akzent-fl);border:1px solid var(--akzent)}
+ .verdict.bad{background:var(--rot-fl);border:1px solid var(--rot)}
  .verdict .vh{font-size:17px;font-weight:700;margin-bottom:3px}
- .verdict.ok .vh{color:#7ee0a0}.verdict.bad .vh{color:#ff8a8a}
- .verdict .vd{color:#cbd5e1;font-size:13px}
+ .verdict.ok .vh{color:var(--akzent-text)}.verdict.bad .vh{color:var(--rot)}
+ .verdict .vd{color:var(--text);font-size:13px}
  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:14px}
- .kpi{background:#171a23;border:1px solid #262b36;border-radius:12px;padding:13px 14px}
- .kpi .v{font-size:22px;font-weight:700}.kpi .l{color:#9aa4b2;font-size:12px;margin-top:3px}
- .kpi .s{color:#6b7280;font-size:11px;margin-top:2px}
- .neg{color:#ff8a8a}.pos{color:#7ee0a0}
- .chartcard{background:#171a23;border:1px solid #262b36;border-radius:12px;padding:14px 16px;margin-bottom:14px}
- .legend{color:#9aa4b2;font-size:12px;margin-top:6px;display:flex;gap:16px;flex-wrap:wrap}
- .legend b{color:#4f8cff}.legend i{color:#9aa4b2;font-style:normal}
+ .kpi{background:var(--fl);border:1px solid var(--linie);border-radius:12px;padding:13px 14px}
+ .kpi .v{font-size:22px;font-weight:700}.kpi .l{color:var(--text2);font-size:12px;margin-top:3px}
+ .kpi .s{color:var(--leise);font-size:11px;margin-top:2px}
+ .neg{color:var(--rot)}.pos{color:var(--akzent-text)}
+ .chartcard{background:var(--fl);border:1px solid var(--linie);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+ .legend{color:var(--text2);font-size:12px;margin-top:6px;display:flex;gap:16px;flex-wrap:wrap}
+ .legend b{color:var(--akzent)}.legend i{color:var(--text2);font-style:normal}
  .legend .sw{display:inline-block;width:20px;height:0;vertical-align:middle;margin-right:3px}
  .legend .swv{display:inline-block;width:0;height:12px;vertical-align:middle;margin-right:5px}
- .modeToggle{display:inline-flex;background:#171a23;border:1px solid #262b36;border-radius:9px;padding:3px;margin-bottom:12px;gap:2px}
- .modebtn{background:none;border:0;color:#9aa4b2;font-weight:600;font-size:13px;padding:6px 13px;border-radius:7px;cursor:pointer}
- .modebtn.on{background:#4f8cff;color:#fff}
+ .modeToggle{display:inline-flex;background:var(--fl);border:1px solid var(--linie);border-radius:9px;padding:3px;margin-bottom:12px;gap:2px}
+ .modebtn{background:none;border:0;color:var(--text2);font-weight:600;font-size:13px;padding:6px 13px;border-radius:7px;cursor:pointer}
+ .modebtn.on{background:var(--akzent);color:var(--auf-akzent)}
  table.det{width:100%;border-collapse:collapse;font-size:13px}
- table.det td{padding:5px 8px;border-bottom:1px solid #1e232e}
- table.det td:last-child{text-align:right;white-space:nowrap;color:#e6e6e6}
- table.det td:first-child{color:#9aa4b2}
- .disc{color:#6b7280;font-size:12px;line-height:1.55;margin-top:12px}
- .zur{display:none;color:#4f8cff}
+ table.det td{padding:5px 8px;border-bottom:1px solid var(--linie)}
+ table.det td:last-child{text-align:right;white-space:nowrap;color:var(--text)}
+ table.det td:first-child{color:var(--text2)}
+ .disc{color:var(--leise);font-size:12px;line-height:1.55;margin-top:12px}
+ .zur{display:none;color:var(--akzent)}
 @media(max-width:900px){
   /* Am Telefon ersetzt der Weg zurueck zur Uebersicht die siebenteilige
      Navigationsleiste. Die Filter der Seite bleiben stehen. */
   .bar>a:not(.zur),.bar>b{display:none}
   .zur{display:inline-block!important;font-size:15px}
  }
-</style></head><body>
-<div class=bar>
-  <a href="/menu" class=zur>← Übersicht</a>
-<a href="/">✏️ Editor</a><a href="/statistik.html">📊 Statistik</a><a href="/vertraege">📑 Verträge</a><a href="/reisen">🏖️ Reisen</a><a href="/import">📥 Import</a><a href="/vermoegen">💰 Vermögen</a>
- <b style="color:#4f8cff">🎯 Vorsorge</b>
- <span id=savestat style="margin-left:auto;color:#9aa4b2;font-size:13px">–</span>
+</style><link rel=stylesheet href="stil.css">
+<meta name=theme-color content="#f4f3ef" media="(prefers-color-scheme: light)">
+<meta name=theme-color content="#0f1215" media="(prefers-color-scheme: dark)">
+<link rel=icon href="icon-192.png">
+</head><body>
+<!--FNAV:vorsorge-->
+<div class=bar> 
+       <span id=savestat style="margin-left:auto;color:var(--text2);font-size:13px">–</span>
 </div>
 <div class=wrap>
  <h1>🎯 Vorsorge &amp; Ruhestandsplanung</h1>
@@ -164,7 +166,7 @@
      <button class=btn id=istBtn title="Depot, Immobilienwert, Restschuld, Tilgung, Bedarf, Sparrate und Mietrendite aus den eigenen Daten übernehmen">💰 Ist-Werte übernehmen</button>
     </div>
     <p class=hint id=istHint>Holt so viel wie möglich aus den eigenen Daten, statt es zu schätzen.
-     <b>Bestände</b> aus <a href="/vermoegen">💰 Vermögen</a>: Depotwert, Immobilienwert, Restschuld, Tilgung.
+     <b>Bestände</b> aus <a href="vermoegen">💰 Vermögen</a>: Depotwert, Immobilienwert, Restschuld, Tilgung.
      <b>Flüsse</b> aus den Buchungen der letzten 12 vollen Monate: Bedarf, Sparrate, Mietrendite.
      Überschreibt nur diese sieben Felder; Alter, Rente, Inflation und Erbe bleiben Handeingabe,
      weil sie in keinem Export stehen.</p>
@@ -179,7 +181,7 @@
    <div class=chartcard>
     <h2 style="margin-bottom:6px">Vermögensverlauf</h2>
     <canvas id=chart></canvas>
-    <div class=legend><span><i class=sw style="border-bottom:3px solid #4f8cff"></i> Liquides Kapital (nominal)</span><span><i class=sw style="border-bottom:3px solid #7ee0a0"></i> Gesamtvermögen inkl. Immobilie</span><span><i class=sw style="border-bottom:2px dashed #9aa4b2"></i> Liquides Kapital real (Kaufkraft heute)</span><span><i class=swv style="border-left:2px dashed #4f8cff"></i> Renteneintritt</span><span><i class=swv style="border-left:2px dashed #f0b46b"></i> 🎁 Erbe</span></div>
+    <div class=legend><span><i class=sw style="border-bottom:3px solid var(--akzent)"></i> Liquides Kapital (nominal)</span><span><i class=sw style="border-bottom:3px solid var(--akzent-text)"></i> Gesamtvermögen inkl. Immobilie</span><span><i class=sw style="border-bottom:2px dashed var(--text2)"></i> Liquides Kapital real (Kaufkraft heute)</span><span><i class=swv style="border-left:2px dashed var(--akzent)"></i> Renteneintritt</span><span><i class=swv style="border-left:2px dashed var(--warn)"></i> 🎁 Erbe</span></div>
     <div class=hint style="margin-top:8px">↔ Fahre mit der Maus über das Diagramm (oder tippe/ziehe auf dem Handy) — der Strich zeigt für jedes Jahr, was rein- und rausgeht.</div>
     <div id=yearhead style="font-weight:700;font-size:15px;margin:14px 0 8px"></div>
     <div class=kpis id=yearkpi></div>
@@ -194,6 +196,8 @@
  </div>
 </div>
 <script>
+// Farben aus stil.css: Canvas kennt keine CSS-Variablen, deshalb zur Laufzeit lesen.
+const FV=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const FIELDS=['alter','rentenalter','endalter','bedarf','rente_gesetzlich','rente_anpassung','inflation','etf_start','sparrate','etf_rendite','etf_rendite_rente','etf_fees','abgaben','immo_wert','immo_schuld','immo_tilgung','immo_wachstum','immo_rendite','immo_anteil','erbe','erbe_immo','erbe_immo_schuld','erbe_immo_tilgung','erbe_immo_wachstum','erbe_immo_rendite','erbe_immo_anteil','erbe_alter'];
 const DEF={alter:40,rentenalter:67,endalter:90,bedarf:4000,rente_gesetzlich:1500,rente_anpassung:1.5,inflation:2.5,etf_start:100000,sparrate:1000,etf_rendite:6.5,etf_rendite_rente:4.5,etf_fees:0.2,abgaben:20,immo_wert:400000,immo_schuld:200000,immo_tilgung:600,immo_wachstum:2,immo_rendite:3,immo_anteil:0,erbe:200000,erbe_immo:0,erbe_immo_schuld:0,erbe_immo_tilgung:0,erbe_immo_wachstum:2,erbe_immo_rendite:3,erbe_immo_anteil:0,erbe_alter:65,erbe_on:true};
 const SZEN={
@@ -372,7 +376,7 @@ function renderYear(S,P,age){
   {v:mE(e.net),l:'Gesamtvermögen',s:'≈ '+altE(e.net)+' · Immobilie '+mE(e.prop)+(e.debt>1?' · Restschuld '+mE(e.debt):'')}
  ];
  const erbeLabel=e.inErbeImmo>0?(MODE==='real'?'+'+mNom(e.inErbeImmo)+' nominal · ≈ '+mReal(e.inErbeImmo)+' heute':'+'+mNom(e.inErbeImmo)+' nominal'):'';
- $('yearhead').innerHTML='📅 Alter '+age+' · ~'+yr+' · <span style="color:#9aa4b2">'+phase+'</span>'+(e.inErbeImmo>0?' · <span style="color:#f0b46b">🎁 Immobilie geerbt ('+erbeLabel+')</span>':'');
+ $('yearhead').innerHTML='📅 Alter '+age+' · ~'+yr+' · <span style="color:var(--text2)">'+phase+'</span>'+(e.inErbeImmo>0?' · <span style="color:var(--warn)">🎁 Immobilie geerbt ('+erbeLabel+')</span>':'');
  $('yearkpi').innerHTML=tiles.map(k=>'<div class=kpi><div class="v '+(k.c||'')+'">'+k.v+'</div><div class=l>'+k.l+'</div>'+(k.s?'<div class=s>'+k.s+'</div>':'')+'</div>').join('');
 }
 function setCursor(age){ if(!LAST)return; CURSOR=age;
@@ -401,37 +405,37 @@ function drawChart(S,P,ex){
  GEOM={x0,x1,aMin,aMax,W};
  ctx.font='11px system-ui,Arial'; ctx.textBaseline='middle';
  for(let i=0;i<=4;i++){const val=vMin+(vMax-vMin)*i/4, y=sy(val);
-   ctx.strokeStyle=Math.abs(val)<1e-6?'#3a4252':'#20242e'; ctx.lineWidth=1;
+   ctx.strokeStyle=Math.abs(val)<1e-6?FV('--linie'):FV('--fl'); ctx.lineWidth=1;
    ctx.beginPath();ctx.moveTo(x0,y);ctx.lineTo(x1,y);ctx.stroke();
-   ctx.fillStyle='#6b7280';ctx.textAlign='right';ctx.fillText(kfmt(val),x0-8,y);}
+   ctx.fillStyle=FV('--leise');ctx.textAlign='right';ctx.fillText(kfmt(val),x0-8,y);}
  const xr=sx(P.rentenalter);
- ctx.strokeStyle='#4f8cff';ctx.setLineDash([4,4]);ctx.lineWidth=1;
+ ctx.strokeStyle=FV('--akzent');ctx.setLineDash([4,4]);ctx.lineWidth=1;
  ctx.beginPath();ctx.moveTo(xr,y0);ctx.lineTo(xr,y1);ctx.stroke();ctx.setLineDash([]);
  if(ex.erbeOn && ex.erbeAge>=aMin && ex.erbeAge<=aMax){const xe=sx(ex.erbeAge);
-   ctx.strokeStyle='#f0b46b';ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(xe,y0);ctx.lineTo(xe,y1);ctx.stroke();ctx.setLineDash([]);
-   ctx.fillStyle='#f0b46b';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText('🎁',xe,y0);}
- ctx.fillStyle='#6b7280';ctx.textAlign='center';ctx.textBaseline='top';
+   ctx.strokeStyle=FV('--warn');ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(xe,y0);ctx.lineTo(xe,y1);ctx.stroke();ctx.setLineDash([]);
+   ctx.fillStyle=FV('--warn');ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText('🎁',xe,y0);}
+ ctx.fillStyle=FV('--leise');ctx.textAlign='center';ctx.textBaseline='top';
  for(let a=Math.ceil(aMin/5)*5;a<=aMax;a+=5)ctx.fillText(a,sx(a),y1+6);
  const yBase=sy(Math.max(vMin,Math.min(vMax,0)));
  ctx.beginPath();S.forEach((s,i)=>{const x=sx(s.age),y=sy(seriesTotal[i]);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
- ctx.strokeStyle='#7ee0a0';ctx.lineWidth=1.5;ctx.stroke();
+ ctx.strokeStyle=FV('--akzent-text');ctx.lineWidth=1.5;ctx.stroke();
  ctx.beginPath();S.forEach((s,i)=>{const x=sx(s.age),y=sy(seriesAlt[i]);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
- ctx.strokeStyle='#9aa4b2';ctx.lineWidth=1.4;ctx.setLineDash([5,3]);ctx.stroke();ctx.setLineDash([]);
+ ctx.strokeStyle=FV('--text2');ctx.lineWidth=1.4;ctx.setLineDash([5,3]);ctx.stroke();ctx.setLineDash([]);
  ctx.beginPath();S.forEach((s,i)=>{const x=sx(s.age),y=sy(seriesMain[i]);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
  ctx.lineTo(sx(aMax),yBase);ctx.lineTo(sx(aMin),yBase);ctx.closePath();
- ctx.fillStyle='rgba(79,140,255,0.12)';ctx.fill();
+ ctx.fillStyle=FV('--akzent-fl');ctx.fill();
  ctx.beginPath();S.forEach((s,i)=>{const x=sx(s.age),y=sy(seriesMain[i]);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
- ctx.strokeStyle='#4f8cff';ctx.lineWidth=2;ctx.stroke();
+ ctx.strokeStyle=FV('--akzent');ctx.lineWidth=2;ctx.stroke();
  // Jahres-Cursor (Scrubber) + Punkte auf beiden Linien
  if(ex.cursor!=null && ex.cursor>=aMin && ex.cursor<=aMax){
    const xc=sx(ex.cursor);
-   ctx.strokeStyle='#e6e6e6';ctx.globalAlpha=0.55;ctx.lineWidth=1;
+   ctx.strokeStyle=FV('--text');ctx.globalAlpha=0.55;ctx.lineWidth=1;
    ctx.beginPath();ctx.moveTo(xc,y0);ctx.lineTo(xc,y1);ctx.stroke();ctx.globalAlpha=1;
    const e=S.find(s=>s.age===ex.cursor);
    if(e){ const idx=S.findIndex(s=>s.age===ex.cursor);
-     ctx.fillStyle='#7ee0a0';ctx.beginPath();ctx.arc(xc,sy(seriesTotal[idx]),3.5,0,6.29);ctx.fill();
-     ctx.fillStyle='#9aa4b2';ctx.beginPath();ctx.arc(xc,sy(seriesAlt[idx]),3.5,0,6.29);ctx.fill();
-     ctx.fillStyle='#4f8cff';ctx.beginPath();ctx.arc(xc,sy(seriesMain[idx]),3.5,0,6.29);ctx.fill(); }
+     ctx.fillStyle=FV('--akzent-text');ctx.beginPath();ctx.arc(xc,sy(seriesTotal[idx]),3.5,0,6.29);ctx.fill();
+     ctx.fillStyle=FV('--text2');ctx.beginPath();ctx.arc(xc,sy(seriesAlt[idx]),3.5,0,6.29);ctx.fill();
+     ctx.fillStyle=FV('--akzent');ctx.beginPath();ctx.arc(xc,sy(seriesMain[idx]),3.5,0,6.29);ctx.fill(); }
  }
 }
 
@@ -443,7 +447,7 @@ function save(){
  $('savestat').textContent='… speichere';
  clearTimeout(saveTimer);
  saveTimer=setTimeout(async()=>{
-   try{const r=await fetch('/api/vorsorge',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan:o})});
+   try{const r=await fetch('api/vorsorge',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan:o})});
      $('savestat').textContent=r.ok?'gespeichert ✓':'lokal gespeichert';}
    catch(e){$('savestat').textContent='lokal gespeichert (Server offline)';}
  },600);
@@ -454,7 +458,7 @@ function setAll(obj){FIELDS.forEach(f=>{if(obj[f]!==undefined)$(f).value=obj[f];
 function setMode(m){ MODE=m; document.querySelectorAll('.modebtn').forEach(b=>b.classList.toggle('on',b.dataset.m===m)); calc(); }
 async function load(){
  let data=null;
- try{const r=await fetch('/api/vorsorge'); if(r.ok){const j=await r.json(); if(j&&j.plan)data=j.plan;}}catch(e){}
+ try{const r=await fetch('api/vorsorge'); if(r.ok){const j=await r.json(); if(j&&j.plan)data=j.plan;}}catch(e){}
  if(!data){try{data=JSON.parse(localStorage.getItem('vorsorge_plan')||'null');}catch(e){}}
  setAll(Object.assign({},DEF,data||{}));
  FIELDS.forEach(f=>{$(f).addEventListener('input',calc);$(f).addEventListener('change',calc);});
@@ -467,10 +471,10 @@ async function load(){
   try{
    // Zwei Quellen: Bestaende von der Vermoegensseite, Fluesse aus den Buchungen.
    const [d,i]=await Promise.all([
-     fetch('/api/vermoegen').then(r=>r.json()),
-     fetch('/api/ist_werte').then(r=>r.json()).catch(()=>({fehler:'nicht erreichbar'}))
+     fetch('api/vermoegen').then(r=>r.json()),
+     fetch('api/ist_werte').then(r=>r.json()).catch(()=>({fehler:'nicht erreichbar'}))
    ]);
-   if(d.fehler||!d.vorsorge){h.innerHTML='<b style="color:#ff8a8a">Ist-Werte nicht verfügbar:</b> '+(d.fehler||'keine Daten');return;}
+   if(d.fehler||!d.vorsorge){h.innerHTML='<b style="color:var(--rot)">Ist-Werte nicht verfügbar:</b> '+(d.fehler||'keine Daten');return;}
    const v=d.vorsorge, teile=[];
    ['etf_start','immo_wert','immo_schuld','immo_tilgung'].forEach(k=>{if(v[k]!=null)$(k).value=v[k];});
    teile.push('Depot '+eur(v.etf_start)+' €');
@@ -494,11 +498,11 @@ async function load(){
    }
    calc(); save();
    const de=d.stichtag.slice(8)+'.'+d.stichtag.slice(5,7)+'.'+d.stichtag.slice(0,4);
-   h.innerHTML='<b style="color:#7ee0a0">Übernommen</b> (Bestände Stand '+de+'): '
+   h.innerHTML='<b style="color:var(--akzent-text)">Übernommen</b> (Bestände Stand '+de+'): '
      +teile.join(', ')+'.'+fluss
-     +(i.fehler?' <span style="color:#f0b46b">Werte aus den Buchungen nicht geladen: '+i.fehler+'</span>':'');
+     +(i.fehler?' <span style="color:var(--warn)">Werte aus den Buchungen nicht geladen: '+i.fehler+'</span>':'');
    setTimeout(()=>{h.innerHTML=old;},20000);
-  }catch(e){h.innerHTML='<b style="color:#ff8a8a">Laden fehlgeschlagen:</b> '+e;}
+  }catch(e){h.innerHTML='<b style="color:var(--rot)">Laden fehlgeschlagen:</b> '+e;}
  };
  document.querySelectorAll('.modebtn').forEach(b=>{b.classList.toggle('on',b.dataset.m===MODE);b.onclick=()=>setMode(b.dataset.m);});
  // Jahres-Scrubber: Maus/Touch über dem Chart wählt das Jahr

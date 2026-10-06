@@ -1,47 +1,47 @@
 <!doctype html><html lang=de><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>Finanzen · Vermögen</title>
 <style>
- body{font-family:system-ui,Arial,sans-serif;margin:0;background:#0f1117;color:#e6e6e6;font-size:14px}
- .bar{position:sticky;top:0;background:#11141c;padding:10px;border-bottom:1px solid #262b36;display:flex;gap:10px;align-items:center;z-index:5;flex-wrap:wrap}
- a{color:#9aa4b2;text-decoration:none;font-weight:600} a:hover{color:#cbd5e1}
+ body{font-family:system-ui,Arial,sans-serif;margin:0;background:var(--bg);color:var(--text);font-size:14px}
+ .bar{position:sticky;top:0;background:var(--fl);padding:10px;border-bottom:1px solid var(--linie);display:flex;gap:10px;align-items:center;z-index:5;flex-wrap:wrap}
+ a{color:var(--text2);text-decoration:none;font-weight:600} a:hover{color:var(--text)}
  .wrap{padding:16px 26px 80px;max-width:1500px;margin:0 auto}
- h1{font-size:22px;margin:8px 0 2px} h2{font-size:15px;margin:0 0 10px;color:#cbd5e1}
- .sub{color:#9aa4b2;max-width:900px;line-height:1.55;margin:2px 0 14px}
- .grp{background:#171a23;border:1px solid #262b36;border-radius:12px;padding:14px 16px;margin-bottom:14px}
- .grp h2{border-bottom:1px solid #262b36;padding-bottom:7px}
+ h1{font-size:22px;margin:8px 0 2px} h2{font-size:15px;margin:0 0 10px;color:var(--text)}
+ .sub{color:var(--text2);max-width:900px;line-height:1.55;margin:2px 0 14px}
+ .grp{background:var(--fl);border:1px solid var(--linie);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+ .grp h2{border-bottom:1px solid var(--linie);padding-bottom:7px}
  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-bottom:14px}
- .kpi{background:#171a23;border:1px solid #262b36;border-radius:12px;padding:13px 14px}
- .kpi .v{font-size:22px;font-weight:700}.kpi .l{color:#9aa4b2;font-size:12px;margin-top:3px}
- .kpi .s{color:#6b7280;font-size:11px;margin-top:2px}
- .kpi.hero .v{font-size:26px;color:#fff}
- .neg{color:#ff8a8a}.pos{color:#7ee0a0}
+ .kpi{background:var(--fl);border:1px solid var(--linie);border-radius:12px;padding:13px 14px}
+ .kpi .v{font-size:22px;font-weight:700}.kpi .l{color:var(--text2);font-size:12px;margin-top:3px}
+ .kpi .s{color:var(--leise);font-size:11px;margin-top:2px}
+ .kpi.hero .v{font-size:26px;color:var(--text)}
+ .neg{color:var(--rot)}.pos{color:var(--akzent-text)}
  .cbar{display:flex;height:32px;border-radius:8px;overflow:hidden;gap:2px}
  .cbar div{min-width:3px}
  .leg{margin-top:12px;display:grid;gap:8px}
  .lg{display:flex;align-items:center;gap:10px;font-size:13px}
  .lg .sw{width:11px;height:11px;border-radius:3px;flex:none}
- .lg .n{flex:1;color:#cbd5e1}
+ .lg .n{flex:1;color:var(--text)}
  .lg .v{font-weight:700;font-variant-numeric:tabular-nums}
- .lg .p{color:#6b7280;width:46px;text-align:right;font-variant-numeric:tabular-nums}
+ .lg .p{color:var(--leise);width:46px;text-align:right;font-variant-numeric:tabular-nums}
  table.det{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
- table.det td{padding:9px 8px;border-bottom:1px solid #1e232e;vertical-align:top}
+ table.det td{padding:9px 8px;border-bottom:1px solid var(--linie);vertical-align:top}
  table.det tr:last-child td{border-bottom:none}
- table.det td.nm{color:#e6e6e6;font-weight:600}
- table.det td.nm span{display:block;color:#6b7280;font-size:11.5px;font-weight:400;margin-top:2px;max-width:56ch;line-height:1.45}
- table.det td.an{color:#9aa4b2;text-align:right;white-space:nowrap;font-size:12px}
- table.det td.vl{text-align:right;white-space:nowrap;font-weight:700;color:#e6e6e6}
+ table.det td.nm{color:var(--text);font-weight:600}
+ table.det td.nm span{display:block;color:var(--leise);font-size:11.5px;font-weight:400;margin-top:2px;max-width:56ch;line-height:1.45}
+ table.det td.an{color:var(--text2);text-align:right;white-space:nowrap;font-size:12px}
+ table.det td.vl{text-align:right;white-space:nowrap;font-weight:700;color:var(--text)}
  table.det td.gt{text-align:right;white-space:nowrap;width:1%}
- .grph td{color:#6b7280;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding-top:16px;border-bottom:1px solid #262b36}
- .sumr td{border-top:1px solid #2c323f;border-bottom:none;padding-top:13px;font-size:15px;font-weight:700}
- .bdg{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;border:1px solid #2c323f;color:#9aa4b2}
- .mk{padding:12px 0;border-bottom:1px solid #1e232e}
+ .grph td{color:var(--leise);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding-top:16px;border-bottom:1px solid var(--linie)}
+ .sumr td{border-top:1px solid var(--linie);border-bottom:none;padding-top:13px;font-size:15px;font-weight:700}
+ .bdg{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;border:1px solid var(--linie);color:var(--text2)}
+ .mk{padding:12px 0;border-bottom:1px solid var(--linie)}
  .mk:last-child{border-bottom:none;padding-bottom:0}
- .mk h3{font-size:13.5px;font-weight:700;margin:0 0 5px;color:#cbd5e1}
- .mk p{margin:0 0 4px;color:#9aa4b2;font-size:12.5px;line-height:1.55}
- .mk .nt{color:#6b7280}
- .mk .rs{color:#cbd5e1;font-weight:600}
- .disc{color:#6b7280;font-size:12px;line-height:1.6;margin-top:12px}
- .err{background:#2a1620;border:1px solid #6b2c3a;border-radius:12px;padding:14px 16px;color:#ff8a8a}
+ .mk h3{font-size:13.5px;font-weight:700;margin:0 0 5px;color:var(--text)}
+ .mk p{margin:0 0 4px;color:var(--text2);font-size:12.5px;line-height:1.55}
+ .mk .nt{color:var(--leise)}
+ .mk .rs{color:var(--text);font-weight:600}
+ .disc{color:var(--leise);font-size:12px;line-height:1.6;margin-top:12px}
+ .err{background:var(--rot-fl);border:1px solid var(--rot);border-radius:12px;padding:14px 16px;color:var(--rot)}
 
  /* Handy: breite Tabellen scrollen in sich selbst, statt die ganze Seite
     seitlich zu schieben. Alle Spalten bleiben erreichbar. */
@@ -49,19 +49,21 @@
   .wrap{padding:12px}
   table{display:block;overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch}
  }
- .zur{display:none;color:#4f8cff}
+ .zur{display:none;color:var(--akzent)}
 @media(max-width:900px){
   /* Am Telefon ersetzt der Weg zurueck zur Uebersicht die siebenteilige
      Navigationsleiste. Die Filter der Seite bleiben stehen. */
   .bar>a:not(.zur),.bar>b{display:none}
   .zur{display:inline-block!important;font-size:15px}
  }
-</style></head><body>
-<div class=bar>
-  <a href="/menu" class=zur>← Übersicht</a>
-<a href="/">✏️ Editor</a><a href="/statistik.html">📊 Statistik</a><a href="/vertraege">📑 Verträge</a><a href="/reisen">🏖️ Reisen</a><a href="/import">📥 Import</a>
- <b style="color:#4f8cff">💰 Vermögen</b> <a href="/vorsorge">🎯 Vorsorge</a>
- <span id=stand style="margin-left:auto;color:#9aa4b2;font-size:13px">–</span>
+</style><link rel=stylesheet href="stil.css">
+<meta name=theme-color content="#f4f3ef" media="(prefers-color-scheme: light)">
+<meta name=theme-color content="#0f1215" media="(prefers-color-scheme: dark)">
+<link rel=icon href="icon-192.png">
+</head><body>
+<!--FNAV:vermoegen-->
+<div class=bar> 
+       <span id=stand style="margin-left:auto;color:var(--text2);font-size:13px">–</span>
 </div>
 <div class=wrap>
  <h1>💰 Vermögen</h1>
@@ -69,7 +71,7 @@
  <div id=body></div>
 </div>
 <script>
-const F=['#3987e5','#d95926','#199e70','#c98500'];
+const F=['var(--kat1)','var(--kat2)','var(--kat3)','var(--kat4)'];
 const $=i=>document.getElementById(i);
 const e0=n=>(n==null?'–':Math.round(n).toLocaleString('de-DE'));
 const rng=(a,b)=>Math.abs(b-a)<1?e0(a)+' €':e0(a)+' – '+e0(b)+' €';
@@ -159,6 +161,6 @@ function render(d){
     (d.nicht_enthalten?'<br>Nicht enthalten: '+esc(d.nicht_enthalten):'')+'</p>';
  $('body').innerHTML=h;
 }
-fetch('/api/vermoegen').then(r=>r.json()).then(render)
+fetch('api/vermoegen').then(r=>r.json()).then(render)
  .catch(e=>{$('body').innerHTML='<div class=err>Laden fehlgeschlagen: '+esc(e)+'</div>';});
 </script></body></html>

@@ -40,14 +40,9 @@ class TestSeitenAuslagerung(unittest.TestCase):
     sagen — nicht ein Absturz beim ersten Aufruf im Browser."""
 
     def test_alle_seiten_vorhanden_und_nicht_leer(self):
-        for name in ("APP_HTML", "VTG_HTML", "REISEN_HTML", "IMPORT_HTML",
+        for name in ("APP_HTML", "VTG_HTML", "REISEN_HTML", "START_HTML", "STIL_CSS",
                      "SHARED_JS", "VORSORGE_HTML", "VERMOEGEN_HTML"):
             self.assertGreater(len(getattr(app, name)), 500, f"{name} ist verdächtig kurz")
-
-    def test_import_seite_hat_platzhalter(self):
-        """Die Import-Seite zeigt den Eingangsordner an; der wird beim Ausliefern
-        ersetzt. Fehlt der Platzhalter, steht dort nichts."""
-        self.assertIn("__KONTEN__", app.IMPORT_HTML)
 
     def test_kategorien_kommen_aus_der_konfiguration(self):
         self.assertEqual(app.CATS, konfig.KATEGORIEN)

@@ -112,3 +112,12 @@ camt*.xml
 *.code-workspace
 .DS_Store
 .claude/settings.local.json
+
+# Angewendetes Kategorien-Feedback enthaelt echte Buchungen (tx_id, Kategorie).
+feedback_angewendet_*.json
+# Datenbanksicherungen enthalten echte Buchungen.
+*.db.bak*
+
+# Rechnerspezifische Claude-Einstellungen (Pfade auf dem eigenen Rechner)
+.claude/settings.json
+.claude/settings.local.json

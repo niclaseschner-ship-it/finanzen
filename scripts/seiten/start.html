@@ -1,0 +1,154 @@
+<!doctype html><html lang=de><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><title>Finanzen · Übersicht</title>
+<!-- Desktop-Startseite unter /finanzen/. Gleiche Daten und gleiche Rechnung wie die
+     Handy-App (api/handy/*, handy.py), nur breiter angeordnet. -->
+<style>
+ .wrap{max-width:1500px;margin:0 auto;padding:6px 24px 60px}
+ .kopfzeile{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin:20px 0 18px}
+ .kopfzeile h1{margin:0}
+ .unter{color:var(--leise);font-size:13.5px;margin-top:4px}
+ .monatswahl{display:flex;gap:6px}
+ .monatswahl button{width:38px;height:38px;border:0;border-radius:11px;background:var(--fl);box-shadow:var(--schatten);color:var(--text2);display:grid;place-items:center}
+ .monatswahl button:disabled{opacity:.3;cursor:default}
+ .kennzahlen{display:grid;grid-template-columns:1.4fr repeat(4,1fr);gap:12px}
+ .k{background:var(--fl);border-radius:var(--r);box-shadow:var(--schatten);padding:18px 20px;text-decoration:none;color:inherit;display:block}
+ a.k:hover{outline:2px solid var(--fl3)}
+ .k .l{font-size:13px;color:var(--text2);font-weight:550}
+ .k .v{font-size:26px;font-weight:740;letter-spacing:-.03em;margin-top:6px;font-variant-numeric:tabular-nums}
+ .k.gross .v{font-size:42px;letter-spacing:-.035em}
+ .k .s{font-size:12.5px;color:var(--leise);margin-top:6px}
+ .pille{display:inline-flex;align-items:center;gap:4px;border-radius:99px;padding:3px 9px;font-size:12.5px;font-weight:600;white-space:nowrap}
+ .pille.gut{background:var(--akzent-fl);color:var(--akzent-text)}
+ .pille.acht{background:var(--warn-fl);color:var(--warn)}
+ .pille.neutral{background:var(--fl2);color:var(--text2)}
+ .zwei{display:grid;grid-template-columns:1.25fr 1fr;gap:12px;margin-top:12px;align-items:start}
+ .karte{padding:20px}
+ .karte h2{margin:0 0 14px!important}
+ .diagramm{overflow-x:auto;scrollbar-width:thin}
+ .diagramm .bal{cursor:pointer}
+ .kat{display:block;width:100%;text-align:left;padding:10px 0;border:0;border-top:1px solid var(--linie);background:none;color:inherit;border-radius:0}
+ .kat:first-of-type{border-top:0;padding-top:0}
+ .kat .z1{display:flex;justify-content:space-between;gap:10px}
+ .kat .n{font-weight:600}.kat .v{font-weight:650;font-variant-numeric:tabular-nums}
+ .kat .spur{position:relative;height:6px;border-radius:3px;background:var(--fl2);margin:7px 0 4px}
+ .kat .fuell{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:var(--akzent)}
+ .kat .fuell.drueber{background:var(--warn)}
+ .kat .mark{position:absolute;top:-3px;bottom:-3px;width:2px;border-radius:1px;background:var(--text)}
+ .kat .z2{display:flex;justify-content:space-between;font-size:12px;color:var(--leise)}
+ .kacheln{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-top:12px}
+ .kachel{display:flex;gap:14px;align-items:flex-start;background:var(--fl);border-radius:var(--r);box-shadow:var(--schatten);padding:16px 18px;text-decoration:none;color:inherit}
+ .kachel:hover{outline:2px solid var(--fl3)}
+ .kachel svg{flex:none;color:var(--akzent);margin-top:1px}
+ .kachel b{display:block;font-size:15.5px}
+ .kachel span{display:block;color:var(--leise);font-size:13px;margin-top:2px;line-height:1.4}
+ .fuss{color:var(--leise);font-size:12.5px;margin-top:18px;line-height:1.5}
+ .fehler{background:var(--rot-fl);color:var(--rot);border-radius:var(--r);padding:14px 18px}
+ @media(max-width:1100px){.kennzahlen{grid-template-columns:repeat(2,1fr)}.k.gross{grid-column:1/-1}.zwei{grid-template-columns:1fr}}
+</style>
+<link rel=stylesheet href="stil.css">
+<meta name=theme-color content="#f4f3ef" media="(prefers-color-scheme: light)">
+<meta name=theme-color content="#0f1215" media="(prefers-color-scheme: dark)">
+<link rel=icon href="icon-192.png">
+</head><body>
+<!--FNAV:start-->
+<div class=wrap>
+ <div class=kopfzeile>
+  <div><h1 id=titel>Übersicht</h1><div class=unter id=unter>lädt …</div></div>
+  <div class=monatswahl>
+   <button id=zurueck aria-label="Vormonat"><svg width=18 height=18 viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=2.2 stroke-linecap=round stroke-linejoin=round><path d="m15 18-6-6 6-6"/></svg></button>
+   <button id=vor aria-label="Folgemonat"><svg width=18 height=18 viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=2.2 stroke-linecap=round stroke-linejoin=round><path d="m9 18 6-6-6-6"/></svg></button>
+  </div>
+ </div>
+ <div id=inhalt></div>
+ <div class=kacheln>
+  <a class=kachel href="editor"><svg width=24 height=24 viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=1.9 stroke-linecap=round><path d="M9 6h11M9 12h11M9 18h11"/><circle cx=4.5 cy=6 r=1 /><circle cx=4.5 cy=12 r=1 /><circle cx=4.5 cy=18 r=1 /></svg><div><b>Buchungen</b><span>Prüfen, kategorisieren, kommentieren, Händlerregeln</span></div></a>
+  <a class=kachel href="statistik.html"><svg width=24 height=24 viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=1.9 stroke-linecap=round><path d="M4 20h16"/><path d="M7 16v-5"/><path d="M12 16V7"/><path d="M17 16v-8"/></svg><div><b>Statistik</b><span>Einnahmen, Ausgaben und Kategorien im Verlauf</span></div></a>
+  <a class=kachel href="vertraege"><svg width=24 height=24 viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=1.9 stroke-linecap=round stroke-linejoin=round><path d="M17 3l3 3-3 3"/><path d="M4 11V9a3 3 0 0 1 3-3h13"/><path d="M7 21l-3-3 3-3"/><path d="M20 13v2a3 3 0 0 1-3 3H4"/></svg><div><b>Verträge</b><span>Wiederkehrendes, Fixkosten pro Monat und Jahr</span></div></a>
+  <a class=kachel href="reisen"><svg width=24 height=24 viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=1.9 stroke-linecap=round stroke-linejoin=round><path d="M12 21s-6-5.3-6-10a6 6 0 0 1 12 0c0 4.7-6 10-6 10z"/><circle cx=12 cy=11 r=2.2 /></svg><div><b>Reisen</b><span>Erkannte Reisen und was sie gekostet haben</span></div></a>
+  <a class=kachel href="vermoegen"><svg width=24 height=24 viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=1.9 stroke-linecap=round stroke-linejoin=round><path d="M3 10 12 4l9 6"/><path d="M5 10v8M9.5 10v8M14.5 10v8M19 10v8"/><path d="M3 20h18"/></svg><div><b>Vermögen</b><span>Konten, Depot, Immobilien, Kredite</span></div></a>
+  <a class=kachel href="vorsorge"><svg width=24 height=24 viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=1.9 stroke-linecap=round stroke-linejoin=round><circle cx=12 cy=12 r=8.5 /><circle cx=12 cy=12 r=4.5 /><circle cx=12 cy=12 r=.8 /></svg><div><b>Vorsorge</b><span>Ruhestandsplanung Jahr für Jahr</span></div></a>
+ </div>
+ <div class=fuss id=fuss></div>
+</div>
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const nf0=new Intl.NumberFormat('de-DE',{maximumFractionDigits:0});
+const nf1=new Intl.NumberFormat('de-DE',{minimumFractionDigits:1,maximumFractionDigits:1});
+const eur=x=>nf0.format(Math.round(x))+' €';
+const MON=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+const MONK=['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+const ymName=ym=>MON[+ym.slice(5,7)-1]+' '+ym.slice(0,4), ymKurz=ym=>MONK[+ym.slice(5,7)-1];
+const datum=d=>new Date(d+'T12:00:00').toLocaleDateString('de-DE',{day:'numeric',month:'short',year:'numeric'});
+const FV=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+let U=null, MONAT=null, FIX=null, NETTO=null;
+
+async function laden(){
+ try{
+  const [u,v,vm]=await Promise.all([
+   fetch('api/handy/uebersicht').then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}),
+   fetch('api/handy/vertraege').then(r=>r.json()).catch(()=>[]),
+   fetch('api/handy/vermoegen').then(r=>r.json()).catch(()=>null)]);
+  U=u;
+  FIX=v.filter(c=>c.status!=='rejected'&&c.aktiv&&c.richtung==='Ausgabe').reduce((s,c)=>s+c.monatlich,0);
+  NETTO=vm&&vm.summen?vm.summen:null;
+  // wie in der Handy-App: der laufende Monat erst ab dem 15., davor der letzte volle
+  const ms=U.monate, letzter=ms[ms.length-1], tag=+(U.letzte||'').slice(8,10);
+  MONAT=(!ms.some(m=>m.ym===U.bis)||(letzter.ym===U.letzte.slice(0,7)&&tag>=15))?letzter.ym:U.bis;
+  zeichnen();
+ }catch(e){$('#inhalt').innerHTML='<div class=fehler>Zahlen nicht geladen ('+esc(e.message)+').</div>';$('#unter').textContent='';}
+}
+function zeichnen(){
+ const ms=U.monate,i=ms.findIndex(m=>m.ym===MONAT),m=ms[i],sch=U.schnitt;
+ $('#titel').textContent=ymName(m.ym);
+ $('#unter').textContent=(m.voll?m.n+' Buchungen':'läuft noch')+' · letzte Buchung '+datum(U.letzte);
+ $('#zurueck').disabled=i<=0; $('#vor').disabled=i>=ms.length-1;
+ let verg='';
+ if(m.voll&&sch.konsum>0){const d=(m.konsum-sch.konsum)/sch.konsum,p=Math.abs(Math.round(d*100));
+  verg=p<3?'<span class="pille neutral">wie üblich</span>':d<0?`<span class="pille gut">↓ ${p} % unter Ø</span>`:`<span class="pille acht">↑ ${p} % über Ø</span>`;}
+ else verg='<span class="pille neutral">Monat läuft</span>';
+ const uebrig=m.ein-m.konsum-m.sparen;
+ const kats=Object.entries(m.kat).filter(([,v])=>v>.5).sort((a,b)=>b[1]-a[1]);
+ const max=Math.max(1,...kats.map(([k,v])=>Math.max(v,sch.kat[k]||0)));
+ const netto=NETTO?(Math.abs(NETTO.netto_max-NETTO.netto_min)<1?eur(NETTO.netto_min):nf0.format(Math.round(NETTO.netto_min/1000))+'–'+nf0.format(Math.round(NETTO.netto_max/1000))+' Tsd. €'):'—';
+ $('#inhalt').innerHTML=`
+  <div class=kennzahlen>
+   <a class="k gross" href="statistik.html"><div class=l>Ausgaben</div><div class=v>${eur(m.konsum)}</div><div class=s>${verg} &nbsp;Ø ${eur(sch.konsum)}</div></a>
+   <div class=k><div class=l>Einnahmen</div><div class=v>${eur(m.ein)}</div><div class=s>Ø ${eur(sch.ein)}</div></div>
+   <div class=k><div class=l>Gespart</div><div class=v>${eur(m.sparen)}</div><div class=s>Übrig: <span style="color:${uebrig<0?'var(--warn)':'var(--text)'}">${uebrig<0?'−':''}${eur(Math.abs(uebrig))}</span></div></div>
+   <a class=k href="vertraege"><div class=l>Feste Ausgaben</div><div class=v>${FIX==null?'—':eur(FIX)}</div><div class=s>pro Monat</div></a>
+   <a class=k href="vermoegen"><div class=l>Netto-Vermögen</div><div class=v style="font-size:22px">${netto}</div><div class=s>${U.offen} Buchungen noch zu prüfen</div></a>
+  </div>
+  <div class=zwei>
+   <div class=karte><h2>Ausgaben je Monat</h2><div class=diagramm id=diagramm></div></div>
+   <div class=karte><h2>Wofür · ${esc(ymName(m.ym))}</h2>${kats.slice(0,8).map(([k,v])=>{const s=sch.kat[k]||0,dr=m.voll&&s>0&&v>s*1.15;
+     return `<button class=kat onclick="location.href='statistik.html'"><div class=z1><span class=n>${esc(k)}</span><span class=v>${eur(v)}</span></div>
+      <div class=spur><div class="fuell${dr?' drueber':''}" style="width:${(v/max*100).toFixed(1)}%"></div>${s>0?`<div class=mark style="left:calc(${(s/max*100).toFixed(1)}% - 1px)"></div>`:''}</div>
+      <div class=z2><span>${s>0?'Ø '+eur(s):'sonst selten'}</span><span>${s>0&&m.voll?(v>=s?'+':'−')+eur(Math.abs(v-s)):''}</span></div></button>`;}).join('')||'<div class=unter>Noch keine Ausgaben in diesem Monat.</div>'}${kats.length>8?`<a href="statistik.html" style="display:inline-block;margin-top:10px;font-weight:600;font-size:13.5px">Alle ${kats.length} Kategorien in der Statistik</a>`:''}</div>
+  </div>`;
+ $('#fuss').innerHTML=`Ausgaben ohne Sparen und interne Umbuchungen, wie in der Statistik. Ø aus den ${sch.monate.length} vollen Monaten ${sch.monate.length?ymKurz(sch.monate[0])+' '+sch.monate[0].slice(0,4)+' – '+ymKurz(sch.monate.at(-1))+' '+sch.monate.at(-1).slice(0,4):''}; der senkrechte Strich zeigt ihn je Kategorie.`;
+ diagramm();
+}
+function diagramm(){
+ const box=$('#diagramm'),ms=U.monate,sch=U.schnitt.konsum,bw=26,gap=10,oben=24,h=300,unten=24;
+ const breite=Math.max(box.clientWidth,ms.length*(bw+gap)+gap), versatz=breite-(ms.length*(bw+gap)-gap);
+ const max=Math.max(sch,...ms.map(m=>m.konsum))*1.08||1, y=v=>oben+h-Math.max(0,v)/max*h;
+ let s=`<svg width="${breite}" height="${oben+h+unten}" role=img aria-label="Ausgaben je Monat">`;
+ ms.forEach((m,i)=>{const x=versatz+i*(bw+gap)-gap/2,an=m.ym===MONAT,yt=y(m.konsum),r=Math.min(4,(oben+h-yt)/2);
+  const fill=an?FV('--akzent'):(m.voll?FV('--balken'):FV('--fl3'));
+  s+=`<g class=bal data-ym="${m.ym}"><title>${ymName(m.ym)}: ${eur(m.konsum)}</title><rect x="${x-gap/2}" y=0 width="${bw+gap}" height="${oben+h+unten}" fill=transparent />
+   <path d="M${x} ${oben+h}V${yt+r}q0 -${r} ${r} -${r}h${bw-2*r}q${r} 0 ${r} ${r}V${oben+h}Z" fill="${fill}"/>
+   <text x="${x+bw/2}" y="${oben+h+17}" text-anchor=middle font-size=11.5 font-weight="${an?700:500}" fill="${an?FV('--text'):FV('--leise')}">${ymKurz(m.ym)}</text>
+   ${an?`<text x="${x+bw/2}" y="${yt-8}" text-anchor=middle font-size=11.5 font-weight=700 fill="${FV('--text')}">${m.konsum<1000?nf0.format(Math.round(m.konsum)):nf1.format(m.konsum/1000)+'k'}</text>`:''}</g>`;});
+ if(sch>0)s+=`<line x1=0 x2="${breite}" y1="${y(sch)}" y2="${y(sch)}" stroke="${FV('--text2')}" stroke-dasharray="3 4" opacity=.7 /><text x=4 y="${y(sch)-5}" font-size=11.5 font-weight=600 fill="${FV('--text2')}">Ø</text>`;
+ box.innerHTML=s+'</svg>';
+ box.querySelectorAll('.bal').forEach(g=>g.addEventListener('click',()=>{MONAT=g.dataset.ym;zeichnen();}));
+ box.scrollLeft=box.scrollWidth;
+}
+$('#zurueck').onclick=()=>{const i=U.monate.findIndex(m=>m.ym===MONAT);if(i>0){MONAT=U.monate[i-1].ym;zeichnen();}};
+$('#vor').onclick=()=>{const i=U.monate.findIndex(m=>m.ym===MONAT);if(i<U.monate.length-1){MONAT=U.monate[i+1].ym;zeichnen();}};
+addEventListener('resize',()=>{if(U)diagramm();});
+laden();
+</script>
+</body></html>

@@ -10,7 +10,7 @@ import time, json, re, urllib.request, urllib.parse
 import db, konfig
 
 NOMINATIM = "https://nominatim.openstreetmap.org/search"
-UA = "buddyboard-finanzen/1.0 (persönliche, lokale Ausgaben-Auswertung)"
+UA = "finanzen-auswertung/1.0 (persönliche, lokale Ausgaben-Auswertung)"
 MAX_PRO_LAUF = 150          # höflich + zeitlich begrenzt; Rest kommt im nächsten Lauf dran
 PAUSE = 1.1                 # Nominatim-Policy: max ~1 Anfrage/Sekunde
 

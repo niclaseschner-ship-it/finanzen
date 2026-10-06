@@ -1,41 +1,41 @@
 <!doctype html><html lang=de><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>Finanzen · Verträge</title>
 <style>
- body{font-family:system-ui,Arial,sans-serif;margin:0;background:#0f1117;color:#e6e6e6;font-size:14px}
- .bar{position:sticky;top:0;background:#11141c;padding:10px;border-bottom:1px solid #262b36;display:flex;gap:10px;align-items:center;z-index:5}
- a{color:#9aa4b2;text-decoration:none;font-weight:600}
+ body{font-family:system-ui,Arial,sans-serif;margin:0;background:var(--bg);color:var(--text);font-size:14px}
+ .bar{position:sticky;top:0;background:var(--fl);padding:10px;border-bottom:1px solid var(--linie);display:flex;gap:10px;align-items:center;z-index:5}
+ a{color:var(--text2);text-decoration:none;font-weight:600}
  .wrap{padding:16px 28px;max-width:1600px;margin:0 auto}
  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:8px 0 18px}
- .kpi{background:#171a23;border:1px solid #262b36;border-radius:12px;padding:14px}
- .kpi .v{font-size:22px;font-weight:700}.kpi .l{color:#9aa4b2;font-size:12px;margin-top:3px}
- .jl{display:block;font-size:12px;color:#9aa4b2;font-weight:400;margin-top:1px}
- td.jahr{color:#cbd5e1;font-weight:600}
- table{width:100%;border-collapse:collapse}td,th{padding:6px 8px;border-bottom:1px solid #1e232e;vertical-align:middle}
- th{position:sticky;top:48px;background:#11141c;color:#9aa4b2;text-align:left;cursor:default}
+ .kpi{background:var(--fl);border:1px solid var(--linie);border-radius:12px;padding:14px}
+ .kpi .v{font-size:22px;font-weight:700}.kpi .l{color:var(--text2);font-size:12px;margin-top:3px}
+ .jl{display:block;font-size:12px;color:var(--text2);font-weight:400;margin-top:1px}
+ td.jahr{color:var(--text);font-weight:600}
+ table{width:100%;border-collapse:collapse}td,th{padding:6px 8px;border-bottom:1px solid var(--linie);vertical-align:middle}
+ th{position:sticky;top:48px;background:var(--fl);color:var(--text2);text-align:left;cursor:default}
  .r{text-align:right;white-space:nowrap}
- select,input{background:#1b1f2a;color:#e6e6e6;border:1px solid #2c323f;border-radius:7px;padding:5px 7px;font-size:13px}
- .nm{width:230px} .b{background:#222a38;border:1px solid #2c323f;color:#cbd5e1;border-radius:6px;padding:4px 9px;cursor:pointer;font-weight:600}
- .b.ok{background:#16301d;border-color:#2c6b3f;color:#7ee0a0} .b.no{background:#301717;border-color:#6b2c2c;color:#ff8a8a}
+ select,input{background:var(--fl2);color:var(--text);border:1px solid var(--linie);border-radius:7px;padding:5px 7px;font-size:13px}
+ .nm{width:230px} .b{background:var(--fl2);border:1px solid var(--linie);color:var(--text);border-radius:6px;padding:4px 9px;cursor:pointer;font-weight:600}
+ .b.ok{background:var(--akzent-fl);border-color:var(--akzent);color:var(--akzent-text)} .b.no{background:var(--rot-fl);border-color:var(--rot);color:var(--rot)}
  .pill{font-size:11px;border-radius:6px;padding:1px 7px}
- .s-confirmed{background:#16301d;color:#7ee0a0}.s-candidate{background:#2a2f3a;color:#cbd5e1}.s-rejected{background:#301717;color:#ff8a8a}
- .sepa{color:#7ee0a0;font-size:11px}.karte{color:#9aa4b2;font-size:11px}
- .ein{color:#7ee0a0}.aus{color:#ff8a8a}
- .zw{color:#7f9cc7;font-size:11px;margin-top:3px}
- .akt{background:#16301d;color:#7ee0a0}.exp{background:#3a2a17;color:#f0b46b}
+ .s-confirmed{background:var(--akzent-fl);color:var(--akzent-text)}.s-candidate{background:var(--linie);color:var(--text)}.s-rejected{background:var(--rot-fl);color:var(--rot)}
+ .sepa{color:var(--akzent-text);font-size:11px}.karte{color:var(--text2);font-size:11px}
+ .ein{color:var(--akzent-text)}.aus{color:var(--rot)}
+ .zw{color:var(--blau);font-size:11px;margin-top:3px}
+ .akt{background:var(--akzent-fl);color:var(--akzent-text)}.exp{background:var(--warn-fl);color:var(--warn)}
  tr.expired{opacity:.6}
- .tgl{background:#222a38;border:1px solid #2c323f;color:#cbd5e1;border-radius:6px;cursor:pointer;padding:2px 8px;font-size:11px;white-space:nowrap}
- .tgl:hover{border-color:#4f8cff;color:#fff}
- .man{color:#f0b46b;font-size:11px;margin-top:2px}.man .rs{color:#7f9cc7;cursor:pointer;text-decoration:underline}
+ .tgl{background:var(--fl2);border:1px solid var(--linie);color:var(--text);border-radius:6px;cursor:pointer;padding:2px 8px;font-size:11px;white-space:nowrap}
+ .tgl:hover{border-color:var(--akzent);color:var(--text)}
+ .man{color:var(--warn);font-size:11px;margin-top:2px}.man .rs{color:var(--blau);cursor:pointer;text-decoration:underline}
  /* gerade von Hand geaendert: bleibt trotz Filter stehen und ist als solche erkennbar */
- tr.eben{opacity:1!important;box-shadow:inset 3px 0 0 #4f8cff}
- .cnt{background:#222a38;border:1px solid #2c323f;color:#cbd5e1;border-radius:6px;padding:2px 8px;cursor:pointer;font-size:13px}
- .up{color:#ff8a8a;font-size:11px}.dn{color:#7ee0a0;font-size:11px}
+ tr.eben{opacity:1!important;box-shadow:inset 3px 0 0 var(--akzent)}
+ .cnt{background:var(--fl2);border:1px solid var(--linie);color:var(--text);border-radius:6px;padding:2px 8px;cursor:pointer;font-size:13px}
+ .up{color:var(--rot);font-size:11px}.dn{color:var(--akzent-text);font-size:11px}
  #ov{position:fixed;inset:0;background:#000a;display:none;z-index:60;align-items:center;justify-content:center}
- #mod{background:#11141c;border:1px solid #3a4252;border-radius:12px;max-width:760px;width:92%;max-height:80vh;overflow:auto;padding:16px;box-shadow:0 12px 40px #000b}
- #mod h3{margin:0 0 4px}#mod .x{float:right;background:#2a3343;border:0;color:#cbd5e1;border-radius:7px;padding:5px 10px;cursor:pointer}
+ #mod{background:var(--fl);border:1px solid var(--linie);border-radius:12px;max-width:760px;width:92%;max-height:80vh;overflow:auto;padding:16px;box-shadow:0 12px 40px #000b}
+ #mod h3{margin:0 0 4px}#mod .x{float:right;background:var(--fl2);border:0;color:var(--text);border-radius:7px;padding:5px 10px;cursor:pointer}
  #mod table{font-size:13px}#mod td,#mod th{padding:5px 8px}
- tr.rej{opacity:.45} .hint{color:#6b7280;font-size:12px}
- #msg{margin-left:auto;color:#9aa4b2}
+ tr.rej{opacity:.45} .hint{color:var(--leise);font-size:12px}
+ #msg{margin-left:auto;color:var(--text2)}
 
  /* ---- Handy und schmale Fenster -------------------------------------------
     Zehn Spalten passen auf kein Telefon und auf kein Tablet. Unterhalb von 900px wird aus jeder
@@ -55,11 +55,11 @@
   .kpi{padding:10px}.kpi .v{font-size:17px}
   table,tbody,tr,td{display:block;width:auto}
   thead{display:none}
-  tr{position:relative;background:#141823;border:1px solid #262b36;border-radius:10px;
+  tr{position:relative;background:var(--fl);border:1px solid var(--linie);border-radius:10px;
      margin:0 0 10px;padding:9px 11px}
   tr.rej,tr.expired{opacity:.6}
   td{border:0;padding:3px 0}
-  td[data-t]::before{content:attr(data-t);display:block;color:#6b7280;font-size:11px;margin-bottom:2px}
+  td[data-t]::before{content:attr(data-t);display:block;color:var(--leise);font-size:11px;margin-bottom:2px}
   /* Status-Knoepfe oben rechts, der Name traegt die Karte */
   /* Feste Breite ist noetig: ohne sie wird der absolut gesetzte Block so breit wie
      seine Knoepfe plus Statuszeichen und schiebt sich ueber das Namensfeld. */
@@ -73,29 +73,31 @@
   .c-rhy{clear:both;padding-top:7px}
   .c-anz{clear:both;text-align:left!important;padding-top:7px}
   .c-art,.c-akt{clear:both}
-  .c-akt{border-top:1px solid #1e232e;margin-top:7px;padding-top:6px}
+  .c-akt{border-top:1px solid var(--linie);margin-top:7px;padding-top:6px}
   .tgl{white-space:normal}
  }
- .zur{display:none;color:#4f8cff}
+ .zur{display:none;color:var(--akzent)}
  /* Filter am Telefon zugeklappt: sonst stehen vier Zeilen Bedienelemente vor
     der ersten Buchung. Am Schreibtisch bleibt alles offen und ohne Aufklapper. */
  .fltm{display:contents}
  .fltm>summary{display:none}
  @media (max-width:900px){
   .fltm{display:block;width:100%}
-  .fltm>summary{display:block;cursor:pointer;background:#171a23;border:1px solid #262b36;
-    border-radius:9px;padding:8px 11px;font-weight:600;color:#cbd5e1;list-style:none}
+  .fltm>summary{display:block;cursor:pointer;background:var(--fl);border:1px solid var(--linie);
+    border-radius:9px;padding:8px 11px;font-weight:600;color:var(--text);list-style:none}
   .fltm>summary::-webkit-details-marker{display:none}
-  .fltm>summary::before{content:"▸ ";color:#6b7280}
+  .fltm>summary::before{content:"▸ ";color:var(--leise)}
   .fltm[open]>summary::before{content:"▾ "}
   .fltm>*:not(summary){margin-top:7px}
  }
-</style></head><body>
-<div class=bar>
-  <a href="/menu" class=zur>← Übersicht</a>
-<a href="/">✏️ Editor</a><a href="/statistik.html">📊 Statistik</a>
- <b style="color:#4f8cff">📑 Verträge</b> <a href="/reisen">🏖️ Reisen</a> <a href="/import">📥 Import</a> <a href="/vermoegen">💰 Vermögen</a> <a href="/vorsorge">🎯 Vorsorge</a>
-<details class=fltm><summary>🔎 Filter</summary>
+</style><link rel=stylesheet href="stil.css">
+<meta name=theme-color content="#f4f3ef" media="(prefers-color-scheme: light)">
+<meta name=theme-color content="#0f1215" media="(prefers-color-scheme: dark)">
+<link rel=icon href="icon-192.png">
+</head><body>
+<!--FNAV:vertraege-->
+<div class=bar> 
+       <details class=fltm open><summary>🔎 Filter</summary>
  <span>Jahr: <select id=yr onchange=draw()></select></span>
  <label class=hint><input type=checkbox id=hiderej onchange=draw()> abgelehnte ausblenden</label>
  <label class=hint><input type=checkbox id=hideexp onchange=draw()> ausgelaufene ausblenden</label>
@@ -113,7 +115,7 @@
 <tbody id=tb></tbody></table>
 <h3 id=dh style="margin-top:22px"></h3><div id=detail></div>
 </div>
-<script src="/shared.js"></script>
+<script src="shared.js"></script>
 <script>
 let C=[],CATS=[];
 // IDs der Vertraege, die in DIESER Sitzung von Hand geaendert wurden. Schuetzt sie vor den
@@ -129,7 +131,7 @@ function delta(c){ if(!c.betrag) return '';
 function showTx(c){    // Buchungen des Vertrags INLINE darunter (gleiche Detailtabelle wie überall)
  document.getElementById('dh').textContent='📑 '+(c.name||'')+(c.zweck?' · '+c.zweck:'')
    +'  ('+esc(c.rhythmus)+' · '+fmt(c.jaehrlich)+' € im Jahr)';
- BK.loadInto('detail','/api/rows?contract='+encodeURIComponent(c.id));
+ BK.loadInto('detail','api/rows?contract='+encodeURIComponent(c.id));
  document.getElementById('dh').scrollIntoView({behavior:'smooth',block:'start'});
 }
 const inYear=c=>{const y=document.getElementById('yr').value;
@@ -137,8 +139,8 @@ const inYear=c=>{const y=document.getElementById('yr').value;
 let FS;
 async function load(){
  await BK.init();
- CATS=(await (await fetch('/api/meta')).json()).cats;
- C=await (await fetch('/api/contracts')).json();
+ CATS=(await (await fetch('api/meta')).json()).cats;
+ C=await (await fetch('api/contracts')).json();
  const ys=[...new Set(C.flatMap(c=>[(c.erste||'').slice(0,4),(c.letzte||'').slice(0,4)]).filter(Boolean))].sort();
  yr.innerHTML=['Alle',...ys].map(y=>`<option>${y}</option>`).join(''); yr.value=ys[ys.length-1]||'Alle';
  FS=BK.filterState('vertraege'); const s=FS.load();   // Filter über Seitenwechsel merken
@@ -211,7 +213,7 @@ async function save(c,patch){
  document.getElementById('msg').textContent='speichere… (rechnet neu)';
  // Merken, was der Nutzer selbst angefasst hat: diese Zeile bleibt sichtbar (siehe draw()).
  if('aktiv' in patch||'status' in patch)KEEP.add(c.id);
- const res=await (await fetch('/api/contract_edit',{method:'POST',
+ const res=await (await fetch('api/contract_edit',{method:'POST',
    headers:{'Content-Type':'application/json'},body:JSON.stringify({id:c.id,...patch})})).json();
  if(res.contracts)C=res.contracts;
  document.getElementById('msg').textContent='gespeichert ✓ – Statistik aktualisiert';

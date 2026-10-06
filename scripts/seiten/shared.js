@@ -8,58 +8,58 @@ window.BK=(function(){
    if(document.getElementById('bkstyle'))return;
    const st=document.createElement('style'); st.id='bkstyle'; st.textContent=`
     .bk-tbl{width:100%;border-collapse:collapse;font-size:14px}
-    .bk-tbl td,.bk-tbl th{padding:6px 8px;border-bottom:1px solid #232834;vertical-align:top}
-    .bk-tbl th{color:#9aa4b2;text-align:left}.bk-r{text-align:right;white-space:nowrap}
-    .bk-neg{color:#ff8a8a}.bk-pos{color:#7ee0a0}
-    .bk-tbl select,.bk-tbl input{background:#1b1f2a;color:#e6e6e6;border:1px solid #2c323f;border-radius:7px;padding:4px 6px;font-size:13px}
+    .bk-tbl td,.bk-tbl th{padding:6px 8px;border-bottom:1px solid var(--linie);vertical-align:top}
+    .bk-tbl th{color:var(--text2);text-align:left}.bk-r{text-align:right;white-space:nowrap}
+    .bk-neg{color:var(--rot)}.bk-pos{color:var(--akzent-text)}
+    .bk-tbl select,.bk-tbl input{background:var(--fl2);color:var(--text);border:1px solid var(--linie);border-radius:7px;padding:4px 6px;font-size:13px}
     .bk-komm{width:150px}
-    tr.bk-rev>td{background:#13251a} tr.bk-ign{opacity:.4}
-    tr.bk-unsaved>td{background:#3a1620;outline:1px solid #ff8a8a}
-    .bk-prod{color:#7ee0a0;font-weight:600;font-size:13px;margin:2px 0}
-    .bk-ctx{color:#c2c9d6;font-size:12px;max-width:420px}.bk-mr{color:#7f9cc7;font-size:11px}.bk-why{color:#6b7280;font-size:11px}
-    .bk-chip{background:#26324a;border-radius:6px;padding:1px 6px;margin:1px;display:inline-block;font-size:12px}
-    .bk-lbe{background:#2a3343;border:0;color:#9aa4b2;border-radius:6px;cursor:pointer;padding:1px 7px}
+    tr.bk-rev>td{background:var(--akzent-fl)} tr.bk-ign{opacity:.4}
+    tr.bk-unsaved>td{background:var(--rot-fl);outline:1px solid var(--rot)}
+    .bk-prod{color:var(--akzent-text);font-weight:600;font-size:13px;margin:2px 0}
+    .bk-ctx{color:var(--text2);font-size:12px;max-width:420px}.bk-mr{color:var(--blau);font-size:11px}.bk-why{color:var(--leise);font-size:11px}
+    .bk-chip{background:var(--fl2);border-radius:6px;padding:1px 6px;margin:1px;display:inline-block;font-size:12px}
+    .bk-lbe{background:var(--fl2);border:0;color:var(--text2);border-radius:6px;cursor:pointer;padding:1px 7px}
     .bk-lc{cursor:pointer;min-width:140px}
-    .bk-b{background:#222a38;border:1px solid #2c323f;color:#cbd5e1;border-radius:6px;cursor:pointer;padding:2px 7px;font-weight:600}
-    .bk-okb{background:#16301d;border-color:#2c6b3f;color:#7ee0a0}.bk-nob{background:#301717;border-color:#6b2c2c;color:#ff8a8a}
-    .bk-mailbtn{background:#22324a;border:1px solid #2c4060;color:#9ec1ff;border-radius:6px;cursor:pointer;padding:1px 7px;font-size:11px}
-    .bk-vtg{background:#3a2f4d;color:#c9b6ec;border-radius:5px;padding:0 5px;font-size:10px;vertical-align:middle}
-    #bklp{position:fixed;z-index:60;background:#11141c;border:1px solid #3a4252;border-radius:10px;width:270px;box-shadow:0 8px 30px #000a;display:none}
+    .bk-b{background:var(--fl2);border:1px solid var(--linie);color:var(--text);border-radius:6px;cursor:pointer;padding:2px 7px;font-weight:600}
+    .bk-okb{background:var(--akzent-fl);border-color:var(--akzent);color:var(--akzent-text)}.bk-nob{background:var(--rot-fl);border-color:var(--rot);color:var(--rot)}
+    .bk-mailbtn{background:var(--blau-fl);border:1px solid var(--blau-fl);color:var(--blau);border-radius:6px;cursor:pointer;padding:1px 7px;font-size:11px}
+    .bk-vtg{background:var(--lila-fl);color:var(--lila);border-radius:5px;padding:0 5px;font-size:10px;vertical-align:middle}
+    #bklp{position:fixed;z-index:60;background:var(--fl);border:1px solid var(--linie);border-radius:10px;width:270px;box-shadow:0 8px 30px #000a;display:none}
     #bklp .lphd{padding:10px 12px 6px}
-    #bklp .lq{width:100%;box-sizing:border-box;background:#1b1f2a;color:#e6e6e6;border:1px solid #2c323f;border-radius:7px;padding:7px 9px;font-size:13px}
+    #bklp .lq{width:100%;box-sizing:border-box;background:var(--fl2);color:var(--text);border:1px solid var(--linie);border-radius:7px;padding:7px 9px;font-size:13px}
     #bklp .lplist{max-height:42vh;overflow:auto;padding:4px 12px 6px}#bklp .lo{display:block;padding:3px 0;font-size:13px;cursor:pointer}
-    #bklp .lo.on{color:#7ee0a0;font-weight:600}
-    #bklp .lnew{padding:6px 9px;margin:2px 0 6px;background:#16301d;color:#7ee0a0;border:1px solid #2c6b3f;border-radius:7px;cursor:pointer;font-size:13px}
-    #bklp .lpfoot{padding:8px 12px;border-top:1px solid #2c323f}
-    #bklp button{background:#4f8cff;border:0;color:#fff;border-radius:7px;padding:6px 10px;cursor:pointer}#bklp .sec{background:#2a3343;color:#cbd5e1}
+    #bklp .lo.on{color:var(--akzent-text);font-weight:600}
+    #bklp .lnew{padding:6px 9px;margin:2px 0 6px;background:var(--akzent-fl);color:var(--akzent-text);border:1px solid var(--akzent);border-radius:7px;cursor:pointer;font-size:13px}
+    #bklp .lpfoot{padding:8px 12px;border-top:1px solid var(--linie)}
+    #bklp button{background:var(--akzent);border:0;color:var(--auf-akzent);border-radius:7px;padding:6px 10px;cursor:pointer}#bklp .sec{background:var(--fl2);color:var(--text)}
     #bkov{position:fixed;inset:0;background:#000a;display:none;z-index:70;align-items:center;justify-content:center}
-    #bkmod{background:#11141c;border:1px solid #3a4252;border-radius:12px;max-width:820px;width:92%;max-height:82vh;overflow:auto;padding:0}
+    #bkmod{background:var(--fl);border:1px solid var(--linie);border-radius:12px;max-width:820px;width:92%;max-height:82vh;overflow:auto;padding:0}
     /* Kopf bleibt beim Scrollen stehen; kein float mehr, sonst umfliesst der Betreff den Knopf */
     .bk-kopf{position:sticky;top:0;z-index:2;display:flex;gap:12px;align-items:flex-start;
-      background:#11141c;border-bottom:1px solid #232834;padding:14px 16px;border-radius:12px 12px 0 0}
+      background:var(--fl);border-bottom:1px solid var(--linie);padding:14px 16px;border-radius:12px 12px 0 0}
     .bk-kopf-t{font-size:17px;font-weight:700;line-height:1.3;overflow-wrap:anywhere;flex:1}
-    #bkmod .x{flex:none;background:#2a3343;border:0;color:#cbd5e1;border-radius:7px;padding:5px 10px;cursor:pointer}
+    #bkmod .x{flex:none;background:var(--fl2);border:0;color:var(--text);border-radius:7px;padding:5px 10px;cursor:pointer}
     .bk-inhalt{padding:12px 16px 16px}
     #bkmod h4{overflow-wrap:anywhere;margin:14px 0 6px}
-    .bk-rel{border-top:1px solid #232834;padding-top:6px;margin-top:6px}
+    .bk-rel{border-top:1px solid var(--linie);padding-top:6px;margin-top:6px}
     /* overflow:auto ist Pflicht, sobald eine Hoehe gedeckelt wird. Ohne das lief der Text
        sichtbar aus dem Kasten heraus und legte sich ueber die naechste Betreffzeile. */
-    .bk-mailbody{white-space:pre-wrap;font-size:13px;line-height:1.45;color:#dfe5ee;background:#141823;border:1px solid #232834;border-radius:8px;padding:10px;margin:6px 0;overflow-wrap:anywhere;overflow:auto}
+    .bk-mailbody{white-space:pre-wrap;font-size:13px;line-height:1.45;color:var(--text);background:var(--fl);border:1px solid var(--linie);border-radius:8px;padding:10px;margin:6px 0;overflow-wrap:anywhere;overflow:auto}
     .bk-snip{max-height:150px}
-    .bk-werb{background:#3a2f17;color:#e0b46b;border-radius:5px;padding:0 5px;font-size:10px;margin-left:6px;vertical-align:middle}
-    #bkmod details>summary{cursor:pointer;color:#7f9cc7;font-size:13px;padding:8px 0}
+    .bk-werb{background:var(--warn-fl);color:var(--warn);border-radius:5px;padding:0 5px;font-size:10px;margin-left:6px;vertical-align:middle}
+    #bkmod details>summary{cursor:pointer;color:var(--blau);font-size:13px;padding:8px 0}
     /* Anhaenge als Karten: Kopfzeile mit Name/Typ/Groesse, darunter die Vorschau */
-    .bk-att{border:1px solid #232834;border-radius:8px;margin:8px 0;overflow:hidden;background:#141823}
-    .bk-att-kopf{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 10px;border-bottom:1px solid #232834}
+    .bk-att{border:1px solid var(--linie);border-radius:8px;margin:8px 0;overflow:hidden;background:var(--fl)}
+    .bk-att-kopf{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 10px;border-bottom:1px solid var(--linie)}
     .bk-att-name{font-weight:600;font-size:13px;overflow-wrap:anywhere;min-width:0}
-    .bk-att-meta{color:#6b7280;font-size:11px;white-space:nowrap}
-    .bk-att .dl{margin-left:auto;background:#2a3343;color:#cbd5e1;border-radius:6px;padding:3px 9px;font-size:12px;text-decoration:none;white-space:nowrap}
+    .bk-att-meta{color:var(--leise);font-size:11px;white-space:nowrap}
+    .bk-att .dl{margin-left:auto;background:var(--fl2);color:var(--text);border-radius:6px;padding:3px 9px;font-size:12px;text-decoration:none;white-space:nowrap}
     .bk-att img{display:block;max-width:100%;height:auto;background:#fff}
     .bk-att iframe{display:block;width:100%;height:70vh;border:0;background:#fff}
     .bk-att-pdf{padding:10px}
-    .bk-pdfbtn{background:#2a3343;border:1px solid #3a4252;color:#cbd5e1;border-radius:7px;padding:5px 10px;cursor:pointer;font-size:12px}
-    .bk-att details{padding:0 10px 8px}.bk-att summary{cursor:pointer;color:#7f9cc7;font-size:12px;padding:6px 0}
-    .bk-att-hint{padding:8px 10px;color:#6b7280;font-size:12px}`;
+    .bk-pdfbtn{background:var(--fl2);border:1px solid var(--linie);color:var(--text);border-radius:7px;padding:5px 10px;cursor:pointer;font-size:12px}
+    .bk-att details{padding:0 10px 8px}.bk-att summary{cursor:pointer;color:var(--blau);font-size:12px;padding:6px 0}
+    .bk-att-hint{padding:8px 10px;color:var(--leise);font-size:12px}`;
    document.head.appendChild(st);
    const lp=document.createElement('div'); lp.id='bklp'; document.body.appendChild(lp);
    const ov=document.createElement('div'); ov.id='bkov'; ov.innerHTML='<div id=bkmod></div>'; document.body.appendChild(ov);
@@ -68,13 +68,13 @@ window.BK=(function(){
      if(l.style.display==='block'&&!l.contains(e.target)&&!e.target.closest('.bk-lc'))l.style.display='none';});
    document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.getElementById('bklp').style.display='none';document.getElementById('bkov').style.display='none';}});
  }
- async function init(){ ensureDom(); try{META=await (await fetch('/api/meta')).json();}catch(e){} return META; }
+ async function init(){ ensureDom(); try{META=await (await fetch('api/meta')).json();}catch(e){} return META; }
  const chips=s=>(s||'').split(',').map(x=>x.trim()).filter(Boolean).map(l=>`<span class=bk-chip>${esc(l)}</span>`).join('');
  const catOptions=c=>META.cats.map(x=>`<option${x===c?' selected':''}>${esc(x)}</option>`).join('')+`<option value="__new__">➕ neue Kategorie…</option>`;
  async function save(r,patch,tr,onChange){
    const body=Object.assign({tx_id:r.id,scope:'tx',src:'detail'},patch);  // NUR geändertes Feld (merge-sicher)
    try{
-     const resp=await fetch('/api/edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+     const resp=await fetch('api/edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
      if(!resp.ok) throw new Error('HTTP '+resp.status);
      const j=await resp.json(); if(!j.row) throw new Error('keine Bestätigung');
      Object.assign(r,j.row);
@@ -109,7 +109,7 @@ window.BK=(function(){
      list.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.onchange=()=>{cb.checked?sel.add(cb.value):sel.delete(cb.value);
        cb.parentElement.classList.toggle('on',cb.checked);});};
    const addNew=async v=>{v=(v||'').trim();if(!v)return;
-     try{const res=await (await fetch('/api/addlabel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:v})})).json();META.labels=res.labels||META.labels;}catch(_){}
+     try{const res=await (await fetch('api/addlabel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:v})})).json();META.labels=res.labels||META.labels;}catch(_){}
      sel.add(v);q.value='';draw();q.focus();};
    const toggle=l=>{sel.has(l)?sel.delete(l):sel.add(l);q.value='';draw();q.focus();};
    q.addEventListener('input',draw);
@@ -132,7 +132,7 @@ window.BK=(function(){
  async function onCatChange(r,tr,sel,onChange){
    if(sel.value==='__new__'){const name=(prompt('Neue Kategorie:')||'').trim();
      if(!name){sel.value=r.cat;return;}
-     try{const res=await (await fetch('/api/addcat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})})).json();META.cats=res.cats||META.cats;}catch(e){}
+     try{const res=await (await fetch('api/addcat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})})).json();META.cats=res.cats||META.cats;}catch(e){}
      sel.innerHTML=catOptions(name);}
    r.cat=sel.value; save(r,{category:r.cat},tr,onChange);
  }
@@ -142,7 +142,7 @@ window.BK=(function(){
      +'<button class=x onclick="document.getElementById(\'bkov\').style.display=\'none\'">schließen ✕</button></div>'
      +'<div class=bk-inhalt><div class=bk-why>lädt…</div></div>';
    ov.style.display='flex';
-   const m=await (await fetch('/api/mail?tx_id='+encodeURIComponent(txid))).json();
+   const m=await (await fetch('api/mail?tx_id='+encodeURIComponent(txid))).json();
    // Kopfzeile als eigene, klebende Leiste: der Schliessen-Knopf lag vorher als
    // float:right VOR der Ueberschrift, dadurch lief ein langer Betreff um ihn herum
    // und bei langen Mails scrollte er aus dem Bild.
@@ -150,7 +150,7 @@ window.BK=(function(){
         +`<button class=x>schließen ✕</button></div><div class=bk-inhalt>`;
    if(!m.found){h+='<p class=bk-why>Keine direkt verknüpfte Beleg-Mail.</p>';}
    else{
-     h+=`<div class=bk-why>${esc(m.from||'')} · ${esc(m.date||'')} · Treffer: <b style="color:${m.sure?'#7ee0a0':'#f0b46b'}">${esc(m.match_art||'')}</b></div>`;
+     h+=`<div class=bk-why>${esc(m.from||'')} · ${esc(m.date||'')} · Treffer: <b style="color:${m.sure?'var(--akzent-text)':'var(--warn)'}">${esc(m.match_art||'')}</b></div>`;
      h+=`<pre class=bk-mailbody>${esc(m.body||'')}</pre>`;
      const att=m.attachments||[];
      if(att.length){
@@ -166,7 +166,7 @@ window.BK=(function(){
      // Aufgeklappt, sobald hier ueberhaupt eine Datei haengt: dann ist genau das der
      // Grund, warum jemand die Beleg-Mail geoeffnet hat.
      h+=`<details${nAtt?' open':''}><summary>📬 ${rel.length} weitere Mails dieses Händlers`
-       +(nAtt?` · <b style="color:#7ee0a0">${nAtt} Anhang${nAtt===1?'':'/Anhänge'}</b>`:'')
+       +(nAtt?` · <b style="color:var(--akzent-text)">${nAtt} Anhang${nAtt===1?'':'/Anhänge'}</b>`:'')
        +` · nur Info, KEINE Buchungen</summary>`;
      rel.forEach(x=>{
        const at=x.anhaenge||[];
@@ -186,13 +186,13 @@ window.BK=(function(){
  // Begleitmail. Vorher gab es sie nur fuer die verknuepfte — und genau dort haengt die
  // Rechnung fast nie, weil der Zahlungsbeleg eine eigene Mail ist.
  function attHTML(a){
-   const url='/api/anhang?id='+encodeURIComponent(a.id);
+   const url='api/anhang?id='+encodeURIComponent(a.id);
    const bild=/^image\//.test(a.typ||''), pdf=(a.typ||'')==='application/pdf';
    let h=`<div class=bk-att><div class=bk-att-kopf>`
      +`<span class=bk-att-name>${esc(a.name)}</span>`
      +`<span class=bk-att-meta>${esc(kurztyp(a.typ))}${a.size?' · '+groesse(a.size):''}</span>`
      +(a.da?`<a class=dl href="${url}" target=_blank rel=noopener>öffnen ↗</a>`
-           :`<span class=bk-att-meta style="margin-left:auto;color:#f0b46b">Datei fehlt</span>`)
+           :`<span class=bk-att-meta style="margin-left:auto;color:var(--warn)">Datei fehlt</span>`)
      +`</div>`;
    if(a.da&&bild)     h+=`<img src="${url}" loading=lazy alt="${esc(a.name)}">`;
    // PDFs erst auf Klick laden: zehn Belege gleichzeitig als iframe legen die Seite lahm.

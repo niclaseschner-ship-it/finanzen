@@ -10,8 +10,10 @@ auf deinem Rechner, ohne Konto bei irgendwem, und jede Zuordnung ist begründet.
 - 🧾 **Belege statt Rätselraten.** Zu einer Buchung „AMAZON −57,50 €" steht da, *was* drin war —
   automatisch aus deinen eigenen Bestellmails verknüpft, über die Bestellnummer.
 - ⚡ **Keine Installation.** Python 3.10 genügt — kein `pip install`, kein Build, kein Docker.
+- 📱 **Am Rechner und am Handy.** Eine Adresse: am Rechner die Übersicht, am Telefon eine
+  installierbare App. Hell und dunkel folgen der Systemeinstellung.
 
-[![Statistik](docs/bilder/statistik.png)](docs/bilder/statistik.png)
+[![Übersicht](docs/bilder/uebersicht.png)](docs/bilder/uebersicht.png)
 
 ## In 30 Sekunden ausprobieren — ohne eigene Daten
 
@@ -27,10 +29,19 @@ Das Skript sagt dir am Ende, wie du den Server startest. Die Demo hat ihre **eig
 Datenbank** in `beispieldaten/demo/` — sie fasst nichts an, und `beispieldaten/demo/`
 löschen macht sie spurlos wieder weg.
 
-| ✏️ Editor | 📑 Verträge | 🏖️ Reisen |
-|---|---|---|
-| [![Editor](docs/bilder/editor.png)](docs/bilder/editor.png) | [![Verträge](docs/bilder/vertraege.png)](docs/bilder/vertraege.png) | [![Reisen](docs/bilder/reisen.png)](docs/bilder/reisen.png) |
-| Kategorie, Labels — und die Begründung | Fixkosten, allein aus der Wiederholung erkannt | Urlaube, allein aus den Einkaufsorten erkannt |
+| Buchungen | Statistik | Verträge | Reisen |
+|---|---|---|---|
+| [![Buchungen](docs/bilder/editor.png)](docs/bilder/editor.png) | [![Statistik](docs/bilder/statistik.png)](docs/bilder/statistik.png) | [![Verträge](docs/bilder/vertraege.png)](docs/bilder/vertraege.png) | [![Reisen](docs/bilder/reisen.png)](docs/bilder/reisen.png) |
+| Kategorie, Labels — und die Begründung | Einnahmen, Ausgaben, Kategorien im Verlauf | Fixkosten, allein aus der Wiederholung erkannt | Urlaube, allein aus den Einkaufsorten erkannt |
+
+### Am Handy
+
+Dieselbe Adresse öffnet am Telefon eine installierbare App (PWA): der Monat gegen den
+Zwölfmonatsschnitt, Buchungen mit Suche, und eine **Prüfliste** für alles, was die Automatik
+nur geraten hat — „Passt“ oder „Ändern“ mit einem Tipp. Umschalten zwischen beiden Ansichten
+geht jederzeit (`?ansicht=handy` / `?ansicht=desktop`).
+
+[![Handy-App](docs/bilder/handy.png)](docs/bilder/handy.png)
 
 Die Demo bringt auch **Beleg-Mails** mit (als echtes mbox, genau wie Thunderbird es
 anlegt) — die Belegverknüpfung lässt sich also sofort sehen. Sie zeigt absichtlich auch,
@@ -137,6 +148,11 @@ Wer Claude Code nutzt, kann stattdessen den mitgelieferten Skill
 `finanz-einrichtung` ([`.claude/skills/`](.claude/skills/)) starten — der geht
 zusätzlich das Ergebnis durch und sucht nach typischen Einrichtungsfehlern.
 
+**Jeden Monat:** neue Exporte nach `konten/` und `python run_all.py`. Eine Import-Seite gibt
+es bewusst nicht. Mit Claude Code übernimmt das der Skill `finanz-monatsimport`: er prüft,
+ob die Exporte lückenlos anschließen, kategorisiert den unklaren Rest mit Begründung und
+meldet, was auffällt — ausgebliebene Miete, ausgelaufene Verträge, neue Reisen.
+
 ## Konfiguration — `konfig.json`
 Alles, was von Haushalt zu Haushalt anders ist, steht in **einer** Datei im Projektordner.
 **Kein Quellcode-Editieren nötig.** Von Hand geht es auch:
@@ -183,8 +199,7 @@ set FINANZEN_BANK=D:\bank-exporte
 ```
 
 ## Schnellstart
-1. **Bank-Exporte ablegen:** DKB-/GLS-CSV nach `konten/` kopieren
-   (oder später über die Import-Seite hochladen). Format wird automatisch erkannt.
+1. **Bank-Exporte ablegen:** DKB-/GLS-CSV nach `konten/` kopieren. Format wird automatisch erkannt.
    Sinnvoll sind mindestens 12 Monate — Vertrags- und Reise-Erkennung brauchen
    Wiederholungen.
 2. **Konfiguration anlegen:** `python scripts/einrichten.py` (oder die Vorlage
@@ -196,19 +211,19 @@ set FINANZEN_BANK=D:\bank-exporte
    ```
 4. **Editor/Statistik starten:**
    ```bash
-   python app.py     # -> http://localhost:8765
+   python app.py     # -> http://localhost:8765/finanzen/
    ```
 
-## Die Seiten (alle unter http://localhost:8765)
-- **✏️ Editor** (`/`) — jede Buchung prüfen, Kategorie/Labels/Kommentar setzen.
-- **📊 Statistik** (`/statistik.html`) — Einnahmen/Ausgaben pro Monat, Kategorie-Stack,
+## Die Seiten (alle unter http://localhost:8765/finanzen/)
+- **Übersicht** (`/finanzen/`) — der Monat gegen den Durchschnitt, Kennzahlen, Kategorien.
+  Am Telefon öffnet dieselbe Adresse die Handy-App.
+- **Buchungen** (`/finanzen/editor`) — jede Buchung prüfen, Kategorie/Labels/Kommentar setzen.
+- **Statistik** (`/finanzen/statistik.html`) — Einnahmen/Ausgaben pro Monat, Kategorie-Stack,
   Ranking, Reisen. Filter: Jahr · Kategorien · Verträge · Label. Balken anklicken → Buchungen.
-- **📑 Verträge** (`/vertraege`) — mechanisch erkannte wiederkehrende Zahlungen (= Fixkosten),
+- **Verträge** (`/finanzen/vertraege`) — mechanisch erkannte wiederkehrende Zahlungen (= Fixkosten),
   bestätigen/ablehnen, aktiv/ausgelaufen.
-- **🏖️ Reisen** (`/reisen`) — automatisch erkannte Reisen (zusammenhängend außerhalb der
+- **Reisen** (`/finanzen/reisen`) — automatisch erkannte Reisen (zusammenhängend außerhalb der
   Heimatregion), bestätigen → Buchungen werden zu „Urlaub".
-- **📥 Import** (`/import`) — alle Datenquellen mit Zeitraum/Stand, Zeitachse + Regler für den
-  berücksichtigten Zeitraum, Bank-CSV-Upload und „Daten verarbeiten".
 
 ## Aufbau
 - `scripts/` — der Kern (Pipeline + Server). Details & Reihenfolge: [`PROCESS.md`](PROCESS.md).

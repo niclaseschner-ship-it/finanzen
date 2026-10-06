@@ -1,24 +1,24 @@
 <!doctype html><html lang=de><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>Finanzen · Editor</title>
 <style>
- body{font-family:system-ui,Arial,sans-serif;margin:0;background:#0f1117;color:#e6e6e6;font-size:14px}
- .bar{position:sticky;top:0;background:#11141c;padding:10px;border-bottom:1px solid #262b36;display:flex;gap:9px;flex-wrap:wrap;align-items:center;z-index:5}
- a{color:#9aa4b2;text-decoration:none;font-weight:600}
- select,input{background:#1b1f2a;color:#e6e6e6;border:1px solid #2c323f;border-radius:7px;padding:6px 8px;font-size:13px}
- table{width:100%;border-collapse:collapse} td,th{padding:6px 8px;border-bottom:1px solid #1e232e;vertical-align:top}
- th{position:sticky;top:50px;background:#11141c;color:#9aa4b2;text-align:left}
- .r{text-align:right;white-space:nowrap}.neg{color:#ff8a8a}.pos{color:#7ee0a0}
- .ctx{color:#c2c9d6;font-size:12px;max-width:290px}.why{color:#6b7280;font-size:11px}
- .mail{color:#7f9cc7;font-size:11px;margin-top:2px}
- .vtg{background:#3a2f4d;color:#c9b6ec;border-radius:5px;padding:0 5px;font-size:10px;vertical-align:middle}
- tr.ign{opacity:.45} tr.saved>td{background:#16301d}
- tr.unsaved>td{background:#3a1620;outline:1px solid #ff8a8a}
- .lbl{width:140px} .stat{margin-left:auto;color:#9aa4b2}
+ body{font-family:system-ui,Arial,sans-serif;margin:0;background:var(--bg);color:var(--text);font-size:14px}
+ .bar{position:sticky;top:0;background:var(--fl);padding:10px;border-bottom:1px solid var(--linie);display:flex;gap:9px;flex-wrap:wrap;align-items:center;z-index:5}
+ a{color:var(--text2);text-decoration:none;font-weight:600}
+ select,input{background:var(--fl2);color:var(--text);border:1px solid var(--linie);border-radius:7px;padding:6px 8px;font-size:13px}
+ table{width:100%;border-collapse:collapse} td,th{padding:6px 8px;border-bottom:1px solid var(--linie);vertical-align:top}
+ th{position:sticky;top:50px;background:var(--fl);color:var(--text2);text-align:left}
+ .r{text-align:right;white-space:nowrap}.neg{color:var(--rot)}.pos{color:var(--akzent-text)}
+ .ctx{color:var(--text2);font-size:12px;max-width:290px}.why{color:var(--leise);font-size:11px}
+ .mail{color:var(--blau);font-size:11px;margin-top:2px}
+ .vtg{background:var(--lila-fl);color:var(--lila);border-radius:5px;padding:0 5px;font-size:10px;vertical-align:middle}
+ tr.ign{opacity:.45} tr.saved>td{background:var(--akzent-fl)}
+ tr.unsaved>td{background:var(--rot-fl);outline:1px solid var(--rot)}
+ .lbl{width:140px} .stat{margin-left:auto;color:var(--text2)}
  /* Pruef-Knoepfe und Kommentar: gleiche Optik wie die kanonische Tabelle in shared.js */
  .pf{white-space:nowrap}
- .pf .b{background:#222a38;border:1px solid #2c323f;color:#9aa4b2;border-radius:6px;padding:3px 8px;cursor:pointer;font-weight:700}
- .pf .okb.on{background:#16301d;border-color:#2c6b3f;color:#7ee0a0}
- .pf .nob.on{background:#301717;border-color:#6b2c2c;color:#ff8a8a}
+ .pf .b{background:var(--fl2);border:1px solid var(--linie);color:var(--text2);border-radius:6px;padding:3px 8px;cursor:pointer;font-weight:700}
+ .pf .okb.on{background:var(--akzent-fl);border-color:var(--akzent);color:var(--akzent-text)}
+ .pf .nob.on{background:var(--rot-fl);border-color:var(--rot);color:var(--rot)}
  /* 124 statt 150: mit den beiden neuen Spalten war die Tabelle sonst 19px breiter
     als ein 1440er Laptop und die ganze Seite liess sich seitlich schieben. */
  .komm{width:124px}
@@ -46,15 +46,15 @@
   .stat{margin-left:0;width:100%}
   table,tbody,tr,td{display:block;width:auto}
   thead{display:none}
-  tr{position:relative;background:#141823;border:1px solid #262b36;border-radius:10px;
+  tr{position:relative;background:var(--fl);border:1px solid var(--linie);border-radius:10px;
      margin:0 0 10px;padding:9px 11px}
-  tr.saved{border-color:#2c6b3f} tr.unsaved{border-color:#ff8a8a;outline:0}
+  tr.saved{border-color:var(--akzent)} tr.unsaved{border-color:var(--rot);outline:0}
   tr.saved>td,tr.unsaved>td{background:none}
   td{border:0;padding:3px 0}
-  td[data-t]::before{content:attr(data-t);display:block;color:#6b7280;font-size:11px;margin-bottom:2px}
+  td[data-t]::before{content:attr(data-t);display:block;color:var(--leise);font-size:11px;margin-bottom:2px}
   /* Pruefen-Knoepfe oben rechts in die Ecke der Karte */
   .pf{position:absolute;top:9px;right:11px;padding:0}
-  .c-dat{color:#9aa4b2;font-size:12px}
+  .c-dat{color:var(--text2);font-size:12px}
   .c-bet{text-align:left;font-size:20px;font-weight:700;padding:0 0 2px}
   .c-hdl{font-size:15px;font-weight:600;padding-right:96px;padding-bottom:4px}
   .c-kat select,.c-kom input,.komm{width:100%;box-sizing:border-box}
@@ -63,41 +63,44 @@
   .c-mon,.c-gel{float:left;width:48%;box-sizing:border-box}
   .c-mon{margin-right:4%}
   .c-mon input,.c-gel select{width:100%;box-sizing:border-box}
-  .ctx{clear:both;max-width:none;border-top:1px solid #1e232e;margin-top:7px;padding-top:6px}
+  .ctx{clear:both;max-width:none;border-top:1px solid var(--linie);margin-top:7px;padding-top:6px}
   #lp{width:calc(100vw - 24px);left:12px!important}
  }
- .lc{cursor:pointer;min-width:130px} .chip{background:#26324a;border-radius:6px;padding:1px 6px;margin:1px;display:inline-block;font-size:12px}
- .lbe{background:#2a3343;border:0;color:#9aa4b2;border-radius:6px;cursor:pointer;padding:1px 7px}
- #lp{position:fixed;z-index:50;background:#11141c;border:1px solid #3a4252;border-radius:10px;width:270px;box-shadow:0 8px 30px #000a;display:none}
+ .lc{cursor:pointer;min-width:130px} .chip{background:var(--fl2);border-radius:6px;padding:1px 6px;margin:1px;display:inline-block;font-size:12px}
+ .lbe{background:var(--fl2);border:0;color:var(--text2);border-radius:6px;cursor:pointer;padding:1px 7px}
+ #lp{position:fixed;z-index:50;background:var(--fl);border:1px solid var(--linie);border-radius:10px;width:270px;box-shadow:0 8px 30px #000a;display:none}
  #lp .lphd{padding:10px 12px 6px}
- #lp .lq{width:100%;box-sizing:border-box;background:#1b1f2a;color:#e6e6e6;border:1px solid #2c323f;border-radius:7px;padding:7px 9px;font-size:13px}
+ #lp .lq{width:100%;box-sizing:border-box;background:var(--fl2);color:var(--text);border:1px solid var(--linie);border-radius:7px;padding:7px 9px;font-size:13px}
  #lp .lplist{max-height:42vh;overflow:auto;padding:4px 12px 6px}
  #lp .lo{display:block;padding:3px 0;font-size:13px;cursor:pointer}
- #lp .lo.on{color:#7ee0a0;font-weight:600}
- #lp .lnew{padding:6px 9px;margin:2px 0 6px;background:#16301d;color:#7ee0a0;border:1px solid #2c6b3f;border-radius:7px;cursor:pointer;font-size:13px}
- #lp .lpfoot{padding:8px 12px;border-top:1px solid #2c323f;background:#11141c;border-radius:0 0 10px 10px}
- #lp button{background:#4f8cff;border:0;color:#fff;border-radius:7px;padding:6px 10px;cursor:pointer}
- #lp .sec{background:#2a3343;color:#cbd5e1}
- .zur{display:none;color:#4f8cff}
+ #lp .lo.on{color:var(--akzent-text);font-weight:600}
+ #lp .lnew{padding:6px 9px;margin:2px 0 6px;background:var(--akzent-fl);color:var(--akzent-text);border:1px solid var(--akzent);border-radius:7px;cursor:pointer;font-size:13px}
+ #lp .lpfoot{padding:8px 12px;border-top:1px solid var(--linie);background:var(--fl);border-radius:0 0 10px 10px}
+ #lp button{background:var(--akzent);border:0;color:var(--auf-akzent);border-radius:7px;padding:6px 10px;cursor:pointer}
+ #lp .sec{background:var(--fl2);color:var(--text)}
+ .zur{display:none;color:var(--akzent)}
  /* Filter am Telefon zugeklappt: sonst stehen vier Zeilen Bedienelemente vor
     der ersten Buchung. Am Schreibtisch bleibt alles offen und ohne Aufklapper. */
  .fltm{display:contents}
  .fltm>summary{display:none}
  @media (max-width:900px){
   .fltm{display:block;width:100%}
-  .fltm>summary{display:block;cursor:pointer;background:#171a23;border:1px solid #262b36;
-    border-radius:9px;padding:8px 11px;font-weight:600;color:#cbd5e1;list-style:none}
+  .fltm>summary{display:block;cursor:pointer;background:var(--fl);border:1px solid var(--linie);
+    border-radius:9px;padding:8px 11px;font-weight:600;color:var(--text);list-style:none}
   .fltm>summary::-webkit-details-marker{display:none}
-  .fltm>summary::before{content:"▸ ";color:#6b7280}
+  .fltm>summary::before{content:"▸ ";color:var(--leise)}
   .fltm[open]>summary::before{content:"▾ "}
   .fltm>*:not(summary){margin-top:7px}
  }
-</style></head><body>
+</style><link rel=stylesheet href="stil.css">
+<meta name=theme-color content="#f4f3ef" media="(prefers-color-scheme: light)">
+<meta name=theme-color content="#0f1215" media="(prefers-color-scheme: dark)">
+<link rel=icon href="icon-192.png">
+</head><body>
 <div id=lp></div>
-<div class=bar>
-  <a href="/menu" class=zur>← Übersicht</a>
-<b style="color:#4f8cff">✏️ Editor</b> <a href="/statistik.html">📊 Statistik</a> <a href="/vertraege">📑 Verträge</a> <a href="/reisen">🏖️ Reisen</a> <a href="/import">📥 Import</a> <a href="/vermoegen">💰 Vermögen</a> <a href="/vorsorge">🎯 Vorsorge</a>
-<details class=fltm><summary>🔎 Filter</summary>
+<!--FNAV:editor-->
+<div class=bar> 
+       <details class=fltm open><summary>🔎 Filter</summary>
  <select id=fcat onchange=draw()><option value="">— Kategorie —</option></select>
  <input id=flabel placeholder="Label…" oninput=draw() class=lbl>
  <input id=fsearch placeholder="Suche Händler/Kontext…" oninput=draw() style="width:220px">
@@ -118,10 +121,10 @@ const LIMIT=150;
 const fmt=x=>x.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
 const esc=s=>{const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML.replace(/"/g,'&quot;').replace(/'/g,'&#39;');};  // textContent maskiert " nicht — in value="..." waere das eine Luecke
 async function load(){
- META=await (await fetch('/api/meta')).json();
+ META=await (await fetch('api/meta')).json();
  fcat.innerHTML='<option value="">— Kategorie —</option>'+META.cats.map(c=>`<option>${esc(c)}</option>`).join('');
  document.getElementById('labelcat').innerHTML=META.labels.map(l=>`<option value="${esc(l)}">`).join('');
- ROWS=await (await fetch('/api/rows')).json(); draw();
+ ROWS=await (await fetch('api/rows')).json(); draw();
 }
 const catOptions=c=>META.cats.map(x=>`<option${x===c?' selected':''}>${esc(x)}</option>`).join('')
   +`<option value="__new__">➕ neue Kategorie…</option>`;
@@ -185,7 +188,7 @@ function openLabels(r,tr,e){
    list.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.onchange=()=>{cb.checked?sel.add(cb.value):sel.delete(cb.value);
      cb.parentElement.classList.toggle('on',cb.checked);});};
  const addNew=async v=>{v=(v||'').trim();if(!v)return;
-   try{const res=await (await fetch('/api/addlabel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:v})})).json();META.labels=res.labels||META.labels;}catch(_){}
+   try{const res=await (await fetch('api/addlabel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:v})})).json();META.labels=res.labels||META.labels;}catch(_){}
    sel.add(v);q.value='';draw();q.focus();};
  const toggle=l=>{sel.has(l)?sel.delete(l):sel.add(l);q.value='';draw();q.focus();};
  q.addEventListener('input',draw);
@@ -227,7 +230,7 @@ async function save(r,tr){
  if(g('cat').value==='__new__'){                  // neue Kategorie anlegen
    const name=(prompt('Neue Kategorie:')||'').trim();
    if(!name){ g('cat').value=r.cat; return; }
-   const res=await (await fetch('/api/addcat',{method:'POST',headers:{'Content-Type':'application/json'},
+   const res=await (await fetch('api/addcat',{method:'POST',headers:{'Content-Type':'application/json'},
      body:JSON.stringify({name})})).json();
    META.cats=res.cats||META.cats; g('cat').innerHTML=catOptions(name);
  }
@@ -237,11 +240,11 @@ async function save(r,tr){
    ignore:!!r.ignore,reviewed:!!r.reviewed,      // kommen jetzt aus den Pruef-Knoepfen, nicht aus einer Checkbox
    datum_override:g('dov').value?g('dov').value+'-01':''};
  try{
-   const resp=await fetch('/api/edit',{method:'POST',headers:{'Content-Type':'application/json'},
+   const resp=await fetch('api/edit',{method:'POST',headers:{'Content-Type':'application/json'},
      body:JSON.stringify(body)});
    if(!resp.ok) throw new Error('HTTP '+resp.status);
    const res=await resp.json();
-   if(res.full){ROWS=await (await fetch('/api/rows')).json();draw();return;}
+   if(res.full){ROWS=await (await fetch('api/rows')).json();draw();return;}
    if(!res.row) throw new Error('keine Server-Bestätigung');
    Object.assign(r,res.row);tr.classList.remove('unsaved');tr.classList.add('saved');markState(tr,r);
  }catch(e){
@@ -249,7 +252,7 @@ async function save(r,tr){
    alert('⚠ NICHT gespeichert: '+e.message+'\nLäuft der Server (python app.py)? Bitte erneut.');
  }
 }
-async function rebuild(){stat.textContent='baue Statistik…';await fetch('/api/rebuild',{method:'POST'});stat.textContent='Statistik neu ✓';}
+async function rebuild(){stat.textContent='baue Statistik…';await fetch('api/rebuild',{method:'POST'});stat.textContent='Statistik neu ✓';}
 // Label-Panel schliessen: Klick ausserhalb oder Esc
 document.addEventListener('mousedown',e=>{const lp=document.getElementById('lp');
  if(lp.style.display==='block'&&!lp.contains(e.target)&&!e.target.closest('.lc'))lp.style.display='none';});

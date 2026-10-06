@@ -14,13 +14,13 @@ import tempfile
 from playwright.sync_api import sync_playwright
 
 CHROME = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
-BASIS = "http://127.0.0.1:8765"
-SEITEN = ["/", "/vertraege", "/reisen", "/import", "/vermoegen", "/vorsorge"]
+BASIS = "http://127.0.0.1:8765/finanzen"
+SEITEN = ["/", "/editor", "/statistik.html", "/vertraege", "/reisen", "/vermoegen", "/vorsorge"]
 BREITEN = [("handy", 390, 844, 2), ("desktop", 1440, 900, 1)]
 
 
 def name(pfad):
-    return (pfad.strip("/").replace("/", "_") or "editor").replace(".html", "")
+    return (pfad.strip("/").replace("/", "_") or "start").replace(".html", "")
 
 
 def main(seiten):

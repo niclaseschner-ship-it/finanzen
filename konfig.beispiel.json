@@ -10,6 +10,9 @@
     "_heimat_orte": "Wohnort + Nachbarorte. Ein Einkauf hier gilt als 'zuhause' und beendet eine Reise. Ohne diese Liste ist der Alltag eine Dauerreise. Kleinschreibung, Teilstrings erlaubt ('musterst' trifft 'Musterstadt').",
     "heimat_orte": ["musterstadt", "musterdorf", "nachbarhausen"],
 
+    "_reise_trennungen": "Optional. Tage (JJJJ-MM-TT), an denen eine Reise zwingend endet und eine neue beginnt. Nur nötig, wenn zwei Reisen ohne Heim-Einkauf dazwischen zu einer verschmelzen.",
+    "reise_trennungen": [],
+
     "_orte_ohne_suchwert": "Orte, die in den eigenen Buchungen ständig vorkommen und als Suchbegriff nichts unterscheiden — z.B. die Region oder die Stadt einer eigenen Immobilie. Andere Frage als heimat_orte; Doppelungen sind erlaubt.",
     "orte_ohne_suchwert": ["musterland", "musterkreis"]
   },

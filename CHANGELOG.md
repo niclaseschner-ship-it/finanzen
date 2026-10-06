@@ -4,6 +4,29 @@ Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 Versionen nach [SemVer](https://semver.org/lang/de/) — solange die Hauptversion 0 ist, können
 sich Datenmodell und Konfigurationsformat noch ändern.
 
+## [Unveröffentlicht]
+
+### Neu
+- **Handy-App** (installierbare PWA): Monat gegen den Zwölfmonatsschnitt, Buchungen mit Suche,
+  Prüfliste für alles, was die Automatik nur geraten hat, Verträge, Vermögen. Verdichtete
+  Daten unter `api/handy/*` statt der vollen Buchungsliste. Offline lesbar.
+- **Eine Adresse für Rechner und Handy:** alles liegt unter `/finanzen/`; die Startseite
+  erkennt das Gerät, `?ansicht=handy|desktop|auto` merkt sich die Wahl.
+- **Neue Übersicht** am Rechner (Monat, Kennzahlen, Kategorien mit Durchschnitt).
+- **Neues Aussehen** aller Seiten: gemeinsames `stil.css` mit den Farben der Handy-App, hell
+  und dunkel nach Systemeinstellung, gemeinsame Kopfleiste.
+- Optionale **Anmeldung über ein signiertes Cookie** (`FINANZEN_AUTH`), für den Betrieb hinter
+  einem Reverse-Proxy.
+
+### Entfernt
+- **Import-Seite** samt Upload, „Daten verarbeiten“ und Zeitraum-Regler: neue Kontoexporte
+  laufen über `run_all.py` (bzw. einen begleitenden Assistenten), nicht über den Browser.
+
+### Behoben
+- Filterleiste in Editor und Verträgen war in aktuellen Chromium-Versionen unsichtbar.
+- Editor lief bei 1440 px Breite seitlich über.
+- Demo-Haushalt und Zweitinstanzen blenden eine zentrale Mail-Datenbank nicht mehr still ein.
+
 ## [0.1.0] — 2026-07-31
 
 Erste öffentliche Fassung. Die Anwendung lief vorher gut ein Jahr privat; dieser Stand ist

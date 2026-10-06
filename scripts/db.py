@@ -1,7 +1,7 @@
 """Gemeinsame DB-Helfer + Schema fuer die Ausgaben-Datenbank.
 Eine SQLite-DB ist die Wahrheitsschicht; Rohdaten bleiben unangetastet.
 """
-import os, sqlite3, datetime, re
+import os, sqlite3, datetime, re, pathlib
 
 # ---- Konfiguration: ALLE Pfade an einer Stelle -----------------------------
 # Per Umgebungsvariable überschreibbar -> niemand muss den Quellcode editieren.
@@ -18,6 +18,17 @@ BANK_CSV = os.environ.get("FINANZEN_BANK_CSV", os.path.join(BASE, "output", "tra
 # 'konten/...'-Pfade aus positionen.json aufzulösen. Name ist historisch (Steuerprojekt);
 # wird mit der Konfig-Umstellung (Schritt 3) abgelöst.
 STEUER_DIR = os.path.dirname(BANK_DIR)
+# Zentrale Mail-DB (Pi: /srv/mail-db, Projekt maildb). Existiert sie, liest die Finanz-App
+# Mails und Anhaenge von dort; die eigenen Tabellen mails/attachments in finanzen.db bleiben
+# dann unbenutzt. Fehlt sie (Laptop, Demo, frischer Clone), laeuft alles wie bisher mit den
+# eigenen Tabellen. Mit FINANZEN_MAILDB="" laesst sich die zentrale DB abschalten.
+# Mit eigenem Datenordner (FINANZEN_BASE: Demo-Haushalt, Tests, zweite Instanz) nie still die
+# zentrale DB einblenden — dort liegen echte Mails, die Demo bekaeme sonst echte Belege.
+# Dann gilt sie nur, wenn FINANZEN_MAILDB ausdruecklich gesetzt ist.
+_MAILDB_STANDARD = "" if os.environ.get("FINANZEN_BASE") else "/srv/mail-db"
+MAILDB_DIR = os.environ.get("FINANZEN_MAILDB", _MAILDB_STANDARD)
+MAILDB_PATH = os.path.join(MAILDB_DIR, "mails.db") if MAILDB_DIR else ""
+MAILDB_AKTIV = bool(MAILDB_PATH) and os.path.exists(MAILDB_PATH)
 
 _PP_PREFIX = re.compile(r"^\s*\d{6,}/PP\.\d+\.PP/\.?\s*")
 _PP_INLINE = re.compile(r"/PP\.\d+\.PP/\.?")
@@ -204,16 +215,48 @@ CREATE TABLE IF NOT EXISTS ingest_log (
 );
 """
 
-def connect():
-    con = sqlite3.connect(DB_PATH)
+def connect(zentral=True):
+    # URI-Modus nur, damit die zentrale Mail-DB schreibgeschuetzt (?mode=ro) angehaengt
+    # werden kann; die eigene DB wird ganz normal geoeffnet.
+    con = sqlite3.connect(pathlib.Path(DB_PATH).as_uri(), uri=True)
     con.execute("PRAGMA journal_mode=WAL;")
     con.execute("PRAGMA synchronous=NORMAL;")
+    if zentral and MAILDB_AKTIV:
+        _mails_zentral(con)
     return con
+
+def _mails_zentral(con):
+    """mails/attachments aus der zentralen Mail-DB einblenden, nur lesend.
+
+    TEMP-Views gehen bei unqualifizierten Namen vor die gleichnamigen Tabellen in
+    finanzen.db: so lesen match.py, build_context.py und app.py ohne Aenderung von dort.
+    Schreibzugriffe auf mails/attachments schlagen damit bewusst fehl, Mails kommen nur ueber
+    `maildb.py ingest` hinein. Die zentrale DB wird schreibgeschuetzt angehaengt (mode=ro)."""
+    con.execute("ATTACH DATABASE ? AS maildb", (pathlib.Path(MAILDB_PATH).as_uri() + "?mode=ro",))
+    con.execute("CREATE TEMP VIEW mails AS SELECT * FROM maildb.mails")
+    con.execute("CREATE TEMP VIEW attachments AS SELECT * FROM maildb.attachments")
+
+def anhang_pfad(saved_path):
+    """Absoluter Pfad zu einem gespeicherten Anhang oder None (leer / ausserhalb des Ordners).
+
+    Zentrale DB: relativ zu <MAILDB_DIR>/attachments. Sonst: attachments/ im Projekt. In beiden
+    Faellen zaehlt nur der Teil nach 'attachments', auch bei alten Zeilen mit absolutem
+    Windows-Pfad (Laufwerk, Benutzerordner, attachments, Postfach, Datei): die laufen so auch
+    auf dem Pi."""
+    if not saved_path:
+        return None
+    basis = os.path.join(MAILDB_DIR, "attachments") if MAILDB_AKTIV else ATTACH_DIR
+    teile = re.split(r"[\\/]+", saved_path)
+    if "attachments" in teile:
+        teile = teile[teile.index("attachments") + 1:]
+    p = os.path.realpath(os.path.join(basis, *teile))
+    b = os.path.realpath(basis)
+    return p if p.startswith(b + os.sep) else None
 
 def init():
     os.makedirs(ATTACH_DIR, exist_ok=True)
     os.makedirs(OUTPUT_DIR, exist_ok=True)   # sonst scheitert frontend/liste im frischen Clone
-    con = connect()
+    con = connect(zentral=False)
     con.executescript(SCHEMA)
     con.commit()
     con.close()

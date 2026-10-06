@@ -4,7 +4,7 @@ Performance: rendert nur gefilterte Zeilen (gedeckelt); Einzel-Edit ist schnell
 (kein voller Neu-Lauf); nur 'ganzer Vertrag' rechnet komplett neu.
 """
 import json, os, sys, http.server, socketserver, datetime, re
-import db, rules
+import db, rules, auth_xbuddy, handy
 
 # Die Seiten (HTML/JS) liegen als Dateien in scripts/seiten/ statt als Riesen-Strings
 # in dieser Datei. Gleicher Inhalt, aber mit Syntax-Highlighting editierbar und in
@@ -106,7 +106,7 @@ def related_mails(con, tid, exclude_id, days=5):
     aus = []
     for r in rows:
         att = [{"id": a[0], "name": a[1] or "(ohne Namen)", "typ": a[2], "size": a[3],
-                "zeigbar": a[2] in INLINE_TYPEN, "da": bool(a[4]) and os.path.exists(a[4])}
+                "zeigbar": a[2] in INLINE_TYPEN, "da": _anhang_da(a[4])}
                for a in con.execute("""select id, filename, coalesce(content_type,''),
                    coalesce(size,0), coalesce(saved_path,'') from attachments
                    where mail_id=? order by id""", (r[0],))]
@@ -118,6 +118,10 @@ def related_mails(con, tid, exclude_id, days=5):
 # Typen, die der Browser gefahrlos direkt anzeigen darf. Alles andere geht als Download
 # raus. Wichtig: NIE text/html o.ae. inline ausliefern — das liefe im selben Ursprung wie
 # der Editor und duerfte dann alle Buchungen mitlesen.
+def _anhang_da(pfad):
+    p = db.anhang_pfad(pfad)
+    return bool(p) and os.path.exists(p)
+
 INLINE_TYPEN = {"application/pdf", "image/png", "image/jpeg", "image/jpg",
                 "image/gif", "image/webp", "image/bmp"}
 MAX_ANHANG = 40 * 1024 * 1024
@@ -135,9 +139,10 @@ def attachment_datei(aid):
     fn, ct, pfad = row
     if not pfad:
         return None, "keine Datei gespeichert", "", False
-    basis = os.path.realpath(os.path.join(db.BASE, "attachments"))
-    echt = os.path.realpath(pfad)
-    if echt != basis and not echt.startswith(basis + os.sep):
+    # db.anhang_pfad loest relativ zum Anhang-Ordner auf (zentrale Mail-DB oder Projekt) und
+    # liefert None, wenn der Pfad daraus ausbricht.
+    echt = db.anhang_pfad(pfad)
+    if not echt:
         return None, "Pfad ausserhalb des Anhang-Ordners", "", False
     if not os.path.exists(echt):
         return None, "Datei fehlt auf der Platte", "", False
@@ -172,7 +177,7 @@ def mail_for_tx(tid):
         aid, fn, ct, size, txt, pfad = r
         att.append({"id": aid, "name": fn or "(ohne Namen)", "typ": ct, "size": size,
                     "text": clean_email(txt)[:2500] if txt else "",
-                    "da": bool(pfad) and os.path.exists(pfad),
+                    "da": _anhang_da(pfad),
                     "zeigbar": ct in INLINE_TYPEN})
     con.close()
     return {"found": True, "subject": m[1], "from": (m[2] or "") + " <" + (m[3] or "") + ">",
@@ -190,6 +195,17 @@ PORT = int(os.environ.get("FINANZEN_PORT", "8765"))   # zweite Instanz (z.B. Dem
 # eigene Tailnet dran und nicht jedes Geraet im WLAN. ACHTUNG: die App hat KEINE
 # Anmeldung. Wer die Adresse erreicht, sieht und aendert alle Buchungen.
 EXTRA_HOST = (os.environ.get("FINANZEN_HOST") or "").strip()
+# Betrieb hinter einem Reverse-Proxy mit Anmeldung (Pi: tailscale serve + xbuddy-Cookie).
+# FINANZEN_AUTH=xbuddy schaltet die Cookie-Pruefung ein, siehe auth_xbuddy.py. Der Server
+# bleibt dabei auf 127.0.0.1; die Pruefung ersetzt nicht die Bindung, sie kommt dazu.
+AUTH_AKTIV, BOT_TOKEN, ERLAUBTE_IDS, OEFFENTLICHER_HOST = auth_xbuddy.aus_umgebung(os.environ)
+# Oeffentliche Adresse (tailscale funnel auf :443). Ueber diesen Host ist nur BASIS
+# erreichbar; die alte Tailnet-Adresse (OEFFENTLICHER_HOST, :8447) leitet dorthin weiter.
+FUNNEL_HOST = (os.environ.get("FINANZEN_FUNNEL_HOST") or "").strip().lower() if AUTH_AKTIV else ""
+# Seit 06.10.2026 liegt die ganze App unter BASIS: /finanzen/ erkennt Handy oder Rechner,
+# alle Seiten verweisen relativ. Oeffentlich ueber den Funnel, geschuetzt durch den Cookie
+# (Standard fuer Pi-Apps, Gedaechtnis werkzeuge/pwa-leitfaden.md).
+BASIS = "/finanzen"
 KEYS = ["id","d","effm","b","h","art","cat","status","src","labels","ctx","cred","hkey","ignore",
         "dov","vz","vtg","prod","note","reviewed","why"]
 
@@ -468,105 +484,15 @@ def contract_edit(p):
     con.commit(); con.close()
     return {"ok": True, "contracts": contracts_rows()}
 
-# ---- Import / Datenquellen -------------------------------------------------
-KONTEN_DIR = db.BANK_DIR   # zentrale Config (db.py); per Env FINANZEN_BANK überschreibbar
-
-def _last_full_month(date_iso):
-    """Letzter VOLLSTÄNDIG abgedeckter Monat: reicht die Quelle nicht bis Monatsende,
-    zählt nur der Vormonat als vollständig."""
-    import calendar
-    if not date_iso or len(date_iso) < 10: return ""
-    y, m, d = int(date_iso[:4]), int(date_iso[5:7]), int(date_iso[8:10])
-    if d < calendar.monthrange(y, m)[1]:
-        m -= 1
-        if m < 1: m = 12; y -= 1
-    return f"{y}-{m:02d}"
-
-def _first_full_month(date_iso):
-    """Erster vollständiger Monat: ab Tag 1 dieser Monat, sonst der Folgemonat."""
-    if not date_iso or len(date_iso) < 10: return ""
-    y, m, d = int(date_iso[:4]), int(date_iso[5:7]), int(date_iso[8:10])
-    if d > 1:
-        m += 1
-        if m > 12: m = 1; y += 1
-    return f"{y}-{m:02d}"
-
-def sources_rows():
-    con = db.connect()
-    src = []
-    lu_tx = con.execute("select max(ts) from ingest_log where step='transactions'").fetchone()[0]
-    for konto, vmin, vmax, n in con.execute(
-            "select konto,min(datum),max(datum),count(*) from transactions group by konto order by konto"):
-        src.append({"name": konto, "typ": "Bank", "sync": "Upload", "von": vmin, "bis": vmax,
-                    "n": n, "update": (lu_tx or "")[:16].replace("T", " ")})
-    for mb, vmin, vmax, n in con.execute(
-            "select mailbox,min(substr(msg_date,1,10)),max(substr(msg_date,1,10)),count(*) "
-            "from mails where coalesce(msg_date,'')<>'' group by mailbox order by mailbox"):
-        lu = con.execute("select max(ts) from ingest_log where step=?", ("mail:" + mb,)).fetchone()[0]
-        src.append({"name": mb, "typ": "Mail", "sync": "Sync", "von": vmin, "bis": vmax,
-                    "n": n, "update": (lu or "")[:16].replace("T", " ")})
-    con.close()
-    vons = [s["von"] for s in src if s["von"]]
-    biss = [s["bis"] for s in src if s["bis"]]
-    sug_von = sug_bis = ""
-    if vons and biss:
-        sug_von = _first_full_month(max(vons))           # gemeinsamer Überlapp aller Quellen
-        sug_bis = _last_full_month(min(biss))             # so weit reichen ALLE Quellen
-    von, bis = db.period_bounds()
-    return {"sources": src, "suggest": {"von": sug_von, "bis": sug_bis},
-            "current": {"von": von, "bis": bis}}
-
-def period_set(p):
-    bis = (p.get("bis") or "").strip()
-    db.set_setting("period_von", (p.get("von") or "").strip())
-    db.set_setting("period_bis", bis)
-    # Ein von Hand gesetztes 'bis' schaltet die Automatik ab, sonst wuerde der naechste
-    # Import es wieder ueberschreiben. Feld leer lassen = Automatik wieder an (dann setzt
-    # run_all den letzten voll gedeckten Monat).
-    db.set_setting("period_bis_auto", "0" if bis else "1")
-    import frontend; frontend.run()                       # Statistik direkt neu bauen
-    von, bis = db.period_bounds()
-    return {"ok": True, "von": von, "bis": bis}
-
-def upload_konto(p):
-    name = os.path.basename((p.get("name") or "upload.csv").replace("\\", "/"))
-    if not name.lower().endswith(".csv"): name += ".csv"
-    os.makedirs(KONTEN_DIR, exist_ok=True)
-    with open(os.path.join(KONTEN_DIR, name), "w", encoding="utf-8-sig", newline="") as f:
-        f.write(p.get("content") or "")
-    return {"ok": True, "name": name}
-
-_REPROC = {"running": False, "log": "", "done": False, "ok": None}
-
-def reprocess_start():
-    import threading
-    if _REPROC["running"]: return {"running": True}
-    _REPROC.update(running=True, log="Start…\n", done=False, ok=None)
-    def work():
-        import io, contextlib, traceback
-        buf = io.StringIO()
-        try:
-            import run_all
-            with contextlib.redirect_stdout(buf):
-                run_all.main()
-            _REPROC["ok"] = True
-        except Exception:
-            buf.write("\nFEHLER:\n" + traceback.format_exc()); _REPROC["ok"] = False
-        _REPROC["log"] = buf.getvalue(); _REPROC["running"] = False; _REPROC["done"] = True
-    threading.Thread(target=work, daemon=True).start()
-    return {"running": True}
-
-def reprocess_status():
-    return {"running": _REPROC["running"], "done": _REPROC["done"],
-            "ok": _REPROC["ok"], "log": _REPROC["log"][-4000:]}
+# Import gibt es in der App nicht mehr (seit 06.10.2026): neue Kontoexporte
+# spielt der Monatsimport-Skill ein (.claude/skills/finanz-monatsimport), nicht der Browser. Damit
+# entfallen Upload, "Daten verarbeiten" und der Zeitraum-Regler samt ihrer API.
 
 APP_HTML = _seite("editor.html")
 
 VTG_HTML = _seite("vertraege.html")
 
 REISEN_HTML = _seite("reisen.html")
-
-IMPORT_HTML = _seite("import.html")
 
 SHARED_JS = _seite("shared.js")
 
@@ -668,13 +594,46 @@ def ist_werte():
 
 VORSORGE_HTML = _seite("vorsorge.html")
 
-# Startseite fuer das Handy: grosse Ziele statt siebenteiliger Navigationsleiste.
-MENU_HTML = _seite("menu.html")
+# Startseite am Rechner: Monat, Kennzahlen, Wege zu den Seiten (am Handy: handy/index.html).
+START_HTML = _seite("start.html")
+STIL_CSS = _seite("stil.css")
 
 VERMOEGEN_HTML = _seite("vermoegen.html")
 
+# Gemeinsame Kopfleiste der Desktop-Seiten. Die Seiten tragen nur den Platzhalter
+# <!--FNAV:schluessel-->, damit die Navigation an einer Stelle gepflegt wird.
+NAVIGATION = [("start", "./", "Übersicht"), ("editor", "editor", "Buchungen"),
+              ("statistik", "statistik.html", "Statistik"), ("vertraege", "vertraege", "Verträge"),
+              ("reisen", "reisen", "Reisen"), ("vermoegen", "vermoegen", "Vermögen"),
+              ("vorsorge", "vorsorge", "Vorsorge")]
+_FNAV = re.compile(r"<!--FNAV:(\w+)-->")
+
+def kopfleiste(aktiv):
+    links = "".join(f'<a href="{ziel}"' + (' class=an aria-current=page' if k == aktiv else "") + f">{text}</a>"
+                    for k, ziel, text in NAVIGATION)
+    return ('<header class=fkopf><div class=fkopf-in>'
+            '<a class=marke href="./"><img src="icon-192.png" alt=""><span>Finanzen</span></a>'
+            f'<nav class=fnav aria-label="Bereiche">{links}</nav>'
+            '<a class=ansicht href="./?ansicht=handy" title="Zur Handy-Ansicht wechseln">'
+            '<svg width=16 height=16 viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=2 '
+            'stroke-linecap=round><rect x=7 y=2.5 width=10 height=19 rx=2.5 /><path d="M11 18.5h2"/></svg>'
+            '<span>Handy-Ansicht</span></a></div></header>')
+
+_MOBIL = re.compile(r"Mobi|iPhone|iPod|Android.+Mobile|Windows Phone", re.I)
+
+def ist_handy(user_agent, ch_mobil=None):
+    """Grobe Geraeteerkennung fuer /finanzen/. Tablets (iPad, Android ohne 'Mobile')
+    bekommen die Desktop-Ansicht; der Umschalter in beiden Ansichten ueberstimmt das."""
+    if (ch_mobil or "").strip() == "?1":
+        return True
+    return bool(_MOBIL.search(user_agent or ""))
+
+
 class H(http.server.BaseHTTPRequestHandler):
     def _send(self, code, body, ctype="application/json", extra=None):
+        if ctype.startswith("text/html") and code == 200:
+            text = body.decode("utf-8") if isinstance(body, bytes) else body
+            body = _FNAV.sub(lambda m: kopfleiste(m.group(1)), text)
         b = body.encode("utf-8") if isinstance(body, str) else body
         self.send_response(code); self.send_header("Content-Type", ctype)
         self.send_header("Cache-Control", "no-store, no-cache, must-revalidate")  # immer frisch
@@ -700,9 +659,20 @@ class H(http.server.BaseHTTPRequestHandler):
     if EXTRA_HOST:
         ERLAUBTE_HOSTS |= {EXTRA_HOST.lower(), f"{EXTRA_HOST.lower()}:{PORT}"}
     ORIGIN_HOSTS = ("127.0.0.1", "localhost", "[::1]") + ((EXTRA_HOST,) if EXTRA_HOST else ())
+    if OEFFENTLICHER_HOST:
+        # Hinter dem Proxy kommt der Host-Header des oeffentlichen Namens an (mit Port).
+        # Genau dieser eine Name, nicht die Loopback-Adressen: wer die App ueber den
+        # Proxy erreicht, soll nicht mit einem anderen Host-Header durchkommen.
+        ERLAUBTE_HOSTS = {OEFFENTLICHER_HOST}
+        ORIGIN_HOSTS = ()
+    if FUNNEL_HOST:
+        ERLAUBTE_HOSTS = ERLAUBTE_HOSTS | {FUNNEL_HOST}
 
     def _host_ok(self):
         return (self.headers.get("Host") or "").lower() in self.ERLAUBTE_HOSTS
+
+    def _ueber_funnel(self):
+        return bool(FUNNEL_HOST) and (self.headers.get("Host") or "").lower() == FUNNEL_HOST
 
     def _origin_ok(self):
         """Schreibende Anfragen nur ohne Origin (eigenes fetch same-origin schickt
@@ -710,7 +680,32 @@ class H(http.server.BaseHTTPRequestHandler):
         o = self.headers.get("Origin") or self.headers.get("Referer") or ""
         if not o:
             return True
+        if OEFFENTLICHER_HOST:
+            return any(o == f"https://{h}" or o.startswith(f"https://{h}/")
+                       for h in (OEFFENTLICHER_HOST, FUNNEL_HOST) if h)
         return any(o.startswith(f"http://{h}") for h in self.ORIGIN_HOSTS)
+
+    def _angemeldet(self):
+        """Ohne FINANZEN_AUTH immer True (lokaler Betrieb wie bisher). Sonst nur mit
+        gueltigem xbuddy-Cookie eines erlaubten Subjekts."""
+        if not AUTH_AKTIV:
+            return True
+        return auth_xbuddy.erlaubt(self.headers.get("Cookie"), BOT_TOKEN, ERLAUBTE_IDS)
+
+    def _nicht_angemeldet(self):
+        # Bewusst knapp und ohne Hinweis, welcher Teil gefehlt hat (kein Orakel fuer
+        # Fremde). 401 statt Weiterleitung: die Anmeldung findet bei xbuddy statt.
+        # Den Grund gibt es nur im Journal: fehlender/ungueltiger Cookie, oder ein Subjekt,
+        # das nicht in FINANZEN_ERLAUBTE_IDS steht (bei `*` kommt Letzteres nicht vor).
+        subjekt = auth_xbuddy.pruefe(auth_xbuddy.cookie_aus_header(self.headers.get("Cookie")), BOT_TOKEN)
+        if subjekt:
+            print(f"Anmeldung abgewiesen: gueltiger Cookie, Subjekt {subjekt} nicht in FINANZEN_ERLAUBTE_IDS")
+        else:
+            print("Anmeldung abgewiesen: kein oder ungueltiger xbuddy-Cookie")
+        return self._send(401, "<!doctype html><meta charset=utf-8><title>Anmeldung</title>"
+                               "<p>Nicht angemeldet. Bitte zuerst bei xbuddy anmelden und "
+                               "diese Seite dann erneut öffnen.</p>",
+                          "text/html; charset=utf-8")
 
     def _abweisen(self, grund):
         self._send(403, json.dumps({"fehler": grund}, ensure_ascii=False))
@@ -719,13 +714,29 @@ class H(http.server.BaseHTTPRequestHandler):
         if not self._host_ok():
             return self._abweisen("Unerwarteter Host-Header — Zugriff nur über "
                                   "127.0.0.1 oder localhost.")
-        if self.path == "/": return self._send(200, APP_HTML, "text/html; charset=utf-8")
+        weg = self._intern()
+        if weg is None:
+            return
+        from urllib.parse import urlparse, parse_qs
+        u = urlparse(weg)
+        name = u.path[1:]
+        if name in handy.OEFFENTLICH:
+            # Ohne Cookie: der Browser holt das Manifest ohne, sonst waere die App nicht
+            # installierbar. Darin steht nichts Vertrauliches.
+            return self._send(200, handy.datei(name), handy.OEFFENTLICH[name],
+                              {"X-Content-Type-Options": "nosniff"})
+        if not self._angemeldet():
+            return self._nicht_angemeldet()
+        self.path = weg
+        if u.path == "/":
+            return self._start(parse_qs(u.query))
+        if u.path.startswith("/api/handy/"):
+            return self._handy_api(u.path[len("/api/handy/"):], {k: v[0] for k, v in parse_qs(u.query).items()})
+        if self.path == "/editor": return self._send(200, APP_HTML, "text/html; charset=utf-8")
+        if self.path == "/stil.css": return self._send(200, STIL_CSS, "text/css; charset=utf-8")
         if self.path == "/shared.js": return self._send(200, SHARED_JS, "application/javascript; charset=utf-8")
-        if self.path == "/menu": return self._send(200, MENU_HTML, "text/html; charset=utf-8")
         if self.path == "/vertraege": return self._send(200, VTG_HTML, "text/html; charset=utf-8")
         if self.path == "/reisen": return self._send(200, REISEN_HTML, "text/html; charset=utf-8")
-        if self.path == "/import":
-            return self._send(200, IMPORT_HTML.replace("__KONTEN__", KONTEN_DIR), "text/html; charset=utf-8")
         if self.path == "/vorsorge":
             return self._send(200, VORSORGE_HTML, "text/html; charset=utf-8")
         if self.path == "/vermoegen":
@@ -736,10 +747,6 @@ class H(http.server.BaseHTTPRequestHandler):
             return self._send(200, json.dumps(vorsorge_load(), ensure_ascii=False))
         if self.path == "/api/ist_werte":
             return self._send(200, json.dumps(ist_werte(), ensure_ascii=False))
-        if self.path == "/api/sources":
-            return self._send(200, json.dumps(sources_rows(), ensure_ascii=False))
-        if self.path == "/api/reprocess_status":
-            return self._send(200, json.dumps(reprocess_status(), ensure_ascii=False))
         if self.path == "/api/contracts":
             return self._send(200, json.dumps(contracts_rows(), ensure_ascii=False))
         if self.path == "/api/trips":
@@ -795,19 +802,99 @@ class H(http.server.BaseHTTPRequestHandler):
                 with open(fp, "rb") as f:
                     return self._send(200, f.read(), "text/html; charset=utf-8")
         self._send(404, "nicht gefunden", "text/plain")
-    MAX_BODY = 64 * 1024 * 1024      # großzügig für Kontoexporte, aber nicht unbegrenzt
+    # Adressen vor dem 06.10.2026 (ohne /finanzen/) -> neue Adresse
+    ALTE_WEGE = {"/": "", "/menu": "", "/handy": "", "/handy/": ""}
+
+    def _intern(self):
+        """Pfad unterhalb von BASIS (mit fuehrendem '/'), oder None, wenn die Anfrage
+        schon beantwortet ist (Weiterleitung oder 404)."""
+        roh, _, query = self.path.partition("?")
+        q = ("?" + query) if query else ""
+        draussen = f"https://{FUNNEL_HOST}" if FUNNEL_HOST else ""
+        if FUNNEL_HOST and not self._ueber_funnel():
+            # Tailnet-Adresse (:8447): alles auf die oeffentliche. Android unterscheidet
+            # keine Ports, eine zweite Installation unter demselben Pfad soll es nicht geben.
+            if roh == BASIS or roh.startswith(BASIS + "/"):
+                ziel = roh[len(BASIS) + 1:]
+            elif roh.startswith("/handy/"):
+                ziel = ""
+            else:
+                ziel = self.ALTE_WEGE.get(roh, roh.lstrip("/"))
+            self._send(301, "", "text/plain", {"Location": f"{draussen}{BASIS}/{ziel}{q}"})
+            return None
+        if roh == BASIS:                             # ohne Schraegstrich laegen relative
+            self._send(301, "", "text/plain", {"Location": f"{BASIS}/{q}"})   # Verweise eine Ebene zu hoch
+            return None
+        if roh.startswith(BASIS + "/"):
+            return self.path[len(BASIS):]
+        if self._ueber_funnel():
+            self._send(404, "nicht gefunden", "text/plain")
+            return None
+        ziel = self.ALTE_WEGE.get(roh, roh.lstrip("/"))   # lokaler Betrieb ohne Funnel
+        self._send(301, "", "text/plain", {"Location": f"{BASIS}/{ziel}{q}"})
+        return None
+
+    def _start(self, qs):
+        """/finanzen/: Handy-App am Telefon, Uebersicht am Rechner. ?ansicht=handy|desktop
+        merkt sich die Wahl im Cookie finanzen_ansicht, ?ansicht=auto vergisst sie."""
+        import http.cookies
+        wahl = (qs.get("ansicht") or [""])[0]
+        if wahl in ("handy", "desktop", "auto"):
+            sicher = "; Secure" if AUTH_AKTIV else ""
+            alter = 0 if wahl == "auto" else 365 * 86400
+            return self._send(303, "", "text/plain", {
+                "Location": "./",
+                "Set-Cookie": f"finanzen_ansicht={wahl}; Path={BASIS}/; Max-Age={alter}; "
+                              f"SameSite=Lax; HttpOnly{sicher}"})
+        keks = http.cookies.SimpleCookie()
+        try:
+            keks.load(self.headers.get("Cookie") or "")
+        except http.cookies.CookieError:
+            pass
+        gemerkt = keks["finanzen_ansicht"].value if "finanzen_ansicht" in keks else ""
+        if gemerkt not in ("handy", "desktop"):
+            gemerkt = "handy" if ist_handy(self.headers.get("User-Agent"),
+                                           self.headers.get("Sec-CH-UA-Mobile")) else "desktop"
+        kopf = {"Vary": "User-Agent, Sec-CH-UA-Mobile, Cookie", "X-Finanzen-Ansicht": gemerkt}
+        if gemerkt == "handy":
+            kopf.update({"Content-Security-Policy": handy.CSP, "X-Content-Type-Options": "nosniff",
+                         "Referrer-Policy": "no-referrer"})
+            return self._send(200, handy.datei("index.html"), "text/html; charset=utf-8", kopf)
+        return self._send(200, START_HTML, "text/html; charset=utf-8", kopf)
+
+    def _handy_api(self, name, qs):
+        """Verdichtete Daten fuer die Handy-App und die Startseite (handy.py)."""
+        j = lambda obj: self._send(200, json.dumps(obj, ensure_ascii=False))
+        if name == "uebersicht": return j(handy.uebersicht())
+        if name == "buchungen":
+            return j(handy.buchungen(monat=qs.get("monat"), kat=qs.get("kat"), q=qs.get("q"),
+                                     offen=qs.get("offen") == "1"))
+        if name == "kategorien": return j(handy.kategorien())
+        if name == "vertraege": return j(handy.vertraege())
+        if name == "vermoegen": return j(handy.vermoegen())
+        if name == "vertrag": return j(contract_tx(qs.get("id", "")))
+        return self._send(404, "nicht gefunden", "text/plain")
+
+    MAX_BODY = 1024 * 1024           # nur noch kleine JSON-Aenderungen (Kontoexporte laufen nicht mehr ueber die App)
 
     def do_POST(self):
         if not self._host_ok():
             return self._abweisen("Unerwarteter Host-Header.")
+        if not self._angemeldet():
+            return self._nicht_angemeldet()
         if not self._origin_ok():
             return self._abweisen("Schreibende Anfrage von einer fremden Seite abgewiesen.")
+        if not self.path.startswith(BASIS + "/"):
+            return self._send(404, "{}")
+        self.path = self.path[len(BASIS):]
         n = int(self.headers.get("Content-Length", 0))
         if n > self.MAX_BODY:
             # Ohne Deckel liest der Server einen beliebig großen Rumpf komplett in den
             # Speicher — eine fremde Seite könnte damit RAM und Platte volllaufen lassen.
             return self._abweisen(f"Anfrage zu groß ({n} Bytes, erlaubt {self.MAX_BODY}).")
         body = self.rfile.read(n).decode("utf-8") if n else "{}"
+        if self.path == "/api/handy/bearbeiten":
+            return self._send(200, json.dumps(handy.bearbeiten(json.loads(body)), ensure_ascii=False))
         if self.path == "/api/edit":
             return self._send(200, json.dumps(save_edit(json.loads(body)), ensure_ascii=False))
         if self.path == "/api/addcat":
@@ -820,19 +907,13 @@ class H(http.server.BaseHTTPRequestHandler):
             return self._send(200, json.dumps(trip_edit(json.loads(body)), ensure_ascii=False))
         if self.path == "/api/rebuild":
             import frontend; frontend.run(); return self._send(200, '{"ok":true}')
-        if self.path == "/api/period":
-            return self._send(200, json.dumps(period_set(json.loads(body)), ensure_ascii=False))
-        if self.path == "/api/upload_konto":
-            return self._send(200, json.dumps(upload_konto(json.loads(body)), ensure_ascii=False))
-        if self.path == "/api/reprocess":
-            return self._send(200, json.dumps(reprocess_start(), ensure_ascii=False))
         if self.path == "/api/vorsorge":
             return self._send(200, json.dumps(vorsorge_save(json.loads(body)), ensure_ascii=False))
         self._send(404, "{}")
 
 if __name__ == "__main__":
     seed_labels()
-    print(f"Finanz-Editor:  http://127.0.0.1:{PORT}   (NICHT 'localhost' -> langsam; Strg+C beendet)")
+    print(f"Finanzen:  http://127.0.0.1:{PORT}{BASIS}/   (NICHT 'localhost' -> langsam; Strg+C beendet)")
     socketserver.ThreadingTCPServer.allow_reuse_address = True
     # Ohne FINANZEN_HOST wie bisher: nur der eigene Rechner. Mit gesetzter Variable
     # kommt GENAU EINE weitere Adresse dazu, in einem zweiten Socket. Bewusst nicht

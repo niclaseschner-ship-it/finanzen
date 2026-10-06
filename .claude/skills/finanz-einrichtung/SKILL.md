@@ -1,11 +1,15 @@
 ---
 name: finanz-einrichtung
-description: Begleitet einen neuen Nutzer von "gerade heruntergeladen" bis "meine eigenen Zahlen stehen" — Demo zeigen, Demo wieder rauswerfen, Kontenkarte (konfig.json) aufbauen, Thunderbird für Beleg-Mails, erster Lauf, Ergebnis prüfen, und am Ende die eigenen Verbesserungen als Branch zurückgeben. Auslöser: "einrichten", "erstes Mal", "gerade geklont", "Setup", "Demo ansehen", "konfig.json anlegen", "meine eigenen Daten reinlegen".
+description: Begleitet einen neuen Nutzer von "gerade heruntergeladen" bis "meine eigenen Zahlen stehen" — Python prüfen, Demo zeigen, Demo wieder rauswerfen, Kontenkarte (konfig.json) aufbauen, Thunderbird für Beleg-Mails, erster Lauf, Ergebnis prüfen, auf Wunsch am Handy nutzbar machen, und am Ende die eigenen Verbesserungen als Branch zurückgeben. Auslöser: "einrichten", "erstes Mal", "gerade geklont", "Setup", "Demo ansehen", "konfig.json anlegen", "meine eigenen Daten reinlegen".
 ---
 
 # Einrichtung — vom Herunterladen bis zu den eigenen Zahlen
 
-Es gibt **nichts zu installieren** außer Python 3.10+. Die Arbeit ist Konfiguration.
+Es gibt **nichts zu installieren** außer Python 3.10+ — keine Pakete, kein Build. Die Arbeit
+ist Konfiguration. Prüf das als Erstes (`python --version`, unter Linux/macOS oft
+`python3 --version`); fehlt Python oder ist es älter, die Installation vorschlagen
+(Windows: `winget install Python.Python.3.12`, macOS: `brew install python`), nicht
+selbst ausführen.
 
 Deine Aufgabe ist nicht, Befehle vorzulesen — die stehen im README. Deine Aufgabe ist der
 Teil, den ein Skript nicht kann: **die Vorschläge prüfen, bevor sie in die Konfiguration
@@ -47,13 +51,20 @@ fährt die ganze Pipeline durch — in einem **eigenen Ordner** `beispieldaten/d
 eigener Datenbank. Danach den Server auf die Demo zeigen lassen (die Befehle gibt das
 Skript am Ende selbst aus) und gemeinsam durchgehen:
 
+Alles liegt unter `http://localhost:8766/finanzen/` (die Demo nimmt einen eigenen Port):
+
+- **Übersicht** — der letzte Monat gegen den Durchschnitt, Kennzahlen, Kategorien
+- **Buchungen** — jede Buchung mit Kategorie, Labels und der Begründung, warum sie dort
+  liegt; bei Online-Käufen mit der Produktzeile aus der Bestellmail (die Demo bringt
+  erfundene Beleg-Mails mit)
 - **Statistik** — Einnahmen/Ausgaben pro Monat, Kategorie-Stack, Ranking
-- **Editor** — jede Buchung mit Kategorie, Labels und der Begründung, warum sie dort liegt
 - **Verträge** — die Fixkosten, rein aus der Wiederholung erkannt
 - **Reisen** — der Urlaub, allein aus den Einkaufsorten erkannt
+- **Handy-Ansicht** — oben rechts „Handy-Ansicht": so sieht es am Telefon aus
 
-Sag dabei ehrlich, was die Demo **nicht** zeigt: Beleg-Kontext aus E-Mails (dafür braucht
-es echte Mails) und die Vermögens-/Vorsorge-Ansicht (die brauchen gepflegte Zahlen).
+Sag dabei ehrlich, was die Demo **nicht** zeigt: die Vermögensansicht (die braucht
+gepflegte Zahlen in `vermoegen/positionen.json`). Die Vorsorge-Rechnung lässt sich sofort
+durchspielen.
 
 **Das Ziel dieser Phase ist eine Entscheidung**, nicht Begeisterung. Frag danach direkt:
 „Willst du das mit deinen eigenen Zahlen?" Bei Nein: aufhören, nichts weiter einrichten.
@@ -142,7 +153,7 @@ ist idempotent — abbrechen und später fortsetzen ist gefahrlos.
 ```bash
 python konfig.py       # prüft die Konfiguration
 python run_all.py      # die Pipeline
-python app.py          # http://localhost:8765
+python app.py          # http://localhost:8765/finanzen/
 ```
 
 `run_all.py` verweigert den Lauf, solange nur die Beispielkonfiguration da ist — Absicht,
@@ -165,6 +176,29 @@ melde, was auffällt, statt „fertig" zu sagen:
 Melde das als kurze Liste mit konkreten nächsten Schritten. Trage die getroffenen
 Entscheidungen in `DECISIONS.md` ein — besonders alles, was bei einer IBAN unklar war und
 wie es entschieden wurde.
+
+**Und ab dann jeden Monat:** neue Exporte nach `konten/`, `run_all.py`, prüfen. Das
+übernimmt der Skill **`finanz-monatsimport`** (liegt daneben in `.claude/skills/`) — er
+prüft die Lücken, kategorisiert den Rest und sichtet das Ergebnis. Eine Import-Seite in der
+App gibt es bewusst nicht. Sag dem Nutzer, dass er beim nächsten Mal einfach „Monatsimport"
+sagen kann.
+
+## Optional — am Handy nutzen
+
+Die App erkennt das Gerät: dieselbe Adresse zeigt am Telefon eine eigene Handy-Ansicht.
+Dafür muss das Telefon den Rechner erreichen. **Ohne Anmeldung (Standard) gilt: nur im
+eigenen, privaten Netz, nie offen im Internet** — wer die Adresse erreicht, sieht und ändert
+alle Buchungen.
+
+- **Einfach:** mit [Tailscale](https://tailscale.com) auf Rechner und Telefon, dann
+  `FINANZEN_HOST=<Tailscale-IP des Rechners>` setzen und `app.py` neu starten. Das Telefon
+  öffnet `http://<Tailscale-IP>:8765/finanzen/`. Im WLAN statt Tailscale geht dasselbe mit
+  der LAN-IP — dann ist jedes Gerät im WLAN drin, darauf hinweisen.
+- **Als installierbare App** (Symbol auf dem Startbildschirm, offline lesbar) braucht es
+  HTTPS, z. B. `tailscale serve`, und dann eine Anmeldung vor der App. Die eingebaute
+  Anmeldung (`FINANZEN_AUTH`, siehe `scripts/auth_xbuddy.py`) prüft ein signiertes Cookie
+  eines vorhandenen Anmeldedienstes; ohne einen solchen Dienst ist das ein Projekt für
+  sich. Nicht nebenbei einrichten, sondern ansprechen.
 
 ---
 
@@ -216,6 +250,8 @@ Chatverlauf.
 |---|---|
 | „Es läuft noch die BEISPIEL-Konfiguration" | `konfig.beispiel.json` → `konfig.json` kopieren |
 | Eigene Zahlen tauchen nicht auf, Demo-Zahlen schon | `FINANZEN_BASE` zeigt noch auf `beispieldaten/demo` |
+| `http://localhost:8765` leitet weiter / zeigt nichts | Die App liegt unter `/finanzen/` |
+| „Unerwarteter Host-Header" vom Handy aus | `FINANZEN_HOST` nicht gesetzt oder falsche IP |
 | `KonfigFehler: Kategorie '…' steht nicht in 'kategorien'` | Tippfehler in `konfig.json`; die Prüfung ist absichtlich streng |
 | Ausgaben viel zu hoch | Kontenkarte unvollständig → eigene Umbuchungen zählen als Ausgabe |
 | Miete fehlt komplett | Vermieterkonto fälschlich als intern eingetragen |

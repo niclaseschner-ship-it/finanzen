@@ -1,26 +1,26 @@
 <!doctype html><html lang=de><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>Finanzen · Reisen</title>
 <style>
- body{font-family:system-ui,Arial,sans-serif;margin:0;background:#0f1117;color:#e6e6e6;font-size:14px}
- .bar{position:sticky;top:0;background:#11141c;padding:10px;border-bottom:1px solid #262b36;display:flex;gap:10px;align-items:center;z-index:5;flex-wrap:wrap}
- a{color:#9aa4b2;text-decoration:none;font-weight:600}
+ body{font-family:system-ui,Arial,sans-serif;margin:0;background:var(--bg);color:var(--text);font-size:14px}
+ .bar{position:sticky;top:0;background:var(--fl);padding:10px;border-bottom:1px solid var(--linie);display:flex;gap:10px;align-items:center;z-index:5;flex-wrap:wrap}
+ a{color:var(--text2);text-decoration:none;font-weight:600}
  .wrap{padding:16px 28px;max-width:1500px;margin:0 auto}
  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:8px 0 18px}
- .kpi{background:#171a23;border:1px solid #262b36;border-radius:12px;padding:14px}
- .kpi .v{font-size:22px;font-weight:700}.kpi .l{color:#9aa4b2;font-size:12px;margin-top:3px}
- table{width:100%;border-collapse:collapse}td,th{padding:7px 8px;border-bottom:1px solid #1e232e;vertical-align:top}
- th{position:sticky;top:48px;background:#11141c;color:#9aa4b2;text-align:left}
+ .kpi{background:var(--fl);border:1px solid var(--linie);border-radius:12px;padding:14px}
+ .kpi .v{font-size:22px;font-weight:700}.kpi .l{color:var(--text2);font-size:12px;margin-top:3px}
+ table{width:100%;border-collapse:collapse}td,th{padding:7px 8px;border-bottom:1px solid var(--linie);vertical-align:top}
+ th{position:sticky;top:48px;background:var(--fl);color:var(--text2);text-align:left}
  .r{text-align:right;white-space:nowrap}
- input{background:#1b1f2a;color:#e6e6e6;border:1px solid #2c323f;border-radius:7px;padding:5px 7px;font-size:13px}
- .nm{width:230px} .b{background:#222a38;border:1px solid #2c323f;color:#cbd5e1;border-radius:6px;padding:4px 9px;cursor:pointer;font-weight:600}
- .b.ok{background:#16301d;border-color:#2c6b3f;color:#7ee0a0} .b.no{background:#301717;border-color:#6b2c2c;color:#ff8a8a}
+ input{background:var(--fl2);color:var(--text);border:1px solid var(--linie);border-radius:7px;padding:5px 7px;font-size:13px}
+ .nm{width:230px} .b{background:var(--fl2);border:1px solid var(--linie);color:var(--text);border-radius:6px;padding:4px 9px;cursor:pointer;font-weight:600}
+ .b.ok{background:var(--akzent-fl);border-color:var(--akzent);color:var(--akzent-text)} .b.no{background:var(--rot-fl);border-color:var(--rot);color:var(--rot)}
  .pill{font-size:11px;border-radius:6px;padding:1px 7px}
- .s-confirmed{background:#16301d;color:#7ee0a0}.s-candidate{background:#2a2f3a;color:#cbd5e1}.s-rejected{background:#301717;color:#ff8a8a}
- tr.rej{opacity:.45} .hint{color:#6b7280;font-size:12px} #msg{margin-left:auto;color:#9aa4b2}
- .cnt{background:#222a38;border:1px solid #2c323f;color:#cbd5e1;border-radius:6px;padding:2px 8px;cursor:pointer;font-size:13px}
- .orte{color:#9ec1ff} #ov{position:fixed;inset:0;background:#000a;display:none;z-index:60;align-items:center;justify-content:center}
- #mod{background:#11141c;border:1px solid #3a4252;border-radius:12px;max-width:780px;width:92%;max-height:82vh;overflow:auto;padding:16px}
- .prodc{color:#7ee0a0}
+ .s-confirmed{background:var(--akzent-fl);color:var(--akzent-text)}.s-candidate{background:var(--linie);color:var(--text)}.s-rejected{background:var(--rot-fl);color:var(--rot)}
+ tr.rej{opacity:.45} .hint{color:var(--leise);font-size:12px} #msg{margin-left:auto;color:var(--text2)}
+ .cnt{background:var(--fl2);border:1px solid var(--linie);color:var(--text);border-radius:6px;padding:2px 8px;cursor:pointer;font-size:13px}
+ .orte{color:var(--blau)} #ov{position:fixed;inset:0;background:#000a;display:none;z-index:60;align-items:center;justify-content:center}
+ #mod{background:var(--fl);border:1px solid var(--linie);border-radius:12px;max-width:780px;width:92%;max-height:82vh;overflow:auto;padding:16px}
+ .prodc{color:var(--akzent-text)}
  #detail{margin-top:8px}
 
  /* Handy: breite Tabellen scrollen in sich selbst, statt die ganze Seite
@@ -29,20 +29,22 @@
   .wrap{padding:12px}
   table{display:block;overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch}
  }
- .zur{display:none;color:#4f8cff}
+ .zur{display:none;color:var(--akzent)}
 @media(max-width:900px){
   /* Am Telefon ersetzt der Weg zurueck zur Uebersicht die siebenteilige
      Navigationsleiste. Die Filter der Seite bleiben stehen. */
   .bar>a:not(.zur),.bar>b{display:none}
   .zur{display:inline-block!important;font-size:15px}
  }
-</style></head><body>
-<script src="/shared.js"></script>
-<div class=bar>
-  <a href="/menu" class=zur>← Übersicht</a>
-<a href="/">✏️ Editor</a><a href="/statistik.html">📊 Statistik</a><a href="/vertraege">📑 Verträge</a>
- <b style="color:#4f8cff">🏖️ Reisen</b> <a href="/import">📥 Import</a> <a href="/vermoegen">💰 Vermögen</a> <a href="/vorsorge">🎯 Vorsorge</a>
- <span>Jahr: <select id=yr onchange=draw()></select></span>
+</style><link rel=stylesheet href="stil.css">
+<meta name=theme-color content="#f4f3ef" media="(prefers-color-scheme: light)">
+<meta name=theme-color content="#0f1215" media="(prefers-color-scheme: dark)">
+<link rel=icon href="icon-192.png">
+</head><body>
+<script src="shared.js"></script>
+<!--FNAV:reisen-->
+<div class=bar> 
+       <span>Jahr: <select id=yr onchange=draw()></select></span>
  <label class=hint><input type=checkbox id=hiderej onchange=draw()> abgelehnte ausblenden</label>
  <span id=msg></span>
 </div>
@@ -58,7 +60,7 @@ Bestätige echte Reisen (✓) oder lehne Transit/Tagesausflüge ab (✗). Klick 
 let T=[], FS;
 const fmt=x=>Math.round(x).toLocaleString('de-DE');
 const esc=s=>{const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML.replace(/"/g,'&quot;').replace(/'/g,'&#39;');};  // textContent maskiert " nicht — in value="..." waere das eine Luecke
-async function load(){ await BK.init(); T=await (await fetch('/api/trips')).json();
+async function load(){ await BK.init(); T=await (await fetch('api/trips')).json();
  const ys=[...new Set(T.flatMap(t=>[t.start.slice(0,4),t.ende.slice(0,4)]))].sort();
  yr.innerHTML=['Alle',...ys].map(y=>`<option>${y}</option>`).join(''); yr.value=ys[ys.length-1]||'Alle';
  FS=BK.filterState('reisen'); const s=FS.load();   // Filter über Seitenwechsel merken
@@ -98,12 +100,12 @@ function draw(){
 }
 function showTx(t){    // Buchungen INLINE darunter (gleiche Detailtabelle wie überall)
  document.getElementById('dh').textContent='🏖️ '+(t.name||t.orte)+'  ('+t.start+' … '+t.ende+')';
- BK.loadInto('detail','/api/rows?trip='+encodeURIComponent(t.id));
+ BK.loadInto('detail','api/rows?trip='+encodeURIComponent(t.id));
  document.getElementById('dh').scrollIntoView({behavior:'smooth',block:'start'});
 }
 async function save(t,patch){
  document.getElementById('msg').textContent='speichere…';
- const res=await (await fetch('/api/trip_edit',{method:'POST',headers:{'Content-Type':'application/json'},
+ const res=await (await fetch('api/trip_edit',{method:'POST',headers:{'Content-Type':'application/json'},
    body:JSON.stringify({id:t.id,...patch})})).json();
  if(res.trips)T=res.trips;
  document.getElementById('msg').textContent='gespeichert ✓';

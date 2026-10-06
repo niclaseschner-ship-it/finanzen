@@ -75,6 +75,7 @@ SEED = [
  ("Restaurant",25,"haendler_kw","pizza","Restaurant/Café","essen-ausser-haus"),
  ("Restaurant",25,"haendler_kw","gelato","Restaurant/Café","essen-ausser-haus,just-for-fun"),
  ("Restaurant",25,"haendler_kw","cafe","Restaurant/Café","essen-ausser-haus,just-for-fun"),
+ ("Restaurant",25,"haendler_kw","café","Restaurant/Café","essen-ausser-haus,just-for-fun"),
  ("Restaurant",25,"haendler_kw","americano","Restaurant/Café","essen-ausser-haus,just-for-fun"),
  # Mobilitaet
  ("Tankstelle",30,"haendler_kw","tankst","Mobilität","auto,sprit"),
@@ -441,7 +442,8 @@ def trip_detect(con):
             prev = cur[-1]
             gap = (D(d) - D(prev)).days
             home_between = any(prev < hd < d for hd in home_days)
-            if gap > TRIP_BRIDGE or home_between:
+            split = any(prev < sd <= d for sd in konfig.REISE_TRENNUNGEN)
+            if gap > TRIP_BRIDGE or home_between or split:
                 runs.append(cur); cur = []
         cur.append(d)
     if cur: runs.append(cur)

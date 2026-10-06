@@ -45,20 +45,26 @@ leerer Datenbank nicht an der noch fehlenden Tabelle scheitert, legt Schritt 2b 
 Alle Schritte liegen in `scripts/` — die Pipeline braucht **kein Projekt außerhalb** dieses
 Ordners. E-Mail-Import läuft separat/einmalig über `ingest_mail.py <mbox> <label>` (resumebar).
 
-## Interaktiver Server — `python app.py` → http://localhost:8765
-Der eigentliche Arbeitsplatz (reine Stdlib, kein Build). Eine geteilte JS-Library (`/shared.js`,
+## Interaktiver Server — `python app.py` → http://localhost:8765/finanzen/
+Der eigentliche Arbeitsplatz (reine Stdlib, kein Build). Eine geteilte JS-Library (`shared.js`,
 `window.BK`) liefert überall dieselbe Detailtabelle + denselben Bestätigen/Ignorieren-Mechanismus.
 
-| Route | Seite |
+Alles liegt unter `/finanzen/`, alle Verweise in den Seiten sind relativ. Alte Adressen ohne
+`/finanzen/` leiten weiter. Aussehen: `seiten/stil.css` (gleiche Farben wie die Handy-App),
+Kopfleiste setzt der Server ein (`<!--FNAV:…-->` → `app.kopfleiste`).
+
+| Route (unter `/finanzen`) | Seite |
 |---|---|
-| `/` | **Editor** — Buchungen prüfen, Kategorie/Labels/Kommentar setzen (Einzel-Edit, merge-sicher) |
+| `/` | **Übersicht** am Rechner, **Handy-App** am Telefon (Erkennung am User-Agent; `?ansicht=handy\|desktop\|auto` merkt sich die Wahl im Cookie) |
+| `/editor` | **Buchungen** — prüfen, Kategorie/Labels/Kommentar setzen (Einzel-Edit, merge-sicher) |
 | `/statistik.html` | **Statistik** — wird bei jedem Aufruf frisch aus der DB gebaut; Filter: Jahr·Kategorie·Vertrag·Label |
 | `/vertraege` | **Verträge** (= Fixkosten) — Kandidaten bestätigen/ablehnen, aktiv/ausgelaufen |
 | `/reisen` | **Reisen** — erkannte Reisen bestätigen → Urlaubsstempel |
-| `/import` | **Import** — Quellen-Übersicht, Zeitraum-Regler, Bank-CSV-Upload, „Daten verarbeiten" (= run_all) |
+| `/vermoegen`, `/vorsorge` | **Vermögen** (Salden, Depot, Immobilien) und **Vorsorge** (Planung) |
+| `/api/handy/*` | verdichtete Daten für Handy-App und Übersicht (`handy.py`) |
 
 **Filter** bleiben über Seitenwechsel erhalten (sessionStorage je Seite), Reset nur bei hartem
-Neuladen (F5) oder „alle Buchungen". **Berücksichtigter Zeitraum** (Import-Seite, `settings`-Tabelle)
+Neuladen (F5) oder „alle Buchungen". **Berücksichtigter Zeitraum** (`settings`-Tabelle; `run_all` setzt das Ende automatisch auf den letzten vollen Monat, von Hand über `db.set_setting`)
 begrenzt alle Auswertungen; der laufende Monat bleibt immer draußen (nur vollendete Monate).
 
 ## Kategorisierungs-Trichter (so kategorisieren wir)
@@ -93,7 +99,7 @@ begrenzt alle Auswertungen; der laufende Monat bleibt immer draußen (nur vollen
 - `contracts` (erkannte Verträge/Fixkosten) · `trips` (erkannte Reisen) · `settings` (Zeitraum) · `cats_catalog`/`labels_catalog`
 
 ## Schnell-Wege
-- **Neuer Kontoexport:** CSV in `konten/` ablegen (oder Import-Seite) → `python run_all.py`.
+- **Neuer Kontoexport:** CSV in `konten/` ablegen → `python run_all.py` (auf dem Pi macht das der Skill `finanz-monatsimport`; eine Import-Seite gibt es seit 06.10.2026 nicht mehr).
   Manuelle Entscheidungen bleiben erhalten (tx-id stabil).
 - **Regeln ergänzen:** Zeile in `SEED2` (breites, allgemeines Muster) ODER `konfig.json` →
   `eigene_regeln` (haushaltsspezifisch) ODER `ki_overrides` (Einzelhändler) → `run_all.py`.
